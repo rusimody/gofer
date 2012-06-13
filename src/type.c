@@ -1840,7 +1840,7 @@ Int what; {
 		       nameNil	    = addPrimCfun("[]",0,0,
 						   mkPolyType(starToStar,
 							      typeList));
-		       nameCons     = addPrimCfun(":",2,1,
+		       nameCons     = addPrimCfun(consStr[newSyntax],2,1,
 						   mkPolyType(starToStar,
 							      fn(var,
 							      fn(typeList,
@@ -1930,7 +1930,7 @@ Int what; {
 		       classMonad  = findClass(findText("Monad"));
 		       classMonad0 = findClass(findText("Monad0"));
 		       nameResult  = findName(findText("result"));
-		       nameBind	   = findName(findText("bind"));
+		       nameBind	   = findName(findText(bindStr[newSyntax]));
 		       nameZero    = findName(findText("zero"));
 		       if (nonNull(classMonad)  &&
 			   nonNull(classMonad0) &&
@@ -1952,6 +1952,9 @@ Int what; {
 			   monadSig    = NIL;
 		       }
 		       break;
+	      case CHANGE_SYNTAX:
+		renameName(textCons[!newSyntax], textCons[newSyntax]);
+		break;
     }
 }
 

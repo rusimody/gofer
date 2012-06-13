@@ -1,3 +1,4 @@
+/*Arunachala Siva Arunachala Ramana*/
 /* --------------------------------------------------------------------------
  * gofer.c:	Copyright (c) Mark P Jones 1991-1994.   All rights reserved.
  *		See goferite.h for details and conditions of use etc...
@@ -51,6 +52,7 @@ static Void   local showtype	      Args((Void));
 static Void   local info	      Args((Void));
 static Void   local describe	      Args((Text));
 static Void   local listNames	      Args((Void));
+static Void   local banner            Args((Void));
 
 /* --------------------------------------------------------------------------
  * Local data areas:
@@ -58,8 +60,8 @@ static Void   local listNames	      Args((Void));
 
 static Time lastChange[NUM_MODULES];	/* Time of last change to file	   */
 static Bool printing  = FALSE;		/* TRUE => currently printing value*/
-static Bool addType;			/* TRUE => print type with value   */
-static Bool showStats = TRUE;		/* TRUE => print stats after eval  */
+static Bool addType   = TRUE;		/* TRUE => print type with value   */
+static Bool showStats = FALSE;		/* TRUE => print stats after eval  */
 static Bool listFiles = TRUE;		/* TRUE => list files after loading*/
 
 /* --------------------------------------------------------------------------
@@ -76,8 +78,7 @@ char *argv[]; {
     /* The startup banner now includes my name.  Gofer is provided free of */
     /* charge.  I ask however that you show your appreciation for the many */
     /* hours of work involved by retaining my name in the banner.  Thanks! */
-
-    printf("Gofer Version 2.30a  Copyright (c) Mark P Jones 1991-1994\n\n");
+    banner();
     fflush(stdout);
     interpreter(argc,argv);
     printf("[Leaving Gofer]\n");
@@ -101,7 +102,7 @@ String argv[]; {
     scriptFile	  = 0;
     numScripts	  = 0;
     namesUpto	  = 1;
-    scriptName[0] = strCopy(fromEnv("GOFER",STD_PRELUDE));
+    scriptName[0] = strCopy(fromEnv("PUGOFER",STD_PRELUDE));
     prompt	  = strCopy("?");
     repeatStr	  = strCopy("$$");
 
@@ -115,8 +116,8 @@ String argv[]; {
 		proj = argv[++i];
 	else
 	    addScriptName(argv[i]);
-
     everybody(INSTALL);
+    everybody(CHANGE_SYNTAX);
     if (proj) {
 	if (namesUpto>1)
 	    fprintf(stderr,
@@ -197,6 +198,7 @@ struct options toggle[] = {		/* List of command line toggles	   */
     {'E', "Fail silently if evidence not found",   &silentEvFail},
 #endif
     {'k', "Show kind errors in full",		   &kindExpert},
+    {'S', "PU syntax", &newSyntax}, /*RPM*/
     {0,   0,					   0}
 };
 
@@ -294,12 +296,14 @@ Int first; {				/* loading everything after and	   */
 
 static Void local whatFiles() {		/* list files in current session   */
     int i;
+    if (0) {infWhatFiles(); return;}
     printf("\nGofer session for:");
     if (projectLoaded)
 	printf(" (project: %s)",currProject);
     for (i=0; i<numScripts; ++i)
 	printf("\n%s",scriptName[i]);
     putchar('\n');
+
 }
 
 /* --------------------------------------------------------------------------
@@ -316,7 +320,7 @@ static Void local editor() {		/* interpreter-editor interface	   */
 	}
     }
     runEditor();
-    readScripts(1);			/* try to reload scripts after edit*/
+    if (!infProc) readScripts(1);	/* try to reload scripts after edit*/
 }
 
 static Void local find() {		/* edit file containing definition */
@@ -338,7 +342,7 @@ static Void local find() {		/* edit file containing definition */
 	}
 	setLastEdit(scriptName[moduleThisName(n)],name(n).line);
 	runEditor();
-	readScripts(1);
+	if (!infProc) readScripts(1);
     }
 }
 
@@ -347,6 +351,15 @@ static Void local runEditor() {		/* run editor on file lastEdit at  */
     String edt;
     Int    l,f;
 
+    if (infProc) {
+      if (lastEdit)
+	sprintf(editorCmd, "(pu-find-file \"%s\" %d)",lastEdit,lastLine);
+      else
+	sprintf(editorCmd, "(pu-find-file)");
+      
+      printf("%s%s%s\n", infCh, editorCmd, infCh);
+      return;
+    }
     if ((edt = fromEnv("EDITLINE",DEF_EDITLINE))
 	    && lastEdit && lastLine && (l=substr("%d",edt))>=0
 				    && (f=substr("%s",edt))>=0)
@@ -420,7 +433,7 @@ static Void local evaluator() {        /* evaluate expr and print value    */
 				     graphForExp()),
 				     nameNil));
 	if (addType) {
-	    printf(" :: ");
+ 	    printTypeStr(stdout);
 	    printType(stdout,type);
 	}
     }
@@ -457,7 +470,7 @@ static Void local showtype() {	       /* print type of expression (if any)*/
     checkExp();
     type = typeCheckExp();
     printExp(stdout,inputExpr);
-    printf(" :: ");
+    printTypeStr(stdout);
     printType(stdout,type);
     putchar('\n');
 }
@@ -510,7 +523,7 @@ Text t; {
 				    for (; nonNull(cs); cs=tl(cs)) {
 					putchar('\n');
 					printExp(stdout,hd(cs));
-					printf(" :: ");
+					printTypeStr(stdout);
 					printType(stdout,name(hd(cs)).type);
 				    }
 				}
@@ -548,7 +561,7 @@ Text t; {
 	    do {
 		printf("\n    ");
 		printExp(stdout,hd(ms));
-		printf(" :: ");
+		printTypeStr(stdout);
 		printType(stdout,name(hd(ms)).type);
 		ms = tl(ms);
 	    } while (nonNull(ms));
@@ -570,7 +583,7 @@ Text t; {
 
     if (nonNull(nm)) {			/* as a function/name		   */
 	printExp(stdout,nm);
-	printf(" :: ");
+	printTypeStr(stdout);
 	if (nonNull(name(nm).type))
 	    printType(stdout,name(nm).type);
 	else
@@ -651,7 +664,7 @@ String argv[]; {
 	if (errorNumber)	       /* before prelude has been loaded   */
 	    fatal("Unable to load prelude");
 	initialise(argc,argv);
-	forHelp();
+/*	forHelp();*/
     }
 
     for (;;) {
@@ -769,3 +782,53 @@ sigHandler(breakHandler) {		/* respond to break interrupt	   */
 }
 
 /*-------------------------------------------------------------------------*/
+/*rpm*/
+static Void local startIPCmd(cmdName)
+String cmdName;
+{  printf("%s(%s ", infCh, cmdName);}
+static Void local endIPCmd()
+{ printf(")%s\n", infCh);}
+
+static Void local banner()
+{
+  if (0)
+  {
+       startIPCmd("pu-banner");
+       putchar('\"');
+       bannerContents();
+       putchar('\"');
+       endIPCmd();
+   }
+  else
+       bannerContents();
+}
+
+static Void local bannerContents()
+{
+  int i;
+  char *sep;
+  char *banstrs[] =
+  {
+       "Gofer Version 2.30a",
+       "Modifications for pugofer Rusi Mody",
+       "Copyright (c) Mark P Jones 1991-1994",
+       "Copyright (c) Rusi Mody 1995-2012",
+       NULL
+  };
+
+  sep = "\n"; /*infProc ? "\\n" : "\n";*/
+  for (i=0; banstrs[i] != NULL; i++)
+       printf("%s%s", banstrs[i], sep);
+}
+static Void local infWhatFiles()
+{
+  int i;
+  startIPCmd("pu-what-files ");
+  if (projectLoaded)
+    printf("\"%s\" ", currProject);
+  else
+    printf("nil ");
+  for (i=0; i < numScripts; i++)
+    printf(" \"%s\"", scriptName[i]);
+  endIPCmd();
+}

@@ -170,6 +170,8 @@ Syntax syntaxOf(t)		       /* look up syntax of operator symbol*/
 Text t; {
     int i;
 
+    if (newSyntax && t == textDot)
+      return mkSyntax(LEFT_ASS, FUN_PREC);
     for (i=0; i<syntaxHw; ++i)
 	if (tabSyntax[i].text==t)
 	    return tabSyntax[i].syntax;
@@ -1376,3 +1378,37 @@ Int what; {
 }
 
 /*-------------------------------------------------------------------------*/
+/*Arunachala Siva Arunachala Ramana*/
+Void renameName(Text oldTxt, Text newTxt)
+/* rename name whose name is oldTxt to newTxt */
+{
+  Int ho,hn;
+  Name o, n, p;
+
+  if (oldTxt == newTxt) return;
+
+  o = nameHash[ho=nHash(oldTxt)];
+  n = nameHash[hn=nHash(newTxt)];
+
+  if (o != n)
+  {
+    /* different hashes */
+    for (p=NIL; nonNull(o) && name(o).text!=oldTxt; o = name(o).nextNameHash)
+      p = o;
+    if (isNull(o)) return; /*old non existent */
+    /* o is a valid name */
+    if (isNull(p))
+    {
+      nameHash[ho] = name(o).nextNameHash;
+      name(o).nextNameHash = n;
+      nameHash[hn] = o;
+    }
+    else /*non first element */
+    {
+      name(p).nextNameHash = name(o).nextNameHash;
+      name(o).nextNameHash = n;
+      nameHash[hn] = o;
+    }
+  }
+  name(o).text = newTxt;
+}

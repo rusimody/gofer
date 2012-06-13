@@ -1,5 +1,6 @@
 .SUFFIXES	: .y .c .h .o .gs
-OBJECTS		= storage.o input.o static.o type.o compiler.o
+OBJECTS		= storage.o input.o static.o type.o compiler.o \
+		  parser.o pug.o
 IOBJECTS	= gofer.o builtin.o  machine.o output.o $(OBJECTS)
 COBJECTS	= gofc.o cbuiltin.o cmachine.o $(OBJECTS)
 
@@ -23,7 +24,7 @@ COBJECTS	= gofc.o cbuiltin.o cmachine.o $(OBJECTS)
 # as you use to build the file runtime.o (as specified by the CC macro
 # below).
 
-CC		= cc
+CC		= gcc
 #CFLAGS		= -DUSE_READLINE=1
 CFLAGS		=
 LDFLAGS    	= -lm
@@ -62,9 +63,11 @@ install		:
 		  rm $*.c
 		  strip $*
 
-parser.c	: parser.y
-		  yacc parser.y
+storage.h	: pug.h
+parser.c	: parser.y input.h
+		  yacc -d parser.y
 		  mv y.tab.c parser.c
+		  mv y.tab.h parser.h
 
 gofer.o		: prelude.h storage.h connect.h errors.h \
 		  command.h machdep.c commonui.c
@@ -72,7 +75,8 @@ gofc.o		: prelude.h storage.h connect.h errors.h \
 		  command.h machdep.c commonui.c output.c
 runtime.o	: prelude.h gofc.h machdep.c markscan.c twospace.c
 storage.o	: prelude.h storage.h connect.h errors.h
-input.o		: prelude.h storage.h connect.h errors.h parser.c command.h
+input.o		: prelude.h storage.h connect.h errors.h command.h
+parser.o	: prelude.h storage.h connect.h errors.h command.h
 static.o	: prelude.h storage.h connect.h errors.h scc.c
 type.o		: prelude.h storage.h connect.h errors.h preds.c kind.c subst.c
 output.o	: prelude.h storage.h connect.h errors.h
@@ -83,3 +87,4 @@ cmachine.o	: prelude.h storage.h connect.h errors.h
 		  $(CC) -c $(OPT1) $(CFLAGS) cmachine.c
 builtin.o	: prelude.h storage.h connect.h errors.h prims.c
 cbuiltin.o	: prelude.h storage.h connect.h errors.h prims.c
+pug.o		: prelude.h pug.h

@@ -12,6 +12,8 @@
 #include "command.h"
 #include "errors.h"
 #include <ctype.h>
+#include "input.h"
+#include "parser.h"
 
 /* --------------------------------------------------------------------------
  * Global data:
@@ -66,12 +68,12 @@ static Cell local readHexChar	  Args((Void));
 static Int  local readHexDigit	  Args((Void));
 static Cell local readDecChar	  Args((Void));
 
-static Void local goOffside	  Args((Int));
-static Void local unOffside	  Args((Void));
-static Bool local canUnOffside	  Args((Void));
+Void goOffside	  Args((Int));
+Void unOffside	  Args((Void));
+Bool canUnOffside	  Args((Void));
 
 static Void local skipWhitespace  Args((Void));
-static Int  local yylex 	  Args((Void));
+Int  yylex 	  Args((Void));
 static Int  local repeatLast	  Args((Void));
 
 static Void local parseInput	  Args((Int));
@@ -83,8 +85,10 @@ static Void local parseInput	  Args((Int));
 static Text textCase,	textOfK,    textData,	textType,   textIf;
 static Text textThen,	textElse,   textWhere,	textLet,    textIn;
 static Text textInfix,  textInfixl, textInfixr, textPrim;
+static Text textCtype; /*RPM*/
+Void setSyntaxTexts(Bool );
 
-static Text textCoco,	textEq,     textUpto,	textAs,     textLambda;
+static Text textCoco[2], textEq,    textUpto[2],  textAs,     textLambda;
 static Text textBar,	textMinus,  textFrom,	textArrow,  textLazy;
 
 static Text textClass,  textImplies,textInstance;
@@ -100,17 +104,18 @@ static Text textRunST;
 static Text textDo;
 #endif
 
-static Cell varMinus;			/* (-)				   */
-static Cell varNegate;			/* negate			   */
-static Cell varFlip;			/* flip				   */
-static Cell varFrom;			/* [_..]			   */
-static Cell varFromTo;			/* [_.._]			   */
-static Cell varFromThen;		/* [_,_..]			   */
-static Cell varFromThenTo;		/* [_,_.._]			   */
+Cell varMinus;			/* (-)				   */
+Cell varNegate;			/* negate			   */
+Cell varFlip;			/* flip				   */
+Cell varFrom;			/* [_..]			   */
+Cell varFromTo;			/* [_.._]			   */
+Cell varFromThen;		/* [_,_..]			   */
+Cell varFromThenTo;		/* [_,_.._]			   */
 
 Text   textPlus;			/* (+)				   */
 Text   textMult;			/* (*)				   */
 
+Cell typeLhs; /*RPM*/
 /* --------------------------------------------------------------------------
  * Single character input routines:
  *
@@ -130,7 +135,7 @@ Text   textMult;			/* (*)				   */
 static Int    reading	= NOTHING;
 
 static Target readSoFar;
-static Int    row, column, startColumn;
+Int    row, column, startColumn;
 static int    c0, c1;
 static FILE   *inputStream;
 static Bool   thisLiterate;
@@ -358,7 +363,7 @@ static Void local closeAnyInput() {	/* close input stream, if open	  */
  * Parser: Uses table driven parser generated from parser.y using yacc
  * ------------------------------------------------------------------------*/
 
-#include "parser.c"
+/*#include "parser.c"*/
 
 /* --------------------------------------------------------------------------
  * Single token input routines:
@@ -372,8 +377,8 @@ static Void local closeAnyInput() {	/* close input stream, if open	  */
 #define startToken()	    tokPos = 0
 #define saveTokenChar(c)    if (tokPos<MAX_TOKEN) saveChar(c); else ++tokPos
 #define saveChar(c)	    tokenStr[tokPos++]=(c)
-#define SPECIALS	    "(),;[]_{}"
-#define SYMBOLS 	    ":!#$%&*+./<=>?@\\^|-" /* For Haskell 1.1: `-' */
+#define SPECIALS	    "(),[]_{}"
+#define SYMBOLS 	    ":!#$%&*+./<=>?@\\^|-;"/* For Haskell 1.1: `-' */
 #define PRESYMBOLS 	    "~"			   /* should be a PRESYMBOL*/
                                                    /* but including it here*/
                                                    /* means we loose eg <- */
@@ -864,7 +869,7 @@ static	Int	   layout[MAXINDENT+1];/* indentation stack		   */
 #define HARD	   (-1) 	       /* indicates hard indentation	   */
 static	Int	   indentDepth = (-1); /* current indentation nesting	   */
 
-static Void local goOffside(col)       /* insert offside marker 	   */
+Void goOffside(col)       /* insert offside marker 	   */
 Int col; {			       /* for specified column		   */
     if (indentDepth>=MAXINDENT) {
 	ERROR(row) "Too many levels of program nesting"
@@ -873,11 +878,11 @@ Int col; {			       /* for specified column		   */
     layout[++indentDepth] = col;
 }
 
-static Void local unOffside() {        /* leave layout rule area	   */
+Void unOffside() {        /* leave layout rule area	   */
     indentDepth--;
 }
 
-static Bool local canUnOffside() {     /* Decide if unoffside permitted    */
+Bool canUnOffside() {     /* Decide if unoffside permitted    */
     return indentDepth>=0 && layout[indentDepth]!=HARD;
 }
 
@@ -937,7 +942,7 @@ ws: while (c0==' ' || c0=='\t' || c0=='\r' || c0=='\f')
 static Bool firstToken; 	       /* Set to TRUE for first token	   */
 static Int  firstTokenIs;	       /* ... with token value stored here */
 
-static Int local yylex() {	       /* Read next input token ...	   */
+Int yylex() {	       /* Read next input token ...	   */
     static Bool insertOpen    = FALSE;
     static Bool insertedToken = FALSE;
     static Text textRepeat;
@@ -1007,8 +1012,8 @@ static Int local yylex() {	       /* Read next input token ...	   */
 	case ','  : skip();
 		    return ',';
 
-	case ';'  : skip();
-		    return ';';
+	/*case ';'  : skip();
+		    return ';';*/
 
 	case '['  : skip();
 		    return '[';
@@ -1051,6 +1056,7 @@ static Int local yylex() {	       /* Read next input token ...	   */
     if (isalpha(c0)) {
 	Text it = readIdent();
 
+	if (it==textCtype)	return CTYPE;
 	if (it==textCase)              return CASEXP;
 	if (it==textOfK)               lookAhead(OF);
 	if (it==textData)	       return DATA;
@@ -1091,9 +1097,9 @@ static Int local yylex() {	       /* Read next input token ...	   */
     if (isoneof(c0,SYMBOLS) || isoneof(c0,PRESYMBOLS)) {
 	Text it = readOperator();
 
-	if (it==textCoco)    return COCO;
+	if (it==textCoco[newSyntax])    return ':';
 	if (it==textEq)      return '=';
-	if (it==textUpto)    return UPTO;
+	if (it==textUpto[newSyntax])    return UPTO;
 	if (it==textAs)      return '@';
 	if (it==textLambda)  return '\\';
 	if (it==textBar)     return '|';
@@ -1207,9 +1213,21 @@ Int what; {
 		       mark(varFromTo);
 		       mark(varFromThen);
 		       mark(varFromThenTo);
+		       mark(typeLhs);/*RPM*/
 		       break;
 
 	case INSTALL : input(RESET);
+		       textDot = findText(".");
+		       varDot = mkVar(textDot);
+		       textCoco[FALSE] = findText(typeStr[FALSE]);
+		       textCoco[TRUE] = findText(typeStr[TRUE]);
+		       textUpto[FALSE] = findText(uptoStr[FALSE]);
+		       textUpto[TRUE] = findText(uptoStr[TRUE]);
+		       textCons[FALSE] = findText(consStr[FALSE]);
+		       textCons[TRUE] = findText(consStr[TRUE]);
+		       textBind[FALSE] = findText(uptoStr[FALSE]);
+		       textBind[TRUE] = findText(uptoStr[TRUE]);
+		       textCtype      = findText("ctype");
 		       textCase       = findText("case");
 		       textOfK	      = findText("of");
 		       textData       = findText("data");
@@ -1224,9 +1242,7 @@ Int what; {
 		       textInfixl     = findText("infixl");
 		       textInfixr     = findText("infixr");
 		       textPrim       = findText("primitive");
-		       textCoco       = findText("::");
 		       textEq	      = findText("=");
-		       textUpto       = findText("..");
 		       textAs	      = findText("@");
 		       textLambda     = findText("\\");
 		       textBar	      = findText("|");

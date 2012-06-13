@@ -1,0 +1,132 @@
+
+
+Introduction to Gofer                                         8. ERRORS
+
+
+8. ERRORS
+
+8.1  Errors detected on input
+-----------------------------
+After an expression has been entered, but before any attempt is made to
+evaluate it, Gofer carries out a number of checks to make sure that the
+expression that you typed does not contain any errors.  Here  are  some
+examples of the kind of problem that might occur:
+
+  o  Syntax errors.  The most common situation in which this happens is
+     when  you  make  a  typing  mistake,  either  leaving   out   some
+     characters, or perhaps pressing the wrong keys  instead.   In  the
+     following example, the user has missed out a `[' character:
+
+         ? sum 1..100]
+         ERROR: Syntax error in input (unexpected `..')
+         ?
+
+  o  Undefined variables.  This happens when you  enter  an  expression
+     using a variable or function name that is not defined  in  any  of
+     the files of definitions loaded into Gofer.  This can  often  mean
+     that you have misspelt the name of a function, or that  the  files
+     defining a function have not yet been loaded.  For example:
+
+         ? sum [1..n]
+         ERROR: Undefined variable "n"
+         ? 
+
+  o  Type errors.  Certain  expressions  are  sensible  only  when  the
+     functions used in those expressions are applied to values  of  the
+     appropriate type.  For example, whilst the factorial function  can
+     be used to calculate the factorial of an integer,  it  is  clearly
+     meaningless to try to  determine  the  factorial  of  a  character
+     value.  This kind of problem can be detected using  the  types  of
+     the components of an expression.  In the expression "fact 'A'", we
+     can see that the argument 'A' has type Char which does  not  match
+     the argument type Int of the factorial function.  This error  will
+     be detected by Gofer if you try to evaluate the expression:
+
+         ? fact 'A'
+         ERROR: Type error in application
+         *** expression     : fact 'A'
+         *** term           : 'A'
+         *** type           : Char
+         *** does not match : Int
+
+         ?
+
+
+8.2  Errors during evaluation
+-----------------------------
+If no errors are detected in an input expression, Gofer then begins  to
+evaluate that expression.  Despite all of the checks that  are  carried
+out before the evaluation begins, it is still possible for an error  to
+occur during the evaluation of an expression.   A  typical  example  of
+this is an attempt to divide a number by zero.   In  this  case,  Gofer
+
+
+                                      19
+
+
+
+
+Introduction to Gofer                     8.2  Errors during evaluation
+
+
+prints the part of the  expression  being  evaluated  that  caused  the
+error, surrounded by braces `{' and `}':
+
+    ? 3/0
+    {primDivInt 3 0}
+    (4 reductions, 30 cells)
+    ? 
+
+[The function "primDivInt" which appears here is a  primitive  function
+used to divide  one  integer  (its  first  argument)  by  another  (the
+second)].  If an error occurs in just one part of  an  expression, only
+the part causing the problem will be displayed:
+
+    ? 4 + (5/0)
+    {primDivInt 5 0}
+    (5 reductions, 32 cells)
+    ? 
+
+A standard function called "error" is defined in the  standard  prelude
+which is often useful for ensuring that appropriate error messages  are
+produced when an error occurs:
+
+    ? error "Problem has occurred"
+    {error "Problem has occurred"}
+    (23 reductions, 99 cells)
+    ? 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      20
+
+

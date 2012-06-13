@@ -354,10 +354,8 @@ List qs; {
 
 				return ap(LETREC,
 					  pair(singleton(pair(hVar,ld)),
-					       ap(ap(ap(nameBind,
-							m),
-						     translate(snd(snd(q)))),
-						  hVar)));
+				ap3(nameBind, m, hVar,translate(snd(snd(q))) )
+						  ));
 			    }
 
 #if DO_COMPS

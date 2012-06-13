@@ -15,7 +15,7 @@
 #include <setjmp.h>
 #include <ctype.h>
 
-/* #define GOFC_INCLUDE  "\"gofc.h\"" */
+/*#define GOFC_INCLUDE  "\"gofc.h\""*/
 
 #ifndef GOFC_INCLUDE
 #if     (TURBOC | BCC | DJGPP | WATCOM)
@@ -24,7 +24,7 @@
 #if     RISCOS
 #define GOFC_INCLUDE "\"Lib:h.gofc\""
 #else
-#define GOFC_INCLUDE  "\"/usr/local/lib/Gofer/gofc.h\""
+#define GOFC_INCLUDE  "\"/usr/local/gofer/inc/gofc.h\""
 #endif
 #endif
 #endif

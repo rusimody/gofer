@@ -1,0 +1,132 @@
+
+
+Introduction to Gofer           APPENDIX F: INTERPRETER COMMAND SUMMARY
+
+
+APPENDIX F: INTERPRETER COMMAND SUMMARY
+
+Command      Description
+-------      -----------
+<expr>       Analyse expression for errors, typecheck and evaluate.  If
+             the expression has type Dialogue,  execute  as  a  program
+             using the I/O facilities as described in section  12.   If
+             the expression has type String, evaluate and print  result
+             as a lazy list of characters.   In  any  other  case,  the
+             standard  prelude  function  show'  is  applied   to   the
+             expression and used to print the value of  the  result  in
+             the form of a string, as in the previous case.
+
+:t <expr>    Analyse expression for errors,  typecheck  and  print  the
+:type <expr> translation and inferred type of the term.
+:T
+
+:q           Exit Gofer interpreter.
+:quit
+:Q
+
+:?           Display summary of interpreter commands.
+:h
+:H
+
+:l f1 .. fn  Removes any previously loaded  files  of  definitions  and
+             attempts to load the contents of the files f1 upto fn  one
+             after the other.
+
+:L           Remove any previously loaded files of  definitions.   Only
+             those functions and values defined in the standard prelude
+             will still be be available.
+
+:load        Equivalent forms of the :l command.
+:L
+
+:a f1 .. fn  Load the contents of the files f1 upto fn in  addition  to
+             any previously loaded files.   If  any  of  the  files  of
+             definitions which  have  already  been  loaded  have  been
+             modified  since  they  were   last  read   then  they  are
+             automatically reloaded before any of the files f1 upto  fn
+             are read.
+
+             If successful, a command of  the  form  ":l  f1  ..fn"  is
+             equivalent to the sequence of commands:
+                               :l
+                               :a f1
+                                .
+                                .
+                               :a fn
+
+:also        Equivalent forms of the :a command.
+:A
+
+:r           Repeat the last load command,  attempting  to  reload  any
+             files which have subsequently been modified.  Since  later
+
+
+                                      121
+
+
+
+
+Introduction to Gofer           APPENDIX F: INTERPRETER COMMAND SUMMARY
+
+
+             files may depend on the definitions in earlier ones,  once
+             one file has been reloaded, all subsequent files will also
+             need to be reloaded.
+
+:reload      Equivalent forms of the :r command.
+:R
+
+:e file      Suspend current Gofer session and start an editor  program
+             to modify or view the named file.  The Gofer session  will
+             be resumed when the editor  program  terminates,  and  any
+             script files that  have  been  changed  will  be  reloaded
+             automatically.
+
+             Note that a separate editor program is required  and  that
+             Gofer must be properly installed to use this feature.  The
+             default editor is usually vi (Calvin version 2.0 is a good
+             substitute for a PC), although this may have been  changed
+             when your system was installed.   In  any  case,  you  can
+             always substitute an editor of your choice by setting  the
+             environment variable EDITOR to the name of your  favourite
+             editor program.
+
+             There are a number  of  factors  which  will  affect  your
+             choice of editor.  On a slow machine, with only a  limited
+             amount of memory, you  will  probably  need  to  choose  a
+             relatively small editor which  can  be  loaded  reasonably
+             quickly and does not require too much memory.  On  a  more
+             powerful system, you may find it more  convenient  to  use
+             Gofer from a window based environment, running your editor
+             in one window with Gofer in another.
+
+:e           Using the :e command without specifying a particular  file
+             to be edited starts up  an  editor  program  as  described
+             above either for the file  of  definitions  most  recently
+             loaded into Gofer or, if an error occurred whilst  loading
+             a file of definitions, for  the  file  of  definitions  in
+             which the error was last detected.
+
+             With many editor programs, it is even  possible  to  start
+             the editor at the  line  where  the  error  occurred.   As
+             before, it is possible to change the default behaviour  of
+             Gofer in this case by  setting  the  environment  variable
+             EDITLINE to a command string which can be  used  to  start
+             the editor program with a given file at  a  specific  line
+             number.  The positions in the string  at  which  the  file
+             name and line number values should be inserted  should  be
+             indicated by the strings "%s" and "%d"  respectively,  and
+             may appear in either order.  The default  command  string,
+             which is used if EDITLINE is not set is "vi +%d %s".
+
+:edit        Equivalent forms of the :e command.
+:E
+
+
+
+
+
+
+                                      122
+
+

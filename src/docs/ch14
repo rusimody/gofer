@@ -1,0 +1,2112 @@
+
+
+Introduction to Gofer                          14. OVERLOADING IN GOFER
+
+
+14. OVERLOADING IN GOFER
+
+One of the biggest differences between Gofer and most other programming
+languages  (with  the  exception  of  Haskell)  is  the   approach   to
+overloading; enabling the definition and use of functions in which  the
+meaning of a function symbol may depend on the types of its arguments.
+
+Like Haskell, overloading in Gofer is based around  a  system  of  type
+classes which allow overloaded functions to be  grouped  together  into
+related groups  of  functions.   Whilst  the  precise  details  of  the
+approach to type classes used by  Gofer are quite  different from those
+of Haskell,  both rely on the same basic ideas and use a similar syntax
+for defining and using type classes.   It would therefore seem possible
+that experience gained with the overloading system in one language  can
+readily by applied to the other.
+
+The differences embodied in the Gofer system of classes  stem  from  my
+own, theoretically based investigations into `qualified types' some  of
+which is detailed in references [8-12].  In my  personal  opinion,  the
+Gofer system has some significant advantages over the Haskell  approach
+(see [12] for details) and one of the principal motivations behind  the
+implementation to Gofer was to provide a way of  testing  such  claims.
+One fact which I believe has already been established  using  Gofer  is
+that the use and implementation of overloaded functions need  not  have
+the significant effect on performance that was anticipated  with  early
+implementations of Haskell.
+
+This section outlines  the  system  of  type  classes  used  in  Gofer,
+indicating briefly how they can be used and how they are implemented.
+
+
+14.1 Type classes and predicates
+--------------------------------
+A type class can be thought of as a family of types (or more  generally
+as a family of tuples of types) whose elements are called instances  of
+the class.  If C is the name of  an  n-parameter  type  class  then  an
+expression of the form C t1 t2 ... tn where t1, t2, ...,  tn  are  type
+expressions is called a predicate and represents the assertion that the
+specified tuple of types is an instance of the class C.
+
+Given a polymorphic function (e.g. map::(a->b)->[a]->[b]), we are  free
+to use the function at any type which can be obtained  by  substituting
+arbitrary types for each of the type variables in its type.  In  Gofer,
+a type expression may be qualified by  one  or  more  predicates  which
+restrict the range of types at which a value can be used:
+
+e.g. a function of type C a => a -> a -> a can be treated as a function
+     of type t -> t -> t for any instance t of the class C.
+
+The predicate C a in the type expression in  the  previous  example  is
+called the context of the type.  Contexts may  contain  more  than  one
+predicate in which case the predicates involved must  be  separated  by
+commas and the context enclosed in parentheses as in (C a, D  b).   The
+empty context is written () and any type expression t is equivalent  to
+the qualified type () => t.  For uniformity, a context  with  only  one
+element may also be enclosed by parentheses.
+
+
+                                      61
+
+
+
+
+Introduction to Gofer                  14.1 Type classes and predicates
+
+
+For technical reasons, type synonyms are  not  currently  permitted  in
+predicates.  This is consistent with the use of predicates in  Haskell,
+but may be relaxed, at least in certain cases,  in  later  versions  of
+Gofer.
+
+
+14.2 The type class Eq
+----------------------
+The type class Eq is a simple and useful example, whose  instances  are
+precisely those types whose elements can be tested for  equality.   The
+declaration of this class given in the standard prelude is as follows:
+
+    class Eq a where
+        (==), (/=) :: a -> a -> Bool
+        x /= y      = not (x == y)
+
+There are three parts in any class declaration.   For  this  particular
+example we have:
+
+  o  The first line (called the `header') of the declaration introduces
+     a name Eq for the  class  and  indicates  that  it  has  a  single
+     parameter, represented by the type variable a.
+
+  o  The  second  line  of  the  declaration  (the  `signature   part')
+     indicates that there are functions denoted by the operator symbols
+     (==) and (/=) of type a -> a -> Bool for each instance a of  class
+     Eq.  Using the notation introduced in the previous  section,  both
+     of these operators have type:
+
+                      Eq a => a -> a -> Bool
+
+     These functions are called the `members' (or  `member  functions')
+     of the class.  [This terminology, taken from  Haskell,  is  rather
+     unfortunate; thinking of a type class  as  a  set  of  types,  the
+     elements of the class are called `instances', whilst the `members'
+     of the class correspond more closely  to  the  instance  variables
+     that are used in the terminology of object-oriented programming.]
+
+     The intention is that the (==) function will be used to  implement
+     an equality test for each instance of the  class,  with  the  (/=)
+     operator providing the  corresponding  inequality  function.   The
+     ability to include related groups of  functions  within  a  single
+     type class in this way is a useful tool in program design.
+
+  o  The  third  line  of   the   class   declaration   (the   `default
+     definitions') provides a default definition of the  (/=)  operator
+     in terms of the (==) operator.  Thus it is only necessary to  give
+     a definition for the (==) operator in order to define all  of  the
+     member functions for the class Eq.  It  is  possible  to  override
+     default member definitions by giving an alternative definition  as
+     appropriate for specific instances of the class.
+
+
+
+
+
+
+
+                                      62
+
+
+
+
+Introduction to Gofer                       14.2.1 Implicit overloading
+
+
+14.2.1 Implicit overloading
+---------------------------
+Member functions are clearly marked as overloaded  functions  by  their
+definition as part of a class declaration, but this is not the only way
+in which overloaded  functions  occur  in  Gofer;  the  restriction  to
+particular instances of a type class is also carried over into the type
+of any function defined either directly or indirectly in terms  of  the
+member functions of that class.  For example, the  types  inferred  for
+the following two functions:
+
+    x  `elem`   xs   =   any (x==) xs
+    xs `subset` ys   =   all (`elem` ys) xs
+
+are:
+
+    elem   :: Eq a => a -> [a] -> Bool
+    subset :: Eq a => [a] -> [a] -> Bool
+
+[ASIDE: On the  other  hand,  if  none  of  the  functions  used  in  a
+particular expression or definition are overloaded then there will  not
+be any overloading in the corresponding value.  Gofer does not  support
+the concept of implicit overloading used  in  some  languages  where  a
+value of a particular type might automatically be coerced to a value of
+some supertype.  An example of this would be the automatic  translation
+of a badly typed expression "1.0 == 1" to a  well-typed  expression  of
+the form "1.0 == float 1" for some  (potentially  overloaded)  coercion
+function "float" mapping numeric values to elements of type Float.]
+
+Note also that the types appearing in the context of a  qualified  type
+reflect the types at which overloaded functions are used.  Thus:
+
+    f x ys  =  [x] == ys
+
+has type  Eq [a] => a -> [a] -> Bool, and not Eq a => a -> [a] -> Bool,
+which is the type that would be assigned to "f" in a Haskell system.
+
+
+14.2.2 Instances of class Eq
+----------------------------
+Instances of a type class are defined  using  declarations  similar  to
+those used to define  the  corresponding  type  class.   The  following
+examples, taken from the standard prelude, give the definitions  for  a
+number of simple instances of the class Eq:
+
+    instance Eq Int  where  (==) = primEqInt
+
+    instance Eq Bool where
+        True  == True   =  True
+        False == False  =  True
+        _     == _      =  False
+
+    instance Eq Char  where  c == d  =  ord c == ord d
+
+    instance (Eq a, Eq b) => Eq (a,b) where
+        (x,y) == (u,v)  =  x==u && y==v
+
+
+
+                                      63
+
+
+
+
+Introduction to Gofer                      14.2.2 Instances of class Eq
+
+
+    instance Eq a => Eq [a] where
+        []     == []     =  True
+        []     == (y:ys) =  False
+        (x:xs) == []     =  False
+        (x:xs) == (y:ys) =  x==y && xs==ys
+
+The interpretation of these declarations is as follows:
+
+  o  The first declaration  makes Int an instance  of  class  Eq.   The
+     function "primEqInt" is a primitive Gofer function which tests the
+     equality of two integer values and has type Int -> Int -> Bool.
+
+  o  The second declaration makes  Bool an instance of  class Eq with a
+     simple definition involving pattern matching.
+
+  o  The third declaration makes Char an instance of  class  Eq.   This
+     definition indicates that a pair of characters are equal  if  they
+     have the same ASCII value,  which  is  obtained  using  the  "ord"
+     function.  Note that the two occurrences of the symbol (==) in the
+     equation:
+
+                       c == d  =  ord c == ord d
+
+     have  different  meanings;  the  first  denotes  equality  between
+     characters (elements of type  Char),  whilst  the  second  denotes
+     equality between integers (elements of type Int).
+
+  o  The fourth declaration provides an equality  operation  on  pairs.
+     Given two elements (x,y) and (u,v) of type (a,b) for some a, b, it
+     must be possible to check that both x==u and y==v before we can be
+     sure that the two pairs are indeed equal.  In other words, both  a
+     and b must also be instances of Eq  in  order  to  make  (a,b)  an
+     instance of Eq.  This requirement is described by the  first  line
+     in the instance declaration using the expression:
+
+                       (Eq a, Eq b) => Eq (a,b)
+
+  o  The fifth declaration makes [a] an instance of Eq, whenever  a  is
+     itself an instance  of  Eq  in  a  similar  way  to  the  previous
+     example.  The context Eq a is used in the  last  equation  in  the
+     declaration:
+
+                     (x:xs) == (y:ys)  =  x==y && xs==ys
+
+     which contains three occurrences of the (==) operator;  the  first
+     and third are used to compare lists of type [a], whilst the second
+     is used to compare elements of type a, using the instance Eq a.
+
+Combining these five declarations, we obtain definitions for (==) on an
+infinite  family  of  types  including  Int,  Char,  Bool,  (Int,Bool),
+(Char,Int), [Char], (Bool,[Int]), [(Bool,Int)], etc...:
+
+    ? 2 == 3                            -- using Eq Int
+    False
+    (2 reductions, 10 cells)
+    ? (["Hello"],3) == (["Hello"],3)    -- using Eq ([[Char]],Int)
+
+
+                                      64
+
+
+
+
+Introduction to Gofer                      14.2.2 Instances of class Eq
+
+
+    True
+    (31 reductions, 65 cells)
+    ?
+
+On the other hand, any attempt to use (==) to compare elements of  some
+type not covered by a suitable instance declaration will result  in  an
+error.  For example, the standard prelude does not define the  equality
+operation on triples of values:
+
+    ? (1,2,3) == (1,2,3)
+    ERROR: Cannot derive instance in expression
+    *** Expression        : (==) d125 (1,2,3) (1,2,3)
+    *** Required instance : Eq (Int,Int,Int)
+    ?
+
+This can  be  solved  by  including  an  instance  declaration  of  the
+following form into a file of definitions loaded into Gofer:
+
+    instance (Eq a, Eq b, Eq c) => Eq (a,b,c) where
+        (x,y,z) == (u,v,w)  =  x==u && y==v && z==w
+
+Giving:
+
+    ? (1,2,3) == (1,2,3)
+    True
+    (6 reductions, 20 cells)
+    ?
+
+In general, an instance declaration has the form:
+
+             instance  context => predicate  where
+                 definitions of member functions
+
+The context part of the declaration gives a list  of  predicates  which
+must be satisfied for the predicate on the right hand side of the  `=>'
+sign to be valid.  Constant predicates (i.e. predicates  not  involving
+any type variables) required by an instance declaration  (such  as  the
+predicate Eq Int  required  by  the  third  declaration)  need  not  be
+included in the context.  If the resulting context is empty (as in  the
+first three declarations above) then it may be omitted,  together  with
+the corresponding `=>' symbol.
+
+
+14.2.3 Testing equality of represented values
+---------------------------------------------
+Instances of  Eq  can  also  be  defined  for  other  types,  including
+user-defined datatypes, and unlike the instances described  above,  the
+definition of (==) need not be used to  determine  whether  the  values
+being compared have the same structure; it  is  often  more  useful  to
+check that they represent the same value.  As an example, suppose  that
+we introduce a type constructor Set for representing  sets  of  values,
+using a list to store the values held in the set:
+
+    data Set a = Set [a]
+
+As usual, we say that two sets are equal if they have the same members,
+
+
+                                      65
+
+
+
+
+Introduction to Gofer     14.2.3 Testing equality of represented values
+
+
+ignoring any repetitions or differences in the ordering of the elements
+in the lists  representing  the  sets.   This  is  achieved  using  the
+following instance declaration:
+
+    instance Eq a => Eq (Set a) where
+        Set xs == Set ys  =  xs `subset` ys  &&  ys `subset` xs
+                             where xs `subset` ys = all (`elem` ys) xs
+
+A couple of examples illustrate the use of this definition:
+
+    ? Set [1,2,3] == Set [3,4,1]
+    False
+    (49 reductions, 89 cells)
+    ? Set [1,2,3] == Set [1,2,2,2,1,3]
+    True
+    (157 reductions, 240 cells)
+    ? 
+
+
+14.2.4 Instance declarations without members
+--------------------------------------------
+It is possible to give an instance declaration without  specifying  any
+definitions for the member functions of the class.  For example:
+
+    instance Eq ()
+
+In this case, the definition of  (==) for the instance  Eq ()  is  left
+completely undefined, and hence so is the definition of (/=), which  is
+defined in terms of (==):
+
+    ? () == ()
+    {undefined_member (==)}
+    (3 reductions, 34 cells)
+    ? () /= ()
+    {undefined_member (==)}
+    (4 reductions, 36 cells)
+    ? 
+
+
+14.2.5 Equality on function types
+---------------------------------
+If an expression requires an  instance  of  a  class  which  cannot  be
+obtained using the rules in the given instance  declarations,  then  an
+error message will be produced when  the  expression  is  type-checked.
+For example, in general there is no sensible way to  determine  when  a
+pair of functions are equal, and the standard prelude does not  include
+a definition for an instance of the form Eq (a -> b) for  any  types  a
+and b:
+
+    ? (1==) == (\x->1==x)
+    ERROR: Cannot derive instance in expression
+    *** Expression        : (==) d148 ((==) {dict} 1) (\x->(==) {dict} 1 x)
+    *** Required instance : Eq (Int -> Bool)
+
+    ?
+
+
+
+                                      66
+
+
+
+
+Introduction to Gofer                 14.2.5 Equality on function types
+
+
+If for some reason, you would prefer this kind of error to  produce  an
+error message when an expression is evaluated, rather than when  it  is
+type-checked, you can  use  an  instance  declaration  to  specify  the
+required behaviour.  For example:
+
+    instance Eq (a -> b) where 
+        (==) = error "Equality not defined between functions"
+
+Evaluating the previous expression once this instance  declaration  has
+been included now produces the following result:
+
+    ? (1==) == (\x->1==x)
+    {error "Equality not defined between functions"}
+    (42 reductions, 173 cells)
+    ? 
+
+A limited form of equality can be defined for functions of type  (a->b)
+if a has only finitely many elements, such as the boolean type Bool:
+
+    instance Eq a => Eq (Bool -> a) where
+        f == g   =   f False == g False   &&   f True == g True
+
+[ASIDE: This instance declaration would not be accepted  in  a  Haskell
+program which insists that the predicate  on  the  right  of  the  `=>'
+symbol contains precisely one type constructor symbol.]
+
+Using this instance declaration once for each argument, we can now test
+two functions taking boolean arguments for equality (assuming of course
+that their result type is also an instance of Eq).
+
+    ? (&&) == (||)
+    False
+    (9 reductions, 21 cells)
+    ? not == (\x -> if x then False else True)
+    True
+    (8 reductions, 16 cells)
+    ? (&&) == (\x y-> if x then y else False)
+    True
+    (16 reductions, 30 cells)
+    ? 
+
+
+14.2.6 Non-overlapping instances
+--------------------------------
+Other instance declarations for types of the form a -> b can be used at
+the same time, so  long  as  no  pair  of  declarations  overlap.   For
+example, adding the following instance declaration
+
+    instance Eq a => Eq (() -> a)  where  f == g  =  f () == g ()
+
+enables us to evaluate expressions such as:
+
+    ? (\()->"Hello") == const "Hello"
+    True
+    (30 reductions, 55 cells)
+    ? 
+
+
+                                      67
+
+
+
+
+Introduction to Gofer                  14.2.6 Non-overlapping instances
+
+
+If however, we try to use instance declarations for types of  the  form
+(a -> b) and (Bool -> a) at the same time, then Gofer produces an error
+message similar to the following:
+
+    ERROR "file" (line 37): Overlapping instances for class "Eq"
+    *** This instance   : Eq (a -> b)
+    *** Overlaps with   : Eq (Bool -> a)
+    *** Common instance : Eq (Bool -> a)
+
+    ? 
+
+indicating that, given the task of testing two values of type (Bool->a)
+for equality, there are (at least) two definitions of (==)  that  could
+be used, with potentially different  results  being  obtained  in  each
+case.
+
+Here is a further example of the use of non-overlapping instances of  a
+class to define a function "cat" (inspired by the unix (tm) command  of
+the same name) which uses the I/O facilities  of  Gofer  to  print  the
+contents of one or more files on the terminal:
+
+    class    Cat a        where cat  :: a -> Dialogue
+    instance Cat [Char]   where cat n = showFile n done
+    instance Cat [[Char]] where cat   = foldr showFile done
+
+    showFile name cont = readFile name abort
+                             (\s->appendChan stdout s abort cont)
+ 
+Given these declarations, an expression of the form:
+
+                            cat "file"
+
+can be used to display the contents of the named file, whilst a list of
+files can be printed one after the other using  an  expression  of  the
+form:
+
+               cat ["file1", "file2", ..., "filen"].
+
+
+14.3 Dictionaries
+-----------------
+In order to understand some of the messages produced by Gofer, as  well
+as  some  of  the  more  subtle  problems  associated  with  overloaded
+functions, it is useful to have a  rough  idea  of  the  way  in  which
+overloaded functions are implemented.
+
+The basic idea is that a function with a qualified type context => type
+where context is a non-empty list of predicates  is  implemented  by  a
+function which takes an  extra  argument  for  each  predicate  in  the
+context.  When the function is used, each of these parameters is filled
+by a `dictionary'  which  gives  the  values  of  each  of  the  member
+functions in the appropriate class.  None of these extra parameters  is
+entered by the programmer.  Instead, they  are  inserted  automatically
+during type-checking.
+
+For the class Eq, each dictionary has at least two elements  containing
+
+
+                                      68
+
+
+
+
+Introduction to Gofer                                 14.3 Dictionaries
+
+
+definitions for each of the functions (==) and (/=).  A dictionary  for
+an instance of Eq can be depicted by a diagram of the form:
+
+                     +--------+--------+---------
+                     |        |        |
+                     |  (==)  |  (/=)  |  .....
+                     |        |        |
+                     +--------+--------+---------
+
+In order to produce useful error messages and indicate the way in which
+dictionary expressions are being used, Gofer uses a number  of  special
+notations for printing expressions involving dictionaries:
+
+   (#1 d)   selects the first element of the dictionary d
+
+   (#2 d)   selects the second element of the dictionary d
+
+   (#n d)   selects the nth element of the dictionary d
+            (note that (#0 d) is equivalent to the dictionary d).
+
+   {dict}   denotes a specific dictionary (the contents are not
+            displayed).
+
+   dnnn     a dictionary variable representing an unknown dictionary is
+            printed as a lower case letter `d' followed by an  integer;
+            e.g. d231.
+
+Note that, whilst these notations are used in output produced by  Gofer
+and in the following explanations, they cannot be entered directly into
+Gofer expressions or programs -- even if you use  a  variable  such  as
+"d1" in an expression, Gofer will not confuse this  with  a  dictionary
+variable with the same name (although Gofer might confuse you by  using
+the same name in two different contexts!).
+
+Using these notations, the member functions (==) and (/=) of the  class
+Eq behave as if they were defined by the expressions:
+
+    (==) d1  =  (#1 d1)
+    (/=) d1  =  (#2 d1)
+
+To understand how these definitions work, we need to take a look  at  a
+specific dictionary.  Following the original instance declaration  used
+for Eq Int, the corresponding dictionary is:
+
+                    d :: Eq Int
+                    +------------+------------+
+                    |            |            |
+                    | primEqInt  |  defNeq d  |
+                    |            |            |
+                    +------------+------------+
+
+Note that the  dictionary  variable  d  is  used  as  a  name  for  the
+dictionary in this diagram, indicating how values within  a  dictionary
+can include references to the same dictionary.
+
+[ASIDE: It turns out that predicates  play  a  very  similar  role  for
+
+
+                                      69
+
+
+
+
+Introduction to Gofer                                 14.3 Dictionaries
+
+
+dictionaries as types play for normal values.  This motivates  our  use
+of the notation d :: Eq Int to indicate that d is a dictionary for  the
+instance Eq Int.  One difference between these, particularly  important
+for theoretical work, is that dictionary values are uniquely determined
+by predicates; if d1::p and d2::p for some predicate p, then d1 = d2.]
+
+The value held in the first element of the dictionary is the  primitive
+equality function on  integers,  "primEqInt".   The  following  diagram
+shows how the dictionary is used to evaluate the expression "2  ==  3".
+Note that this expression will first be translated to  "(==) d 2 3"  by
+the type checker.  The evaluation then proceeds as follows:
+
+    (==) d 2 3  ==>  (#1 d) 2 3
+                ==>  primEqInt 2 3
+                ==>  False
+
+The second element of the  dictionary  is  a  little  more  interesting
+because it uses the default definition for (/=) given in  the  original
+class definition  which,  after  translation,  is  represented  by  the
+function "defNeq" defined by:
+
+    defNeq d1 x y = not ((==) d1 x y)
+
+Notice the way in which the  extra  dictionary  parameter  is  used  to
+obtain the appropriate overloading.  For  example,  evaluation  of  the
+expression  "2 /= 3", which  becomes  "(/=) d 2 3"  after  translation,
+proceeds as follows:
+
+    (/=) d 2 3  ==>  (#2 d) 2 3
+                ==>  defNeq d 2 3
+                ==>  not ((==) d 2 3)
+                ==>  not ((#1 d) 2 3)
+                ==>  not (primEqInt 2 3)
+                ==>  not False
+                ==>  True
+
+[Clearly there is some scope for optimisation here; whilst  the  actual
+reduction sequences used by Gofer are equivalent to  those  illustrated
+above, the precise details are a little different.]
+
+If an  instance  is  obtained  from  an  instance  declaration  with  a
+non-empty context, then the basic two element dictionary  used  in  the
+examples above is extended with an  extra  dictionary  value  for  each
+predicate in the context.  As an example, the diagram below  shows  the
+dictionaries that will be created  from  the  instance  definitions  in
+section 14.2.2  for  the  instance  Eq  (Int,  [Int]).   The  functions
+"eqPair" and "eqList" which are used in these dictionaries are obtained
+from the definitions of (==) given in the instance declarations for  Eq
+(a,b) and Eq [a] respectively:
+
+    eqPair d (x,y) (u,v)   = (==) (#3 d) x u && (==) (#4 d) y v
+
+    eqList d [] []         = True
+    eqList d []     (y:ys) = False
+    eqList d (x:xs) []     = False
+    eqList d (x:xs) (y:ys) = (==) (#3 d) x y && (==) d xs ys
+
+
+                                      70
+
+
+
+
+Introduction to Gofer                                 14.3 Dictionaries
+
+
+The dictionary structure for Eq (Int, [Int]) is as follows.  Note  that
+the Gofer system ensures that there is at most  one  dictionary  for  a
+particular instance of a class, and that the dictionary d1 :: Eq Int in
+this system is automatically shared between d2 and d3:
+
+   d3 :: Eq (Int, [Int])
+   +------------+------------+------------+------------+
+   |            |            |            |            |
+   | eqPair d3  | defNeq d3  | d1::Eq Int |d2::Eq [Int]|
+   |            |            |            |            |
+   +------------+------------+-----+------+-----+------+
+                                   |            |
+                    +--------------+            |
+                    |                           |
+                    |        d2 :: Eq [Int]     V 
+                    |        +------------+------------+------------+
+                    |        |            |            |            |
+                    |        | eqList d2  | defNeq d2  | d1::Eq Int |
+                    |        |            |            |            |
+                    |        +------------+------------+-----+------+
+                    |                                        |
+       d1 :: Eq Int V                                        |
+       +------------+------------+                           |
+       |            |            |                           |
+       | primEqInt  | defNeq d1  |<--------------------------+
+       |            |            |
+       +------------+------------+
+
+Once again, it may be useful to see how these definitions are  used  to
+evaluate  the  expression   "(2,[1])   ==   (2,[1,3])"   which,   after
+translation, becomes "(==) d3 (2,[1]) (2,[1,3])":
+
+    (==) d3 (2,[1]) (2,[1,3])
+             ==>   (#1 d3) (2,[1]) (2,[1,3])
+             ==>   eqPair d3 (2,[1]) (2,[1,3])
+             ==>   (==) (#3 d3) 2 2  &&  (==) (#4 d3) [1] [1,3]
+             ==>   (==) d1 2 2       &&  (==) (#4 d3) [1] [1,3]
+             ==>   (#1 d1) 2 2       &&  (==) (#4 d3) [1] [1,3]
+             ==>   primEqInt 2 2     &&  (==) (#4 d3) [1] [1,3]
+             ==>   True              &&  (==) (#4 d3) [1] [1,3]
+             ==>   (==) (#4 d3) [1] [1,3]
+             ==>   (==) d2 [1] [1,3]
+             ==>   (#1 d2) [1] [1,3]
+             ==>   eqList d2 [1] [1,3]
+             ==>   (==) (#3 d2) 1 1  &&  (==) d2 [] [3]
+             ==>   (==) d1 1 1       &&  (==) d2 [] [3]
+             ==>   (#1 d1) 1 1       &&  (==) d2 [] [3]
+             ==>   primEqInt 1 1     &&  (==) d2 [] [3]
+             ==>   True              &&  (==) d2 [] [3]
+             ==>   (==) d2 [] [3]
+             ==>   False
+
+
+
+
+
+
+
+                                      71
+
+
+
+
+Introduction to Gofer                               14.3.1 Superclasses
+
+
+14.3.1 Superclasses
+-------------------
+In general, a type class declaration has the form:
+
+             class  context => Class a1 ... an  where
+                 type declarations for member functions
+                 default definitions of member functions
+
+where Class is the name of the new type class which takes n  arguments,
+represented by distinct type variables a1, ..., an.  As in the case  of
+instance declarations, the context that appears on the left  hand  side
+of the `=>'  symbol  specifies  a  list  of  predicates  that  must  be
+satisfied in order to construct any instance of "Class".
+
+The predicates in the context part of a class  declaration  are  called
+the superclasses of Class.  This  terminology  is  taken  from  Haskell
+where all classes have a single parameter and each of the predicates in
+the context part of a class declaration has the  form  C  a1;  in  this
+situation, any instance of Class must also be an instance of each class
+C named in the context.   In  other  words,  each  such  C  contains  a
+superset of the types in Class.
+
+As an example of a class declaration with a non-empty context, consider
+the following declaration from the standard prelude which introduces  a
+class Ord whose instances are types  with  both  strict  (<),  (>)  and
+non-strict  (<=),  (>=)  versions  of  an  ordering  defined  on  their
+elements:
+
+    class Eq a => Ord a where
+        (<), (<=), (>), (>=) :: a -> a -> Bool
+        max, min             :: a -> a -> a
+
+        x <  y            = x <= y && x /= y
+        x >= y            = y <= x
+        x >  y            = y < x
+
+        max x y | x >= y  = x
+                | y >= x  = y
+        min x y | x <= y  = x
+                | y <= x  = y
+
+Notice that this definition provides default definitions for all of the
+member functions except (<=), so  that  in  general  only  this  single
+function needs to be defined to construct an instance of class Ord.
+
+There are two reasons for defining Eq as a superclass of Ord:
+
+  o  The default definition for (<) relies on the  use  of  (/=)  taken
+     from class Eq.  In order to guarantee that this is always valid we
+     must ensure that every instance of Ord must also be an instance of
+     Eq.
+
+  o  Given the definition of a non-strict ordering (<=) on the elements
+     of a type, it is always possible to construct a definition for the
+     (==) operator (and hence for (/=)) using the equation:
+
+
+
+                                      72
+
+
+
+
+Introduction to Gofer                               14.3.1 Superclasses
+
+
+                      x==y   =   x<=y && y<=x
+
+     There will therefore be no loss in generality by requiring  Eq  to
+     be a superclass of Ord, and conversely, no difficulty in  defining
+     an instance of Eq to accompany any instance of  Ord  for  which an
+     instance of Eq has not already be provided.
+
+     As an example, the following definitions  provide  an  alternative
+     way to implement the equality operation on  elements  of  the  Set
+     datatype described in section  14.2.3,  in  terms  of  the  subset
+     ordering defined in class Ord:
+
+         instance Ord (Set a) => Eq (Set a) where
+             x == y   =   x <= y  &&  y <= x
+
+         instance Eq a => Ord (Set a) where
+             Set xs <= Set ys  =  all (`elem` ys) xs
+
+     This definition is in fact no less efficient or effective than the
+     original version.
+
+Dictionaries for superclasses are dealt with in much the  same  way  as
+the instance specific dictionaries described above.  For  example,  the
+general layout of a dictionary for an instance of Ord is illustrated in
+the following diagram:
+
+ +--------+--------+--------+--------+--------+--------+--------+-----
+ |        |        |        |        |        |        |        |
+ |  (<)   |  (<=)  |  (>)   |  (>=)  |  max   |  min   |  Eq a  | .....
+ |        |        |        |        |        |        |        |
+ +--------+--------+--------+--------+--------+--------+--------+-----
+
+Note the use of the seventh element of this dictionary which points  to
+the dictionary for the appropriate instance of Eq.  This is used in the
+translation of the default definition for (<) which is equivalent to:
+
+      defLessThan d x y  =  (<=) d x y  &&  (/=) (#7 d) x y
+
+
+14.3.2 Combining classes
+------------------------
+In general, a dictionary is made up of three separate parts:
+
+     +-------------------+-------------------+-------------------+
+     |  Implementation   |    Superclass     | Instance specific |
+     | of class members  |   Dictionaries    |   Dictionaries    |
+     |                   |                   |                   |
+     +-------------------+-------------------+-------------------+
+
+Each of these may be empty.  We have already  seen  examples  in  which
+there are no superclass dictionaries (e.g.  instances  of  Eq)  and  in
+which there are no  instance  specific  dictionaries  (e.g.   Eq  Int).
+Classes with no member functions (corresponding to dictionaries with no
+member functions) are sometimes useful as a convenient abbreviation for
+a list of predicates.  For example:
+
+
+
+                                      73
+
+
+
+
+Introduction to Gofer                          14.3.2 Combining classes
+
+
+    class  C a  where  cee :: a -> a
+    class  D a  where  dee :: a -> a
+
+    class  (C a, D a) => CandD a
+
+makes CandD a an abbreviation for the context (C a, D a).  Thinking  of
+single parameter type classes as sets of types, the  type  class  CandD
+corresponds to the intersection of classes C and D.
+
+Just as the type inferred  for  a  particular  function  definition  or
+expression  does  not  involve  type  synonyms  unless  explicit   type
+signatures are used, the Gofer  type  system  will  not  use  a  single
+predicate of the form CandD a instead of the two predicates C a and D a
+unless  explicit signatures are used:
+
+    ? :t dee . cee
+    \d129 d130 -> dee d130 . cee d129 :: (C a, D a) => a -> a
+    ? :t dee . cee :: CandD a => a -> a
+    \d129 -> dee (#2 d129) . cee (#1 d129) :: CandD a => a -> a
+    ?
+
+In Haskell,  all  instances  of  a  class  such  as  CandD  must   have
+explicit declarations, in addition to  the  corresponding  declarations
+for instances for C and D.  This problem can be avoided  by  using  the
+more general form of instance declaration permitted in Gofer; a  single
+instance declaration:
+
+    instance CandD a
+
+is all that is required to ensure that any instance  of  CandD  can  be
+obtained, so long as corresponding instances for C and D can be found.
+
+
+14.3.3 Simplified contexts
+--------------------------
+Consider the function defined by the following equation:
+
+    eg1 x   =   [x] == [x]  ||  x == x
+
+This definition does not restrict the type of x in any way except that,
+if x :: a, then there must be instances Eq [a] and Eq a which are  used
+for the two occurrences of the (==) operator in the equation.  We might
+therefore expect the type of eg1 to be:
+
+    (Eq [a], Eq a) => a -> Bool
+
+with translation:
+
+    eg1 d1 d2 x  =  (==) d1 [x] [x]  ||  (==) d2 x x
+
+However, as can be seen  from  the  case  where  a=Int  illustrated  in
+section 14.3, given d1::Eq [a] we can always find a dictionary for Eq a
+by taking the third element of d1 i.e. (#3 d1)::Eq a.  Since it is more
+efficient to select an element from a  dictionary  than  to  complicate
+both type and translation with extra parameters, the type  assigned  to
+"eg1" by default is:
+
+
+                                      74
+
+
+
+
+Introduction to Gofer                        14.3.3 Simplified contexts
+
+
+    Eq [a] => a -> Bool
+
+with translation:
+
+    eg1 d1 x  =  (==) d1 [x] [x]  || (==) (#3 d1) x x
+
+In general, given a set of predicates corresponding  to  the  instances
+required by an expression,  Gofer  will  always  attempt  to  find  the
+smallest possible subset of these  predicates  such  that  all  of  the
+required dictionaries can still  be  obtained,  whilst  minimising  the
+number of dictionary parameters that are used.
+
+The original type and translation for eg1 given above can  be  produced
+by including an explicit type signature  in  the  file  containing  the
+definition of eg1:
+
+    eg1   ::  (Eq [a], Eq a) => a -> Bool
+    eg1 x  =  [x] == [x]  ||  x == x
+
+But even with this definition, Gofer will still always try to  minimise
+the number of dictionaries used in any particular expression:
+
+    ? :t eg1
+    \d153 -> eg1 d153 (#3 d153) :: Eq [a] => a -> Bool
+    ?
+
+As another example, consider the expression "(\x y->  x==x  ||  y==y)".
+The type and translation assigned to this term can  be  found  directly
+using Gofer:
+ 
+    ? :t (\x y-> x==x || y==y)
+    \d121 d122 x y -> (==) d122 x x ||
+                      (==) d121 y y
+                  :: (Eq b, Eq a) => a -> b -> Bool
+    ?
+
+Note that the translation has two dictionary parameters d121  and  d122
+corresponding to the two predicates Eq a and Eq b respectively.   Since
+both of these dictionaries can be obtained from a  dictionary  for  the
+predicate Eq (a,b), we can use an explicit type signature to produce  a
+translation which needs only one dictionary parameter:
+
+    ? :t (\x y-> x==x || y==y) :: Eq (a,b) => a -> b -> Bool
+    \d121 x y -> (==) (#3 d121) x x ||
+                 (==) (#4 d121) y y
+             :: Eq (a,b) => a -> b -> Bool
+    ?
+
+
+
+
+
+
+
+
+
+
+
+                                      75
+
+
+
+
+Introduction to Gofer                                 14.4 Other issues
+
+
+14.4 Other issues
+-----------------
+
+14.4.1 Unresolved overloading
+-----------------------------
+Consider  the  use  of  the  (==)  operator  in  the  following   three
+situations:
+
+  o  In the expression "2 == 3", it is clear that the appropriate value
+     for the equality operator in this case is primIntEq as defined  by
+     the instance declaration for Eq Int.  The expression can therefore
+     be translated to "primEqInt 2 3".
+
+  o  In the function definition "f x  =  x==x",  we  cannot  completely
+     determine the appropriate value for (==) because it depends on the
+     type assigned to the variable "x",  which  may  itself  vary  with
+     different uses of the function "f".  It is however possible to add
+     an extra parameter to the definition,  giving "f d x = (==) d x x"
+     and taking the type of "f" to be Eq a => a -> Bool.
+
+     In this way, the problem of finding the appropriate definition for
+     the (==) operator is deferred until the function is actually used.
+
+  o  In the expression "[]==[]", the appropriate value for (==) must be
+     obtained from the dictionary for some instance of the form Eq [a],
+     but there is not  sufficient  information  in  the  expression  to
+     determine what the value of the type variable a should be.
+
+     Looking back to the instance declaration for Eq [a], we find  that
+     the definition of (==) depends on the value of the dictionary  for
+     the instance Eq a.  In this particular case, it is clear that  the
+     expression will always evaluate to True, regardless of  the  value
+     of this dictionary.  Unfortunately, the only way that this can  be
+     detected is by evaluating the expression to see if the calculation
+     can be completed without reference to the  dictionary  value  (see
+     the comments in the aside at the end of this section).
+
+     Attempting to evaluate this expression  in  Gofer  will  therefore
+     result in an error message indicating that the expression does not
+     contain sufficient information to resolve the use  of  overloading
+     in the expression:
+
+         ? [] == []
+         ERROR: Unresolved overloading
+         *** type        : Eq [a] => Bool
+         *** translation : \d129 -> (==) d129 [] []
+         ?
+
+     Note  that  the  expression  has  been  converted  into  a  lambda
+     expression using the dictionary variable  d129  to  represent  the
+     dictionary for the unknown instance Eq [a].
+
+     One simple way to resolve the overloading in an expression of this
+     kind is to use an explicit type signature.   For  example,  if  we
+     specify that the second empty list is an empty list of type [Int]:
+
+
+
+                                      76
+
+
+
+
+Introduction to Gofer                     14.4.1 Unresolved overloading
+
+
+         ? [] == ([]::[Int])
+         True
+         (2 reductions, 9 cells)
+         ?
+
+The same problem occurs in Haskell, where it  is  described  using  the
+idea of an `ambiguous type' -- i.e.  a  type  expression  of  the  form
+context => type where one or more of the type  variables  appearing  in
+the given context do not appear in  the  remaining  part  of  the  type
+expression.
+
+Further examples of unresolved overloading occur  with  other  classes.
+As an example consider the class Reader defined by:
+
+    class Reader a where 
+        parse   :: String -> a   
+        unparse :: a -> String
+
+whose  member  functions  provide  methods  for  obtaining  the  string
+representation of an element of an instance type,  and  for  converting
+such representations  back  into  the  original values.  (The  standard
+Haskell Text class  contains  similar  functions.)   Now  consider  the
+expression "parse . unparse" which maps values from  some  instance  of
+Reader to  values  of  another  instance  via  an  intermediate  string
+representation.
+
+    ? parse . unparse
+    ERROR: Unresolved overloading
+    *** type        : (Reader a, Reader b) => a -> b
+    *** translation : \d129 d130 -> parse d130 . unparse d129
+    ?
+
+One of the first things that might surprise the reader here is that the
+value produced by "parse . unparse" does not have to  be  of  the  same
+type as the argument; for example, we would not usually expect to  have
+any sensible interpretation for a floating point number  obtained  from
+the string representation of a boolean value!
+
+This can be fixed by using an explicit type declaration,  although  the
+expression still produces unresolved overloading:
+
+    ? (parse . unparse) :: Reader a => a -> a
+    ERROR: Unresolved overloading
+    *** type        : Reader a => a -> a
+    *** translation : \d130 -> parse d130 . unparse d130
+    ?
+
+Notice however that the type of this expression  is  not  ambiguous  so
+that the unresolved overloading in this example can be eliminated  when
+the function is actually used:
+
+    ? ((parse . unparse) :: Reader a => a -> a) 'a'
+    'a'
+    (4 reductions, 11 cells)
+    ?
+
+
+
+                                      77
+
+
+
+
+Introduction to Gofer                     14.4.1 Unresolved overloading
+
+
+A more serious problem occurs with the  expression  "unparse  .  parse"
+which maps string values to string values via some  intermediate  type.
+Clearly this will lead to a problem with unresolved overloading:
+
+    ? unparse . parse
+    ERROR: Unresolved overloading
+    *** type        : Reader a => String -> String
+    *** translation : \d130 -> unparse d130 . parse (#0 d130)
+    ?
+
+Notice that the type obtained in  this  case  is  ambiguous;  the  type
+variable a which appears in the predicate Reader a does not  appear  in
+the type String -> String.  There are a number  of  ways  of  resolving
+this kind of ambiguity:
+
+  o  Using an explicitly typed expression: Assuming  for  example  that
+     Char is an instance of Reader, we can write:
+
+         ? unparse . (parse :: String -> Char)
+         v113 {dict} . v112 {dict}
+         (5 reductions, 42 cells)
+         ?
+
+     without any ambiguity.  If such type  signatures  are  used  in  a
+     number of places, it  might  be  better  to  define  an  auxiliary
+     function and use that instead:
+
+         charParse :: String -> Char
+         charParse  = parse
+
+         ? unparse . charParse
+         v113 {dict} . charParse
+         (4 reductions, 37 cells)
+         ?
+
+     In such situations, it  is  perhaps  worth  asking  if  overloaded
+     functions are in  fact  the  most  appropriate  solution  for  the
+     problem at hand!
+
+  o  Using an extra dummy parameter in a  function  definition.   In  a
+     definition such as:
+
+         f = unparse . parse
+
+     we can introduce an additional dummy parameter `x'  which  is  not
+     used except to determine the type of the result produced by  parse
+     in f:
+
+         f x  =  unparse . (parse `asTypeOf` (\""->x))
+
+     where the standard prelude operator `asTypeOf` defined by:
+
+         asTypeOf      :: a -> a -> a
+         x `asTypeOf` _ = x
+
+     is used to ensure that the type of parse in the definition of f is
+
+
+                                      78
+
+
+
+
+Introduction to Gofer                     14.4.1 Unresolved overloading
+
+
+     the same as that of the function (\""->x) -- in other  words,  the
+     type must be String -> a where a is the type of the variable x.
+
+     The resulting type for f is:
+
+          f :: Reader a => a -> String -> String
+
+     Notice how the addition of the dummy parameter has  been  used  to
+     eliminate the ambiguity present in the original type.
+
+     This kind of `coding trick' is rather messy and is not recommended
+     for anything but the simplest examples.
+
+[ASIDE: The idea of evaluating an expression with an ambiguous type  to
+see if it does actually need the unspecified  dictionaries  could  have
+been  implemented  quite easily in  Gofer  using  an  otherwise  unused
+datatype Unresolved and generating instance declarations such as:
+
+    instance Eq Unresolved where
+        (==) = error "unresolved overloading for (==)"
+        (/=) = error "unresolved overloading for (/=)"
+
+for each class.  Given a particular expression, we  can  then  use  the
+type Unused in place of any ambiguous type variables in its type.   The
+evaluation of the expression could then be attempted, either completing
+successfully if  the  dictionaries  are  not  required,  but  otherwise
+resulting in a run-time error.
+
+This approach is not used in Gofer; instead, the programmer is notified
+of any unresolved  polymorphism  when  the  program  is  type  checked,
+avoiding the possibility that a program  might  contain  an  undetected
+ambiguity.]
+
+
+14.4.2 `Recursive' dictionaries
+-------------------------------
+Unlike Haskell, there are no restrictions on the form of the predicates
+that may appear in the context  part  of  a  Gofer  class  or  instance
+declaration.  This has a  number  of  potentially  useful  applications
+because it enables the  Gofer  programs  to  use  mutually  `recursive'
+systems of dictionaries.
+
+One example of this is the ability  to  implement  a  large  family  of
+related functions using a group of classes instead of having to  use  a
+single class.  The following example illustrates the technique with  an
+alternative definition for the class Eq in  which  the  (==)  and  (/=)
+operators are placed in different classes:
+
+    class Neq a => Eq a  where  (==) :: a -> a -> Bool
+
+    class Eq a => Neq a  where  (/=) :: a -> a -> Bool
+                                x/=y  = not (x == y)
+
+
+[ASIDE: These declarations clash with those in the standard prelude and
+hence cannot actually be used in Gofer unless a modified version of the
+
+
+                                      79
+
+
+
+
+Introduction to Gofer                   14.4.2 `Recursive' dictionaries
+
+
+standard prelude is used instead.]
+
+If we then give instance declarations:
+
+    instance Eq Int  where (==) = primEqInt
+    instance Neq Int
+
+and try to evaluate the expression "2==3" then the following system  of
+dictionaries will be generated:
+
+        d1 :: Eq Int                   d2 :: Neq Int
+        +-----------+-----------+      +-----------+-----------+
+        |           |           |      |           |           |
+    +-->| primEqInt |d2::Neq Int+----->| defNeq d2 |d1::Eq Int +---+
+    |   |           |           |      |           |           |   |
+    |   +-----------+-----------+      +-----------+-----------+   |
+    |                                                              |
+    +------------------------------<-------------------------------+
+
+where the function "defNeq" is derived from the  default definition  in
+the class Neq and is equivalent to:
+
+               defNeq d x y  =  not ((==) (#2 d) x y)
+
+Incidentally, if the instance declaration for Neq Int  above  had  been
+replaced by:
+
+    instance Neq a
+
+then the effect of these declarations would be similar to the  standard
+definition of the class Eq, except that it would  not  be  possible  to
+override the  default  definition  for  (/=).   In  other  words,  this
+approach would give the same effect as defining  (/=)  as  a  top-level
+function rather than a member function in the class Eq:
+
+    class Eq a  where  (==) :: a -> a -> Bool
+
+    (/=)   ::  Eq a => a -> a -> Bool
+    x /= y  =  not (x == y)
+
+There are other situations in which recursive dictionaries of the  kind
+described above can be  used.   A  further  example  is  given  in  the
+following section.  Unfortunately, the lack of restrictions on the form
+of class and instance declarations can also lead to  problems  in  some
+(mostly pathological) cases.  As an example, consider the class:
+
+    class Bad [a] => Bad a  where  bad :: a -> a
+
+Without defining any instances of Bad, it is not possible to  construct
+any dictionaries for instances of Bad:
+
+    ? bad 2
+    ERROR: Cannot derive instance in expression
+    *** Expression        : bad d126 2
+    *** Required instance : Bad Int
+    ?
+
+
+                                      80
+
+
+
+
+Introduction to Gofer                   14.4.2 `Recursive' dictionaries
+
+
+If however we add the instance declarations:
+
+    instance Bad Int where bad = id
+    instance Bad [a] where bad = id
+
+then any attempt to construct  a  dictionary  for  Bad  Int  will  also
+require a dictionary for the superclass Bad  [Int]  and  then  for  the
+superclass of that instance Bad [[Int]] etc...  Since Gofer has only  a
+finite amount of space for  storing  dictionaries,  this  process  will
+eventually terminate when that space has been used up:
+
+    ? bad 2
+    ERROR: Dictionary storage space exhausted
+    ?
+
+[ASIDE: depending on the configuration of your  particular  version  of
+Gofer and on the nature of the class and instance declarations that are
+involved, an alternative error message "ERROR: Too many type  variables
+in type checker" may be produced instead of the message shown above.]
+
+From a practical point of view, this problem is unlikely to  cause  too
+many real difficulties:
+
+  o  Class declarations involving  predicates  such  as  those  in  the
+     declaration of Bad are unlikely to be used in realistic programs.
+
+  o  All dictionaries are constructed before evaluation  begins.   This
+     process is guaranteed to terminate  because  each  new  dictionary
+     that is created uses up part of  the  space  used  to  hold  Gofer
+     dictionaries.  The  construction  process  will  either  terminate
+     successfully once complete, or be aborted as soon as  all  of  the
+     dictionary space has been used.
+
+It remains to see what impact (if any) this has on realistic  programs,
+and if later versions of  Gofer  should  be  modified  to  impose  some
+syntactic restrictions (as in Haskell) or perhaps some form  of  static
+checking of the contexts appearing in class and instance  declarations.
+
+
+14.4.3 Classes with multiple parameters
+---------------------------------------
+Gofer is the first language to support the use  of  type  classes  with
+multiple parameters.  This again is  an  experimental  feature  of  the
+language, intended to make it possible to explore  the  claims  from  a
+number of researchers about the use of such classes.
+
+Initial experiments suggest that multiple parameter  type  classes  are
+likely  to  lead  to  large  numbers  of   problems   with   unresolved
+overloading.  Ultimately, this may mean that such classes are  only  of
+practical use in explicitly typed languages, or  alternatively  that  a
+more powerful and general defaulting mechanism (similar to that used in
+Haskell with numeric classes) is required to  support  user  controlled
+overloading resolution.
+
+The following declaration introduces a class  Iso  whose  elements  are
+pairs of isomorphic types:
+
+
+                                      81
+
+
+
+
+Introduction to Gofer           14.4.3 Classes with multiple parameters
+
+
+    class Iso b a => Iso a b  where  iso :: a -> b
+
+The single member function "iso"  represents  the  isomorphism  mapping
+elements of type a to corresponding  elements  of  type  b.   Note  the
+`superclass' context in this declaration which formalises the idea that
+if a is isomorphic to b then b is also isomorphic to a.  The class  Iso
+therefore provides  further  examples  of  the  recursive  dictionaries
+described in the previous section.
+
+The fact that any type is isomorphic to itself can be described by the
+following instance declaration:
+
+    instance Iso a a where iso x = x
+
+For example, the dictionary structure created in order to evaluate the
+expression "iso 2 = 3" is:
+
+                   d :: Iso Int Int
+                   +--------------+--------------+
+                   |              |              |
+               +-->|      id      |d::Iso Int Int+--+
+               |   |              |              |  |
+               |   +--------------+--------------+  |
+               |                                    |
+               +------------------<-----------------+
+
+    ? iso 2 == 3
+    False
+    (4 reductions, 11 cells)
+    ? 
+
+Our first taste of the problems to come occurs when we try to  evaluate
+the expression "iso 2 == iso 3":
+
+    ? iso 2 == iso 3
+    ERROR: Unresolved overloading
+    *** type        : (Eq a, Iso Int a) => Bool
+    *** translation : \d130 d132 -> (==) d130 (iso d132 2) (iso d132 3)
+    ?
+
+In this case, the "iso" function is used to map the integers 2 and 3 to
+elements of some type a, isomorphic to Int, and the values produced are
+then compared using (==) at the instance Eq  a;  there  is  no  way  of
+discovering what the value of a should be  without  using  an  explicit
+type signature.
+
+Further instances can be defined.  The following two  declarations  are
+needed to describe the (approximate) isomorphism between lists of pairs
+and pairs of lists:
+
+    instance Iso [(a,b)] ([a],[b]) where  
+        iso xs = (map fst xs, map snd xs)
+ 
+    instance Iso ([a],[b]) [(a,b)] where
+        iso (xs,ys) = zip xs ys
+
+
+
+                                      82
+
+
+
+
+Introduction to Gofer           14.4.3 Classes with multiple parameters
+
+
+Unfortunately, even apparently straightforward examples  give  problems
+with  unresolved  overloading,  forcing  the  use  of   explicit   type
+declarations:
+
+    ? iso [(1,2),(3,4)]
+    ERROR: Unresolved overloading
+    *** type        : Iso [(Int,Int)] a => a
+    *** translation : \d126 -> iso d126 [(1,2),(3,4)]
+
+    ? (iso [(1,2),(3,4)]) :: ([Int],[Int])
+    ([1, 3],[2, 4])
+    (22 reductions, 64 cells)
+    ?
+
+A second example of a multiple  parameter  type  class  is  defined  as
+follows:
+
+    class Ord a => Collects a b where
+        emptyCollection :: b
+        addToCollection :: a -> b -> b
+        listCollection  :: b -> [a]
+
+The basic intuition is that the predicate Collects a b  indicates  that
+elements of type b can be used to represent collections of elements  of
+type a.  A number of people have suggested using type classes  in  this
+way to provide features similar to the (similarly named, but  otherwise
+different) classes that occur in object-oriented languages.
+
+Obvious implementations involve the use  of  ordered  lists  or  binary
+search trees defined by instances of the form:
+
+    data STree a = Empty | Node a (STree a) (STree a)
+ 
+    instance Collects a [a] where ....
+    instance Collects a (STree a) where ....
+
+Once again, there are significant problems even  with  simple  examples
+using these functions.  As an example, the standard way of  defining  a
+function of type:
+
+                  Collects a b => [a] -> b
+
+mapping a list of values to a collection  of  those  values  using  the
+higher order function "foldr":
+
+    listToCollection = foldr addToCollection emptyCollection
+
+actually produces a function with ambiguous type:
+
+    ? :t foldr addToCollection emptyCollection
+    \d139 d140 -> foldr (addToCollection d140) (emptyCollection d139)
+              :: (Collects c b, Collects a b) => [a] -> b
+    ?
+
+which cannot be resolved, even with an explicit type declaration.
+
+
+
+                                      83
+
+
+
+
+Introduction to Gofer             14.4.4 Overloading and numeric values
+
+
+14.4.4 Overloading and numeric values
+-------------------------------------
+One of the most common uses of overloading is to allow the use  of  the
+standard arithmetic operators such as (+), (*) etc. on the elements  of
+a range of numeric types including integers and floating  point  values
+in addition to user defined numeric types such as  arbitrary  precision
+integers,  complex  and  rational  numbers,   vectors   and   matrices,
+polynomials etc.  In Haskell, these features are supported by a  number
+of built-in types and a complex hierarchy of  type  classes  describing
+the operations defined on the elements of each numeric type.
+
+As an experimental language, intended primarily for  the  investigation
+of general purpose overloading, Gofer has  only  two  built-in  numeric
+types; Int and Float (the second of  which  is  not  supported  in  all
+implementations).  Similarly, although the Gofer system could  be  used
+to  implement the  full  hierarchy  of  Haskell  numeric  classes,  the
+standard prelude uses a single numeric type class Num defined by:
+
+    class Eq a => Num a where           -- simplified numeric class
+        (+), (-), (*), (/) :: a -> a -> a
+        negate             :: a -> a
+        fromInteger        :: Int -> a
+
+The first four member functions (+), (-), (*),  (/)  are  the  standard
+arithmetic functions on instances of Num, whilst "negate" denotes unary
+negation.  The final member function, fromInteger is used to coerce any
+integer value to the corresponding value in another  instance  of  Num.
+An expression such as "fromInteger 3" is called an  overloaded  numeric
+constant and has type Num a => a indicating that it can be  used  as  a
+value of any instance of Num.  See below for examples.
+
+Both Float and Int are defined as  instances  of  Num  using  primitive
+functions for integer and floating point arithmetic:
+
+    instance Num Int where
+        (+)           = primPlusInt
+        (-)           = primMinusInt
+        (*)           = primMulInt
+        (/)           = primDivInt
+        negate        = primNegInt
+        fromInteger x = x
+
+    instance Num Float where
+        (+)         = primPlusFloat
+        (-)         = primMinusFloat
+        (*)         = primMulFloat
+        (/)         = primDivFloat 
+        negate      = primNegFloat
+        fromInteger = primIntToFloat
+
+These definitions make it  possible  to  evaluate  numeric  expressions
+involving both types:
+
+    ? 2 + 3
+    5
+    (3 reductions, 6 cells)
+
+
+                                      84
+
+
+
+
+Introduction to Gofer             14.4.4 Overloading and numeric values
+
+
+    ? 3.2 + 4.321
+    7.521
+    (3 reductions, 13 cells)
+    ?
+
+Note  however  that  any  attempt  to  evaluate  an  expression  mixing
+different arithmetic types is likely to cause a type error:
+
+    ? 4.2 * 4
+    ERROR: Type error in application
+    *** expression     : 4.2 * 4
+    *** term           : 4.2
+    *** type           : Float
+    *** does not match : Int
+    ?
+
+Further problems occur when we try to define functions intended  to  be
+used with arbitrary instances  of  Num  rather  than  specific  numeric
+types.  As an example of this, the  standard  prelude  function  "sum",
+roughly equivalent to:
+
+    sum []     = 0
+    sum (x:xs) = x + sum xs
+
+has type [Int] -> Int,  rather than the  more general Num a => [a] -> a
+which could be used to find the sum of a list of numeric values in  any
+instance of Num.  The problem in this particular case is caused by the
+integer constant 0 in the first line of the definition.  Replacing this
+with the expression fromInteger 0 leads to the following definition for
+a generic sum function of the required type:
+
+    genericSum       :: Num a => [a] -> a
+    genericSum []     = fromInteger 0
+    genericSum (x:xs) = x + genericSum xs
+
+For example:
+
+    ? genericSum [1,2,3]
+    6
+    (10 reductions, 18 cells)
+    ? genericSum [1.0,2.0,3.0]
+    6.0
+    (11 reductions, 27 cells)
+    ?
+
+The fromInteger function  can  also  be  used  to  solve  the  previous
+problem:
+
+    ? 4.2 * fromInteger 4
+    16.8
+    (3 reductions, 13 cells)
+    ?
+
+In Haskell, any integer  constant  k  appearing  in  an  expression  is
+treated as if the programmer had actually written  "fromInteger  k"  so
+that  both  of  the  preceding  problems  are  automatically  resolved.
+
+
+                                      85
+
+
+
+
+Introduction to Gofer             14.4.4 Overloading and numeric values
+
+
+Unfortunately, this  also  creates  some  new  problems;  applying  the
+function fromInteger to each integer constant in the previous  examples
+causes problems with unresolved overloading:
+
+    ? fromInteger 2 + fromInteger 3
+    ERROR: Unresolved overloading
+    *** type        : Num a => a
+    *** translation : \d143 -> (+) d143 (fromInteger d143 2)
+                                        (fromInteger d143 3)
+    ?
+
+Once again, Haskell provides a solution to this problem in the form  of
+a `default mechanism' for  numeric  types  which,  once  the  following
+problem has been detected, will typically `default'  the  unknown  type
+represented by the type variable a above to be Int, so that the  result
+is actually equivalent to the following:
+
+    ? (fromInteger 2 + fromInteger 3) :: Int
+    5
+    (4 reductions, 8 cells)
+    ?
+
+There are a number of problems with the Haskell default mechanism; both
+theoretical and practical.  In addition, if a default mechanism of some
+form is used then it should also be capable of dealing  with  arbitrary
+user-defined type classes, rather than  a  small  group  of  `standard'
+classes, in order to provide solutions to  the  unresolved  overloading
+problems described in  previous  sections.   Therefore,  for  the  time
+being, Gofer does  not  support  any  form  of  default  mechanism  and
+overloaded numeric constants can only be obtained by  explicit  use  of
+the fromInteger function.
+
+
+14.4.5 Constants in dictionaries
+--------------------------------
+The Gofer system constructs new dictionaries as necessary, and  deletes
+them when they are no longer required.  At any one time,  there  is  at
+most one dictionary for each instance of a class.   Coupled  with  lazy
+evaluation, this has a number of advantages for classes in which member
+functions are defined by variable declarations as in section 9.10.   As
+an example, consider the class Finite defined by:
+
+    class Finite a  where  members :: [a]
+
+The only member in this class is a list enumerating the elements of the
+type.  For example:
+
+    instance Finite Bool  where  members = [False, True]
+ 
+    instance (Finite a, Finite b) => Finite (a,b) where
+        members = [ (x,y) | x<-members, y<-members ]
+
+In order to overcome any problems with unresolved overloading, explicit
+type signatures are often needed to resolve overloading:
+
+    ? members :: [Bool]
+
+
+                                      86
+
+
+
+
+Introduction to Gofer                  14.4.5 Constants in dictionaries
+
+
+    [False, True]
+    (6 reductions, 26 cells)
+    ? length (members :: [((Bool,Bool),(Bool,Bool))])
+    16
+    (103 reductions, 195 cells)
+    ?
+
+In some cases, the required overloading is implicit  from  the  context
+and no additional type information is required,  as  in  the  following
+example:
+
+    ? [ x && y | (x,y) <- members ]
+    [False, False, False, True]
+    (29 reductions, 90 cells)
+    ?
+
+We can also use the technique of passing a `dummy' parameter to resolve
+overloading problems in a function definition:
+
+    size  :: Finite a => a -> Int
+    size x = length (members `asTypeOf` [x])
+
+which calculates the number of elements of  a  finite  type,  given  an
+arbitrary element of that type:
+
+    ? size (True,False)
+    4
+    (31 reductions, 60 cells)
+    ?
+
+Now consider the expression "size (True,False)  +  size  (True,False)".
+At first glance, we expect  this  to  repeat  the  calculation  in  the
+previous example two  times,  requiring  approximately  twice  as  many
+reductions and cells as before.  However,  before  this  expression  is
+evaluated, Gofer constructs a dictionary for Finite  (Bool,Bool).   The
+evaluation of the first summand forces Gofer to evaluate the value  for
+"members" in this dictionary.  Since precisely the same  dictionary  is
+used to calculate the value of the second summand,  the  evaluation  of
+"members" is not repeated and the complete  calculation  actually  uses
+rather fewer reductions and cells:
+
+    ? size (True,False) + size (True,False)
+    8
+    (51 reductions, 90 cells)
+    ?
+
+On the other hand, repeating the original calculation gives exactly the
+same number of reductions and cells as before, because the dictionaries
+constructed at the beginning of each calculation are not  retained  for
+use in subsequent calculations.
+
+We can force Gofer to construct specific  dictionaries  whilst  reading
+from a file of definitions, so that they are not deleted at the end  of
+each calculation, using an explicitly typed  variable  definition  such
+as:
+
+
+
+                                      87
+
+
+
+
+Introduction to Gofer                  14.4.5 Constants in dictionaries
+
+
+    boolBoolMembers = members :: [(Bool,Bool)]
+
+This forces Gofer to construct the dictionary Finite (Bool,Bool)  when
+the file of definitions is loaded and prevents it from being deleted at
+the end of each calculation.  Having  loaded  a  file  containing  this
+definition, the  first two  attempts  to  evaluate  "size (True,False)"
+give:
+
+    ? size (True,False)
+    4
+    (31 reductions, 60 cells)
+    ? size (True,False)
+    4
+    (20 reductions, 32 cells)
+    ?
+
+
+14.4.6 The monomorphism restriction
+-----------------------------------
+This section  describes  a  technique  used  to  limit  the  amount  of
+overloading used in the definition of certain values to avoid a  number
+of technical problems.  This particular topic has attracted quite a lot
+of attention within the Haskell community where  it  is  affectionately
+known as the `dreaded monomorphism restriction'.  Although the  initial
+formulation of the rule was rather cumbersome and limiting, the current
+version used in both  Gofer  and  Haskell  is  unlikely  to  cause  any
+problems in practice.  In  addition,  many  of  the  examples  used  to
+motivate the need for the monomorphism restriction in Haskell occur  as
+a result  of  the  use  of  implicitly  overloaded  numeric  constants,
+described in section 14.4.4, and hence do not occur in Gofer.
+
+The monomorphism restriction takes its name from the way  in  which  it
+limits the amount of polymorphism that can be used in particular  kinds
+of declaration.  Although we touch  on  this  point  in  the  following
+discussion, the description given here uses  an  equivalent,  but  less
+abstract approach, based on observations about  the  implementation  of
+overloaded functions.
+
+Basic ideas:
+------------
+As we have seen,  the  implementation  of  overloading  used  by  Gofer
+depends on being able to add extra arguments to a  function  definition
+to supply the required dictionary parameters.   For  example,  given  a
+function definition such as:
+
+    isElement x []     =  False
+    isElement x (y:ys) =  x==y || isElement x ys
+
+we first add a dictionary parameter for the use of the overloaded  (==)
+operator on the right hand side, obtaining:
+
+    isElement x []     = False
+    isElement x (y:ys) = (==) d x y || isElement x ys
+
+Finally, we have to add the variable d  as  a  new  parameter  for  the
+function isElement, on both the  left  and  right  hand  sides  of  the
+
+
+                                      88
+
+
+
+
+Introduction to Gofer               14.4.6 The monomorphism restriction
+
+
+definition:
+
+    isElement d x []     = False
+    isElement d x (y:ys) = (==) d x y || isElement d x ys
+
+The monomorphism restriction imposes conditions which prevent this last
+step from being used for certain kinds of value binding.
+
+Declaration groups:
+-------------------
+Before giving the full details, it  is  worth  pointing  out  that,  in
+general,  the  monomorphism  restriction  affects   groups   of   value
+declarations rather than just individual  definitions.   To  illustrate
+this point, consider the function definitions:
+
+    f x y  =  x==y || g x y
+    g x y  =  not (f x y)
+
+Adding an appropriate dictionary parameter for the (==) operator gives:
+
+    f x y  =  (==) d x y || g x y
+    g x y  =  not (f x y)
+
+The next stage is to  make  this  dictionary  variable  into  an  extra
+parameter to the function f wherever it appears, giving:
+
+    f d x y  =  (==) d x y || g x y
+    g x y    =  not (f d x y)
+
+But now the right hand side  of  the  second  definition  mentions  the
+dictionary variable d  which  must  therefore  be  added  as  an  extra
+parameter to g:
+
+    f d x y  =  (==) d x y || g d x y
+    g d x y  =  not (f d x y)
+
+In other words, if dictionary parameters are added  to  any  particular
+function  definition,  then  each  use  of  that  function  in  another
+definition will also be require  extra  dictionary  parameters.   As  a
+result, the monomorphism restriction has to be applied to the  smallest
+groups of  declarations  such  that  any  pair  of  mutually  recursive
+bindings are in the same group.
+
+As the example above shows, if one (or more) of the bindings in a given
+declaration group is affected by the monomorphism restriction  so  that
+the appropriate dictionary parameters cannot be added as parameters for
+that definition, then the same condition must also be imposed on all of
+the other bindings in the group.  [Adding the extra parameter to  f  in
+the example forces us to  add  an  extra  parameter  for  g;  if  extra
+parameters were not permitted for g then they could not be added to f.]
+
+
+
+
+
+
+
+
+                                      89
+
+
+
+
+Introduction to Gofer               14.4.6 The monomorphism restriction
+
+
+Restricted bindings:
+--------------------
+There are three main reasons for avoiding adding dictionary  parameters
+to a particular value binding:
+
+  o  Dictionary parameters unnecessary.  If the dictionary  values  are
+     completely determined by context then it is not necessary to  pass
+     the appropriate values as dictionary parameters.  For example, the
+     function definition:
+
+         f x  =   x == 0  ||  x == 2
+
+     can be translated as:
+
+         f x  =   (==) {dict} x 0  ||  (==) {dict} x 2
+
+     where, in both cases, the symbol {dict} denotes the dictionary for
+     Eq Int.  As a further optimisation, once the dictionary  is  fully
+     determined, this can be simplified to:
+
+         f x  =   primEqInt x 0 || primEqInt x 2
+
+  o  Dictionary parameters cannot be added in a pattern  binding.   One
+     potential solution to this problem would be to replace the pattern
+     binding by an equivalent set of function bindings.   In  practice,
+     we do not use this technique because it typically causes ambiguity
+     problems, as illustrated by the pattern binding:
+
+         (plus,times) = ((+), (*))
+
+     Translating this into a group of function bindings gives:
+
+         newVariable  = ((+), (*))
+         plus         = fst newVariable     -- fst (x,_) = x
+         times        = snd newVariable     -- snd (_,y) = y
+
+     The type of newVariable is (Num a, Num b) => (a->a->a, b->b->b) so
+     that  the  correct  translation  of  these  bindings   using   two
+     dictionary variables gives:
+
+         newVariable da db = ((+) da, (*) db)
+         plus da db        = fst (newVariable da db)
+         times da db       = snd (newVariable da db)
+ 
+     and hence the correct types for plus and times are:
+ 
+         plus  :: (Num a, Num b) => a -> a -> a
+         times :: (Num a, Num b) => b -> b -> b
+     
+     both of which are ambiguous.
+
+  o  Adding dictionary parameters may translate a  variable  definition
+     into  a  function  definition,  loosing  the  benefits  of  shared
+     evaluation.  As an  example,  consider  the  following  definition
+     using the function "size" and the class Finite  described  in  the
+     previous section:
+
+
+                                      90
+
+
+
+
+Introduction to Gofer               14.4.6 The monomorphism restriction
+
+
+         twiceSize x = n + n  where n = size x
+
+     Since the variable n is defined using a local definition, we would
+     not expect to have to evaluate size x more than once to  determine
+     the  value  of  twiceSize.   However,  adding   extra   dictionary
+     parameters without restriction gives:
+
+         twiceSize d x  = n d + n d  where  n d = size d x
+
+     Now that n has been replaced by a function, the evaluation will be
+     repeated, once for each occurrence of the expression  "n  d".   In
+     order to avoid this kind of problem, the monomorphism  restriction
+     does not usually allow extra parameters to be added to a  variable
+     definition.  Thus the original definition above will be translated
+     to give:
+
+         twiceSize d x  =  n + n  where n = size d x
+
+     Note that the same rule is applied to variable definitions at  the
+     top-level of a file of definitions, resulting in an error  if  any
+     dictionary parameters are required for the right hand side of  the
+     definition.  As an example of this:
+
+         twiceMembers = members ++ members
+
+     which produces an error message of the form:
+
+         ERROR "ex" (line 157): Unresolved top-level overloading
+         *** Binding             : twiceMembers
+         *** Inferred type       : [_7]
+         *** Outstanding context : Finite _7
+         ?
+
+     [COMMENT: A type expression of the form _n (such  as  _7  in  this
+     particular example) represents a  fixed  (i.e.  monomorphic)  type
+     variable.]
+
+     In  the  case  of  a  variable   declaration,   the   monomorphism
+     restriction can be overcome by giving an explicit  type  signature
+     including an appropriate context, to indicate  that  the  variable
+     defined is intended to be used as an overloaded  value.   In  this
+     case, we need only include the declaration:
+
+         twiceMembers :: Finite a => [a]
+
+     in the file containing the definition for twiceMembers to suppress
+     the previous error message and allow the function to be used as  a
+     fully overloaded variable.
+
+     Note that the monomorphism restriction interferes with the use  of
+     polymorphism.  For example, the definition:
+
+         aNumber = length (twiceMembers::[Bool]) +
+                   length (twiceMembers::[(Bool,Bool)])
+                   where twiceMembers = members ++ members
+
+
+
+                                      91
+
+
+
+
+Introduction to Gofer               14.4.6 The monomorphism restriction
+
+
+     will not be accepted because the monomorphism  restriction  forces
+     the local definition of  "twiceMembers"  to  be  restricted  to  a
+     single overloading (the dictionary parameter supplied to each  use
+     of members must be constant throughout the local definition):
+
+         ERROR "ex" (line 12): Type error in type signature expression
+         *** term           : twiceMembers
+         *** type           : [(Bool,Bool)]
+         *** does not match : [Bool]
+         ?
+
+     Once again, this problem can  be  fixed  using  an  explicit  type
+     declaration:
+
+         aNumber = length (twiceMembers::[Bool]) +
+                   length (twiceMembers::[(Bool,Bool)])  
+                   where twiceMembers :: Finite a => [a]
+                         twiceMembers  = members ++ members
+
+
+Formal definition:
+------------------
+The  examples  above  describe  the  motivation  for  the  monomorphism
+restriction, captured by the following definition:
+
+Dictionary variables will not  be  used  as  extra  parameters  in  the
+definition of a value in a given declaration group G if:
+
+   either:  G includes a pattern binding
+
+       or:  G includes a variable declaration, but does not include  an
+            explicit type signature for any of  the  variables  in  the
+            group.
+
+If neither of these conditions hold, then equivalent sets of dictionary
+parameters will be added to each declaration in the group.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      92
+
+

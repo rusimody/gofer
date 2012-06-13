@@ -1,0 +1,189 @@
+Arunachala Siva Arunachala Ramana
+
+This script demonstrates how to write a simple shift-reduce parser.
+In the interests of simplicity, we handle expressions with single-digit
+operands and operators from the set {^, *, +, <, &}
+
+The parser will build trees of the following type:
+
+> ctype Exp where
+>     S : Int -> Exp
+>     Pow, Mul, Add, Less, And : Exp -> Exp -> Exp
+
+The precedences as we may expect are as follows:
+
+> opPrecAl = [('^', 5), ('*', 4), ('+', 3), ('<', 2), ('&', 1)]
+
+We must also handle associativities of operators. Operators may be left,
+right or non-associative. The following enumerated type captures this:
+
+> ctype Associativity where
+>     L, R, N : Associativity
+
+The following are needed by assoc
+
+> instance Eq.Associativity where
+>    x == y = gord.x == gord.y
+> instance Text.Associativity  -- gofer supplies the details
+
+The operators have the following associativities:
+
+> opAssocAl = [('^', R), ('*', L), ('+', L), ('<', N), ('&', L)]
+
+Given a character (that better be an operator), the following functions
+get its precedence and associativity:
+
+> precedence : Char -> Int
+> associativity : Char -> Associativity
+
+> precedence = assoc.opPrecAl
+> associativity = assoc.opAssocAl
+
+
+Now we come to shift-reduce parsing.
+
+4 basic actions may be distinguished 
+- shifting an operator into the stack,
+- reducing the top two elements of the output by the top of the stack,
+- shifting an operand onto the output (we'll call this SOp - Shift Operand)
+- error - an ill-formed expression was detected
+Since this is central to our enterprise we capture it into a type
+
+> ctype Action where
+>     Shift, Reduce, Error, Sop : Action
+
+ instance Eq.Action where
+    x == y = gord.x == gord.y
+
+----------------------------------------------------------------
+
+Now, for the moment, let us just consider expressions involving only 1 kind
+of operator eg. "1^2^3" or "1+2+3" or "1<2<3"
+
+And consider further the situation when 1 and 2 have been output and
+one operator is on the stack and the next one is seen. ie we have
+
+ input  = "^3"
+ stk    = ['^']
+ output = [S.1, S.2]
+
+because the '^' is right-associative, the '^' in the input takes precedence
+the '^' in the stack and therefore it gets pushed. ie we must shift
+
+However if we look at "1+2+3" in a similar configuration, we see that a
+reduction is called for.
+
+Finally, when the second '<' in "1<2<3" is seen it is a syntax-error.
+
+We can therefore capture our discoveries in the association-list:
+
+> assocActionAl = [(R, Shift), (L, Reduce), (N, Error)]
+
+Incidentally, why did not Sop figure?
+
+Now let io be the input operator, so be the stack-top operator, and
+continuing with our temporary assumption that the expressions involve
+only one kind of operator, we see that precedences of io and so must be
+same. Even the associativities must be the same.  The precedences in fact
+don't count. It is the associativities alone that (because of our temporary
+assumption) determine the parsing actions.  We capture this information in
+
+
+> sameCmp : Char -> Char -> Action
+> sameCmp.io.so = assoc.assocActionAl.ai
+>        where ai = associativity.io   -- same as associativity.so
+
+----------------------------------------------------------------
+Now we are in a position to generalise to expressions with an arbitrary mix
+of operators. cmp takes an input operator, and the stack-top operator and
+returns the appropriate action.
+
+> cmp : Char -> Char -> Action
+> cmp.io.so
+>    |pi >  ps              = Shift
+>    |pi <  ps              = Reduce
+>    |pi == ps && ai /= as  = Error
+>    |otherwise             = sameCmp.io.so
+>
+>       where pi = precedence.io
+>             ps = precedence.so
+>             ai = associativity.io
+>             as = associativity.so
+
+----------------------------------------------------------------
+We now come to shift-reduce parsing proper.
+We observe that the computation proceeds in the context of a state
+consisting of three components: an input, a stack, and an output.
+
+> type ParseState = ([Char], [Char], [Exp])
+
+The four parser actions transform one such state into another
+
+> type STrans = ParseState -> ParseState  -- state-transformer
+
+The four actions are
+
+> acSop, acShift, acReduce, acError : STrans
+
+When an operand like '3' is output it must be made into the integer 3 and
+enclosed by the leaf-constructor for expression -- S
+Note: op better be an operand
+
+> acSop.(op::input, stk, out) = (input, stk, f.op :: out)
+>        where f.x  = S.(ord.x - ord.'0')
+
+Shift is simple, it moves the top of the input into the stack.
+Note: op better be an operator
+
+> acShift.(op::input, stk, out) = (input, op::stk, out)
+
+Before we can write reduce we must observe that a '+' in the input becomes
+a Add in the output and so on.
+
+> opCnstrAl = [('^', Pow), ('*', Mul), ('+', Add), ('<', Less), ('&', And)]
+
+which we use in the reduce action as follows:
+
+> acReduce.(input, op::stk, r::l::out) = (input, stk, rOpl :: out)
+>       where rOpl  = assoc.opCnstrAl.op.l.r
+
+> acError.s@(input, stk, output) =
+>     error.("acError " ++ (show.s))
+> instance Text.Exp
+
+for the show above we need
+
+> instance (Text.a, Text.b, Text.c) => Text.(a,b,c)
+
+
+A rough and simple distinction between operator and operand
+
+> isOperator.c = c `elem` "^*+<&"
+> isOperand.c  = not.(isOperator.c)
+
+Finally the parser!
+
+> parse : String -> Exp
+> parse.input = p.initState
+>    where initState = (input, [], [])
+
+> p.s = case s of
+>   ([], [], [result])      -> result
+>   ([], optor::stk, out)   -> p.(acReduce.s)
+>   (i::input, [], out)
+>      | isOperand.i        -> p.(acSop.s)
+>      | otherwise          -> p.(acShift.s)
+>   (i::input, o::stk, out) 
+>      | isOperand.i        -> p.(acSop.s)
+>      | otherwise          -> case cmp.i.o of
+>                                     Shift  -> p.(acShift.s)
+>                                     Reduce -> p.(acReduce.s)
+>                                     Error  -> p.(acError.s)
+>                                     Sop    -> error."Should not happen"
+
+> assoc.[].x = error.("assoc: Not found " ++ show.x)
+> assoc.((x,y)::al).x'
+>   | x == x'   = y
+>   | otherwise = assoc.al.x'
+
+> primitive gord "primCharToInt" : a -> Int

@@ -1,0 +1,264 @@
+
+
+Introduction to Gofer         APPENDIX C: RELATIONSHIP WITH HASKELL 1.1
+
+
+APPENDIX C: RELATIONSHIP WITH HASKELL 1.1
+
+The language supported by Gofer is both syntactically and  semantically
+similar to that of  the  functional  programming  language  Haskell  as
+defined in the report  for  Haskell  version  1.1  [5].   This  section
+details the differences between the two languages, outlined briefly  in
+section 2.
+
+Haskell features not included in Gofer:
+---------------------------------------
+  o  Modules
+
+  o  Arrays
+
+  o  Derived instances for standard classes -- the ability to construct
+     instances of particular classes automatically.
+
+  o  Default mechanism for eliminating unresolved overloading involving
+     numeric and standard classes.   Since  Gofer  is  an  experimental
+     system, it can be  used  with  a  range  of  completely  different
+     prelude files; there is no concept of `standard classes'.
+
+  o  Overloaded numeric constants.  In  the  absence  of  a  defaulting
+     mechanism  as  mentioned  in  the  previous  item,  problems  with
+     unresolved overloading make implicitly typed programming involving
+     numeric constants impractical in an interpreter based system.
+
+  o  Full range of numeric types  and  classes.   Gofer  has  only  two
+     primitive numeric types Int and Float (the second of which is  not
+     supported in the PC version).  Although is would  be  possible  to
+     modify the standard prelude so that  Gofer  uses  the  same  class
+     hierarchy as Haskell, this is unnecessarily sophisticated for  the
+     intended uses of Gofer.
+
+  o  Datatype definitions in Haskell may involve class constraints such
+     as:
+
+              data  Ord a => Set a = Set [a]
+
+     It is  not  clear  how  such  constraints  should  be  interpreted
+     (particularly in the light of the  extended  form  of  constraints
+     used by Gofer) in such a way to  make  them useful whilst avoiding
+     unwanted ambiguity problems.
+
+
+Gofer features not supported in Haskell:
+----------------------------------------
+  o  Type classes may have multiple parameters.
+
+  o  Predicates  in  type  expressions  may  involve   arbitrary   type
+     expressions, not just type variables as used in Haskell.
+
+  o  Instances of type classes can be defined at  non-overlapping,  but
+     otherwise arbitrary types, as described in section 14.2.5.
+
+  o  List comprehensions  may include  local definitions,  specified by
+
+
+                                      113
+
+
+
+
+Introduction to Gofer         APPENDIX C: RELATIONSHIP WITH HASKELL 1.1
+
+
+     qualifiers of the form <pat>=<expr> as described in section 10.2.
+
+  o  No restrictions are placed on the form of predicates  that  appear
+     in the context for a class or instance declaration.   This  has  a
+     number  of  consequences,  including  the  possibility  of   using
+     (mutually)  recursive  groups  of  dictionaries,  but  means  that
+     decidability of the predicate entailment  relation  may  be  lost.
+     This is not a great problem  in  practice,  since  all  dictionary
+     construction  is  performed  before  evaluation   and   supposedly
+     non-terminating dictionary constructions will actually generate an
+     error due to the limited amount of  space  available  for  holding
+     dictionaries (see section 14.4.2).
+
+
+Other differences:
+------------------
+  o  Whilst superficially similar the approach to type classes in Gofer
+     is quite different from that used in Haskell.  In particular,  the
+     approach used in Gofer ensures that all necessary dictionaries are
+     constructed before the evaluation of an expression begins,  rather
+     than being built (possibly several times) during the evaluation as
+     is the case with Haskell.  See section 14 and reference  [11]  for
+     further details.
+
+  o  Input/Output facilities - Gofer supports  only  a  subset  of  the
+     requests available in Haskell.  In principle, it should not be too
+     difficult to add most of the remaining forms of request (with  the
+     exception of those associated with binary files)  to  Gofer.   The
+     principal motivation for including the I/O facilities in Gofer was
+     to  make  it  possible  to  experiment  with  simple   interactive
+     programs.
+
+  o  In Gofer, unary minus has greater  precedence  than  any  operator
+     symbol, but lower than that of function application.  In  Haskell,
+     the precedence of unary minus is the same as  that  of  the  infix
+     (subtraction) operator of the same name.
+
+  o  In Haskell, the character `-'  can  only  be  used  as  the  first
+     character of an operator symbol.  In  Gofer,  this  character  may
+     appear  in  any  position  in  an  operator  (except  for  symbols
+     beginning with "--", which indicates the start of a comment).  The
+     only problems that I am aware  of  with  this  is  that  a  lambda
+     expression such as "\-2->2" will be parsed as such  by  a  Haskell
+     system, but cause a syntax error in Gofer.  This  form  of  lambda
+     expression is sufficiently unusual that I do not believe this will
+     cause any problems in practice; in any case, the  parsing  problem
+     can be solved by inserting a space: "\ -2->2".
+
+  o  Pattern bindings are not currently permitted in either instance or
+     class declarations.  This restriction has  been  made  simply  for
+     ease of implementation, is not an inherent problem with  the  type
+     class system and is likely to be  relaxed  in  later  versions  of
+     Gofer if appropriate.  I have yet to see any examples in which the
+     lack of pattern bindings in class and instance declarations causes
+     any kind of deficiency.
+
+
+
+                                      114
+
+
+
+
+Introduction to Gofer         APPENDIX C: RELATIONSHIP WITH HASKELL 1.1
+
+
+  o  Qualified  type  signatures  are  not  permitted  for  the  member
+     functions  in  Gofer  class  declarations.    Once   again,   this
+     restriction was made for ease of implementation  rather  than  any
+     pressing technical issues.  It is  likely  that  this  restriction
+     will be relaxed in future versions of Gofer,  although  I  am  not
+     convinced that proper use can be made  of  such  member  functions
+     without some form of nested instance declarations (yuk!).
+
+  o  The definition of the class Text given  in  the  standard  prelude
+     does not include the Haskell functions for reading/parsing  values
+     from strings; the only reason for omitting these functions was  to
+     try to avoid unnecessary complexity in the standard prelude.   The
+     standard prelude  can  be  modified  to  include  the  appropriate
+     additional definitions if these are required.
+
+
+Known problems in Gofer:
+------------------------
+  o  The null escape sequence "\&" is not generated  in  the  printable
+     representations of strings produced by both the primitive function
+     primPrint (used to implement the show' function) and  the  version
+     of show defined in the standard prelude.  This means that  certain
+     strings values are  not printed correctly  e.g.  show' "\245\&123"
+     produces the string "\245123".  This is unlikely to cause too many
+     problems in practice.
+
+  o  Unification of a type variable a with a  type  expression  of  the
+     form T a where T is  a  synonym  name  whose  expansion  does  not
+     involve a will fail.   It  is  not  entirely  clear  whether  this
+     behaviour is correct or not.
+
+  o  Formfeeds '\f' and vertical tabs '\v' are  not  treated  as  valid
+     whitespace characters in the way suggested by the Haskell  report.
+
+  o  Inability to recover from program stack  overlow  errors  in  some
+     situations.  This problem only affects the  PC  implementation  of
+     Gofer.
+
+  o  Implementation of ReadFile may lose referential transparency;  the
+     response to a particular ReadFile request may  be  affected  by  a
+     later WriteFile or AppendFile request for the same  file.   Whilst
+     this problem can be solved for UNIX based implementations, I  have
+     not yet found a portable solution suitable for all of the  systems
+     on which Gofer can be used.
+
+
+Areas for possible future improvement:
+--------------------------------------
+  o  Relaxing the restriction on type synonyms in predicates.
+
+  o  General  purpose  automatic  default  mechanism  for   eliminating
+     certain forms of unresolved overloading.
+
+  o  Improved checking and use of superclass and  instance  constraints
+     during static analysis and type checking.
+
+
+
+                                      115
+
+
+
+
+Introduction to Gofer         APPENDIX C: RELATIONSHIP WITH HASKELL 1.1
+
+
+  o  Simple facility to force dictionary construction at load-time.
+
+  o  Provision for shell escapes :! etc within the Gofer interpreter.
+
+  o  Debugging  facilities,  including  breakpoints  and  tracing  from
+     within interpreter.
+
+  o  Separate interpreter and compiler programs for creating standalone
+     applications using Gofer.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      116
+
+

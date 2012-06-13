@@ -1,0 +1,132 @@
+
+
+Introduction to Gofer          APPENDIX D: USING GOFER WITH BIRD+WADLER
+
+
+APPENDIX D: USING GOFER WITH BIRD+WADLER
+
+Bird and Wadler's textbook  [1]  gives  an  excellent  introduction  to
+functional programming, providing an insight into both basic techniques
+and matters of programming style as well as describing  the  underlying
+mathematics and its use for program development and  derivation.   Most
+of the programs in that book can be used with Gofer although there  are
+a number of differences between the two notations.  Fortunately, it  is
+not difficult to  translate  from  one  notation  to  the  other.   The
+following points are particularly useful for this:
+
+  o  Type constructors in Gofer  begin with capital letters (e.g. Bool,
+     Char etc..) where lower case is used in  [1]  (e.g.   bool,  char,
+     etc..).  Note that Gofer has no general numeric type "num" as used
+     in [1];  Use  either  Int,  Float,  or  overloading  in  Gofer  as
+     appropriate.
+
+  o  Datatype definitions in [1] are written in the form lhs::=constrs.
+     The equivalent definition in Gofer is: data lhs = constrs.
+
+     Similarly, a type synonym definition in [1] of the form lhs == rhs
+     can be written in Gofer as: type lhs = rhs.
+
+  o  The differences between the syntax used for  guarded equations  in
+     Gofer compared with the notation used in  [1]  have  already  been
+     discussed in section 9.2.  For example:
+
+     Using the notation of [1]:       Using Gofer:
+
+     filter p (x:xs)                  filter p (x:xs)
+       = x : filter p xs, if p x         | p x       = x : filter p xs
+       = filter p xs,     otherwise      | otherwise = filter p xs
+
+  o  In Gofer,  list comprehension qualifiers  are separated by  commas
+     rather than semicolons as used in [1].
+
+  o  A number of the  function names and types in the  standard prelude
+     are different:
+
+             [1]         Gofer            [1]         Gofer
+             ---         -----            ---         ----
+             (#)         length           takewhile   takeWhile
+             (~)         not              dropwhile   dropWhile
+             (/\)        (&&)             zipwith     zipWith
+             (\/)        (||)             swap        flip
+             (!)         (!!)             in          elem
+             (--)        (\\)             scan        scanl
+             hd          head             some        any
+             tl          tail             listmin     minimum
+             decode      chr              listmax     maximum
+             code        ord
+
+     See appendix B for a complete list of standard functions in Gofer.
+
+     The version of foldl  using  "strict"  which  appears  in  [1]  is
+     available in Gofer as the function "foldl'".
+
+
+                                      117
+
+
+
+
+Introduction to Gofer          APPENDIX D: USING GOFER WITH BIRD+WADLER
+
+
+     The role of "zip" and "zipwith" in [1] is filled by the "zip"  and
+     "zipWith" families of functions in Gofer.  An  expression  of  the
+     form "zip (xs,ys)" in [1] is equivalent to "zip xs  ys"  in  Gofer
+     etc...
+
+  o  Gofer does not enforce the condition assumed in [1] that the  left
+     hand sides of each of the equations defining a  function  must  be
+     disjoint.
+
+  o  The equality operator in Gofer is written as  "=="  and the single
+     equality character "=" is a reserved symbol used to separate  left
+     and right hand sides of equations.  Many  C  programmers  will  be
+     familiar with this kind of notation (together with  the  kinds  of
+     problems it can create!).
+
+  o  Some of the  identifiers used in  [1] are reserved words in Gofer.
+     Examples that are particularly likely to occur  include  "in"  and
+     "then".
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      118
+
+

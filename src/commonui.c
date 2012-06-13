@@ -9,6 +9,15 @@
 /* --------------------------------------------------------------------------
  * Local function prototypes:
  * ------------------------------------------------------------------------*/
+/*rpm*/
+/* Stuff for gofer as an inferior process typically emacs */
+static Void local startIPCmd  Args((String cmdName));
+static Void local endIPCmd    Args((Void));
+static Void local banner      Args((Void));
+static Void local bannerContents Args((Void));
+static Void local infWhatFiles Args((Void));
+static Bool infProc = TRUE;
+static char *infCh   = "";
 
 static Void   local toggleSet	      Args((Char,Bool));
 static Void   local togglesIn	      Args((Bool));
@@ -123,6 +132,12 @@ String s; {
 
     while (*++s)
 	switch (*s) {
+	      /*RPM*/
+	    case 'S' :
+	      newSyntax = state;
+	      everybody(CHANGE_SYNTAX);
+	      return;
+
 	    case 'n' : if (s[1]) {
 			   if (outputFile) free(outputFile);
 			   outputFile = strCopy(s+1);
@@ -217,7 +232,7 @@ String fname;			       /* name of script file		   */
 Long   len; {			       /* length of script file 	   */
     scriptFile = fname;
 
-    printf("Reading script file \"%s\":\n",fname);
+    /*printf("Reading script file\n\"%s\":\n",fname); rpm for clean emacs*/
     setLastEdit(fname,0);
 
     parseScript(fname,len);	       /* process script file		   */
@@ -271,7 +286,7 @@ Target t; {
 	maxPos  = getTerminalWidth() - 1;
 	printf("%s",what);
     }
-    else
+    else if (!infProc)
 	for (charCount=0; *what; charCount++)
 	    putchar(*what++);
     fflush(stdout);
@@ -302,7 +317,7 @@ Void done() {			       /* Goal has now been achieved	   */
 	putchar('\n');
 	aiming = FALSE;
     }
-    else
+    else if (!infProc)
 	for (; charCount>0; charCount--) {
 	    putchar('\b');
 	    putchar(' ');

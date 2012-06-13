@@ -1,0 +1,245 @@
+------------------------------------------------------------------------------
+This document contains a brief introduction to the use of the current
+experimental features for imperative programming in Gofer.  These
+features can only be used if the Gofer interpreter is compiled with
+the LAMBDAVAR symbol #defined, for example, by adding a -DLAMBDAVAR
+to the CFLAGS line in the Makefile.
+
+These notes were written by Martin Odersky ... I have made a couple
+of changes to reflect the current syntax used in the Gofer version;
+I believe that this document correctly reflects the current set of
+features provided by Gofer.
+
+I should also emphasise that, as experimental features, these
+extensions are subject to change in later releases.  For example,
+the Glasgow Haskell system uses the type constructor IO where we
+have used Proc here.  The first of these names seems to be gaining
+a consensus and Gofer may well be modified to reflect this in some
+future release.
+
+------------------------------------------------------------------------------
+
+An introduction to Gofer's imperative constructs
+================================================
+
+
+This short paper describes a library for imperative programming.
+The library consists of functions that operate on an two abstract types
+
+	Var a		and 		Proc a
+
+"Var a" is the type of mutable variables that contain terms of type
+"a".  "Proc a" is the type of procedures that return a result of type
+"a".  Conceptually, a procedure is a function from states to pairs of
+states and results.
+
+	Proc a	 ~~    State -> (State, a)
+
+A state can be thought of as a function that maps a mutable variable
+to its "current" value. States cannot be typed in Gofer, and they need
+not be, since for the purposes of type checking "Proc a" is an opaque
+type. In fact, the implementation of procedures does not use the above
+type synonym for "Proc a". For efficiency reasons it uses a global
+state that is updated destructively.
+
+Any expression with type  Proc ()  will be executed as an imperative
+program by the Gofer interpreter.
+
+The library contains the following functions.
+
+1. Mutable variables are created by the function
+
+> 	newvar :: Proc (Var a).
+
+Executing the term
+
+	newvar 
+
+has the effect that a fresh, uninitialized variable is allocated and returned
+as a result.
+
+
+2. Mutable variables are read and written using the functions:
+
+>	(=:) :: a -> Var a -> Proc ()
+>
+>	deref  :: Var a -> Proc a
+
+Executing the term 
+
+	A =: V
+
+has the effect of assigning A to variable V and returning the unit
+value ().  Note that A is not evaluated prior to the assignment.
+
+Executing the term 
+
+	deref V
+
+has no effects on the state and returns the term that was last
+assigned to V.
+
+
+3. Another primitive state transformer is
+
+>	result :: a -> Proc a
+
+Executing the term 
+
+	result A
+
+has no effects on the state and returns A as result.
+
+
+4. Procedures are composed using the functions:
+
+>	(>>)  :: Proc () -> Proc b -> Proc b
+>	(>>=) :: Proc a -> (a -> Proc b) -> Proc b
+>	(?)   :: Var a -> (a -> Proc b) -> Proc b
+
+(>>) is sequential composition.  Executing the term
+
+	P >> Q
+
+first executes procedure P in the current state S, giving a new state
+S'. It then executes Q in the new state S'.
+
+(>>=) is the "bind" operator of the state monad.  Executing the term
+
+	P >>= Q
+
+first executes procedure P in the current state S, giving a new
+state S' and a returned result R. It then executes (Q R) in the
+new state S'. 
+
+(?) is a combination of (>>=) and (deref). Executing the term
+
+	V ? Q
+
+passes to procedure Q the term that is currently assigned to variable V.
+
+
+Note that
+
+	P >> Q	 =   P >>= \() -> Q.
+	V ? Q    =   deref V >>= Q
+
+Note also that (result) and (>>=) form a monad, since the following laws 
+hold:
+
+	result A >>= B	  	=    B A
+	A >>= \x -> result x	=    A
+	(A >>= \x -> B) >>= C   =    A >>= ((\x -> B) >>= C)
+				     if x not free in C 	
+
+
+5. An imperative computation can be encapsulated using the function
+
+	pure :: Proc a -> a
+
+Executing the term
+
+	pure P
+
+executes procedure P in an empty initial state. It returns the final
+result returned by P while discarding the final state.
+
+NOTE: (pure P) is referentially transparent only if two conditions
+are met.
+
+  1. The body of P may only refer to variables allocated inside P.
+  2. The result of P may not refer to variables allocated inside P.
+
+Currently, it is the programmer's obligation to verify that these
+conditions hold. They are not checked by the compiler.  This is an
+implementation restriction, NOT a language feature. It is anticipated
+that some future version of the compiler will enforce the conditions.
+
+6. Simple imperative I/O:
+
+>	getchar :: Proc Char
+>	getch	:: Proc Char
+>	putchar :: Char -> Proc ()
+>	puts    :: String -> Proc ()
+
+The getchar and getch processes return a character typed on the standard
+input stream, with or without echoing the character on the standard output
+respectively.
+
+Executing the term
+
+	putchar C
+
+causes the character given by the expression C to be printed on the standard
+output.  In a similar way, executing the term
+
+	puts S
+
+causes the string S to be displated on the standard output.
+
+
+Programming Examples:
+=====================
+
+1. A swap procedure:
+
+>	swap :: Var a -> Var a -> Proc ()
+>	swap v w =
+>	  v ? \x ->
+>	  w ? \y ->
+>	  x =: w >>
+>	  y =: v
+
+2. Forming lists of mutable variables
+
+>	newvars       :: Int -> Proc [Var a]	
+>	newvars 0     =  result []
+>	newvars (n+1) =  newvar    >>= \v ->
+>		     	 newvars n >>= \rest -> 
+>			 result (v:rest)
+
+"newvars n" forms a list of "n" fresh mutable variables.
+
+
+3. An iterator:
+
+>	seq :: [Proc ()] -> Proc ()
+>	seq =  foldr (>>) (result ())
+
+To exchange the contents of all variables in two lists:
+
+>	swapall       :: [Var a] -> [Var a] -> ([Var a], [Var a])
+>	swapall xs ys =  seq [swap v w | (v,w) <- zip xs ys]
+
+
+4. Simple I/O:
+
+The getchar and puts functions are defined in terms of the getch and
+putchar primitives:
+
+>	getchar :: Proc Char
+>	getchar  = getch     >>= \c ->
+>	           putchar c >>
+>	           result c
+
+>	puts    :: String -> Proc ()
+>	puts     = seq . map putchar
+
+
+More material about the semantics of these imperative constructs, and
+the algebraic reasoning methods associated with them, is contained in
+[1]. See also [2] for a similar approach.
+
+
+[1] Martin Odersky, Dan Rabin and Paul Hudak:
+    "Call-by-name, Assignment, and the Lambda Calculus".
+    Proc. 20th ACM Symp. on Principles of Programming Languages, 
+    pp 43-56, January 1993.
+
+[2] Simon Peyton Jones and Philip Wadler:
+    "Imperative Functional Programming".
+    Proc. 20th ACM Symp. on Principles of Programming Languages, 
+    pp 71-84, January 1993.
+
+
+------------------------------------------------------------------------------

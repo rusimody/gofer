@@ -1,0 +1,66 @@
+
+
+Introduction to Gofer                                 3. STARTING GOFER
+
+
+3. STARTING GOFER
+
+The Gofer interpreter is usually entered by giving the command `gofer',
+after which a display something like the  following  will  normally  be
+produced:
+
+    Gofer Version 2.20
+ 
+    Reading script file "/gofer/prelude":
+    Parsing........................................................
+    Dependency analysis............................................
+    Type checking..................................................
+    Compiling......................................................
+
+    Gofer session for:
+    /gofer/prelude
+    Type :? for help
+    ?
+
+The file name "/gofer/prelude" mentioned in the  output  above  is  the
+name of a file of standard definitions which are loaded into Gofer each
+time that the interpreter is started.  By default,  Gofer  reads  these
+definitions from  a  file  called  "prelude"  in  the  current  working
+directory.  Alternatively you can set the environment variable GOFER to
+the name of the  standard  prelude  file,  which  will  then  be  used,
+whatever the current working directory might be.
+
+Most commands in Gofer take the form of a colon followed by one or more
+characters which distinguish one command from another.  There  are  two
+commands which are particularly worth remembering:
+
+  o  :q  exits the  Gofer  interpreter.   On most systems, you can also
+     exit from Gofer by typing the end of  file  character  (^Z  on  an
+     MS-DOS machine, usually ^D on a unix based machine).
+
+  o  :?  prints a list of all the commands,  which can be useful if you
+     forget the name of the command that you want to use.
+
+The complete range of commands supported by the  Gofer  interpreter  is
+described in appendix F.
+
+Note that the interrupt key (^C on most systems) can  be  used  at  any
+time whilst using Gofer to abandon the process of reading in a file  of
+function definitions or the evaluation  of  an  expression.   When  the
+interrupt key is detected, Gofer prints the string "{Interrupted!}" and
+prints the "? " prompt so that further commands can be entered.
+
+
+
+
+
+
+
+
+
+
+
+
+                                      4
+
+

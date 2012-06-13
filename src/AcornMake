@@ -1,0 +1,141 @@
+# Project:   Gofer228
+
+
+# Toolflags:
+CCflags = -c -depend !Depend -IC: -throwback  -DLAMBDAVAR  
+Linkflags = -aif -o $@ 
+ObjAsmflags = -depend !Depend -ThrowBack -Stamp -quit -CloseExec
+CMHGflags = 
+LibFileflags = -c -o $@
+Squeezeflags = -o $@
+AAsmflags = -depend !Depend -quit -CloseExec -To $@ -From
+
+
+# Final targets:
+@.GofC:   @.o.compiler @.o.input @.o.static @.o.storage @.o.type @.o.cbuiltin \
+        @.o.cmachine @.o.gofc c:o.Stubs c:o.RISC_OSLib 
+        link $(linkflags) @.o.compiler @.o.input @.o.static @.o.storage \
+        @.o.type @.o.cbuiltin @.o.cmachine @.o.gofc c:o.Stubs c:o.RISC_OSLib 
+@.Gofer:   c:o.Stubs c:o.RISC_OSLib @.o.compiler @.o.input @.o.static \
+        @.o.storage @.o.type @.o.builtin @.o.gofer @.o.machine @.o.output 
+        link $(linkflags) c:o.Stubs c:o.RISC_OSLib @.o.compiler @.o.input \
+        @.o.static @.o.storage @.o.type @.o.builtin @.o.gofer @.o.machine @.o.output 
+
+
+# User-editable dependencies:
+
+# Static dependencies:
+@.o.compiler:   @.c.compiler
+        cc $(ccflags) -o @.o.compiler @.c.compiler 
+@.o.input:   @.c.input
+        cc $(ccflags) -o @.o.input @.c.input 
+@.o.static:   @.c.static
+        cc $(ccflags) -o @.o.static @.c.static 
+@.o.storage:   @.c.storage
+        cc $(ccflags) -o @.o.storage @.c.storage 
+@.o.type:   @.c.type
+        cc $(ccflags) -o @.o.type @.c.type 
+@.o.builtin:   @.c.builtin
+        cc $(ccflags) -o @.o.builtin @.c.builtin 
+@.o.gofer:   @.c.gofer
+        cc $(ccflags) -o @.o.gofer @.c.gofer 
+@.o.machine:   @.c.machine
+        cc $(ccflags) -o @.o.machine @.c.machine 
+@.o.output:   @.c.output
+        cc $(ccflags) -o @.o.output @.c.output 
+@.o.cbuiltin:   @.c.cbuiltin
+        cc $(ccflags) -o @.o.cbuiltin @.c.cbuiltin 
+@.o.cmachine:   @.c.cmachine
+        cc $(ccflags) -o @.o.cmachine @.c.cmachine 
+@.o.gofc:   @.c.gofc
+        cc $(ccflags) -o @.o.gofc @.c.gofc 
+
+
+# Dynamic dependencies:
+o.runtime:	c.runtime
+o.runtime:	h.gofc
+o.runtime:	h.prelude
+o.runtime:	c.twospace
+o.runtime:	c.machdep
+o.runtime:	C:h.swis
+o.runtime:	C:h.os
+o.compiler:	c.compiler
+o.compiler:	h.prelude
+o.compiler:	h.storage
+o.compiler:	h.connect
+o.input:	c.input
+o.input:	h.prelude
+o.input:	h.storage
+o.input:	h.connect
+o.input:	h.command
+o.input:	h.errors
+o.input:	c.parser
+o.static:	c.static
+o.static:	h.prelude
+o.static:	h.storage
+o.static:	h.connect
+o.static:	h.errors
+o.static:	c.scc
+o.static:	c.scc
+o.static:	c.scc
+o.storage:	c.storage
+o.storage:	h.prelude
+o.storage:	h.storage
+o.storage:	h.connect
+o.storage:	h.errors
+o.type:	c.type
+o.type:	h.prelude
+o.type:	h.storage
+o.type:	h.connect
+o.type:	h.errors
+o.type:	c.subst
+o.type:	c.kind
+o.type:	c.preds
+o.cbuiltin:	c.cbuiltin
+o.cbuiltin:	h.prelude
+o.cbuiltin:	h.storage
+o.cbuiltin:	h.connect
+o.cbuiltin:	h.errors
+o.cbuiltin:	c.prims
+o.cmachine:	c.cmachine
+o.cmachine:	h.prelude
+o.cmachine:	h.storage
+o.cmachine:	h.connect
+o.cmachine:	h.errors
+o.gofc:	c.gofc
+o.gofc:	h.prelude
+o.gofc:	h.storage
+o.gofc:	h.command
+o.gofc:	h.connect
+o.gofc:	h.errors
+o.gofc:	c.machdep
+o.gofc:	C:h.swis
+o.gofc:	C:h.os
+o.gofc:	c.commonui
+o.gofc:	c.output
+o.builtin:	c.builtin
+o.builtin:	h.prelude
+o.builtin:	h.storage
+o.builtin:	h.connect
+o.builtin:	h.errors
+o.builtin:	c.prims
+o.gofer:	c.gofer
+o.gofer:	h.prelude
+o.gofer:	h.storage
+o.gofer:	h.command
+o.gofer:	h.connect
+o.gofer:	h.errors
+o.gofer:	c.machdep
+o.gofer:	C:h.swis
+o.gofer:	C:h.os
+o.gofer:	c.commonui
+o.machine:	c.machine
+o.machine:	h.prelude
+o.machine:	h.storage
+o.machine:	h.connect
+o.machine:	h.errors
+o.output:	c.output
+o.output:	h.prelude
+o.output:	h.storage
+o.output:	h.connect
+o.output:	h.errors

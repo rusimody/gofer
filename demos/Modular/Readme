@@ -1,0 +1,73 @@
+------------------------------------------------------------------------------
+The files in this directory are based on the programs described in:
+
+    A Modular fully-lazy lambda lifter in Haskell
+    Simon L. Peyton Jones and David Lester
+    Software -- Practice and Experience
+    Vol 21(5), pp.479-506
+    MAY 1991
+
+These files include:
+
+    Readme       -- this file.
+
+    Utility      -- implementation of various utility functions and
+                    data types including sets, bags and name supplies.
+                    The paper referred to above includes type signatures
+                    for the operations defined in this file but does not
+                    actually give definitions.  I trust that my own
+                    implementations of these functions will be satisfactory!
+
+    LambdaLift   -- simple lambda lifter.  Contains code from the first
+                    half of the above paper.
+
+    Laziness     -- transformations for fully-lazy lambda lifting.  Contains
+                    the remaining code from the above paper.
+
+    Demo         -- demonstration of lamda lifting (normal and fully-lazy
+                    variants).  This hastily-written file contains definitions
+                    for a parser and input parser for the expressions used
+                    in the preceeding two files.  This file can only be loaded
+                    if the Parse file from MiniProlog has already been loaded
+                    into Gofer.  As it stands, this code uses non-standard
+                    features of Gofer and will not (i.e. should not!) be
+                    accepted by a Haskell compiler.
+
+The modular fully-lazy lambda lifter and demonstration files can be loaded
+into Gofer with the command:
+
+      gofer Utility LambdaLift Laziness ../Prolog/Parse Demo
+      (or, using the project file supplied, gofer + mlamlift.gp)
+
+The kind of results that can be obtained are illustrated by:
+
+? show example1
+let f = (\x.let g = (\y.(Plus (Times x x) y)) in (Plus (g 3) (g 4))) in (f 6)
+
+? ll example1  
+   1) $main = let f = SC1 in (f 6)
+   2) SC1 x = let g = (SC0 x) in (Plus (g 3) (g 4))
+   3) SC0 x y = (Plus (Times x x) y)
+
+? fll example1
+   1) $main = let f0 = SC1 in (f0 6)
+   2) SC1 x1 = let v4 = (Plus (Times x1 x1)) in
+               let g2 = (SC0 v4) in (Plus (g2 3) (g2 4))
+   3) SC0 v4 y3 = (v4 y3)
+
+
+? show example2
+let f = (\x.letrec g = (\y.(Cons (Times x x) (g y))) in (g 3)) in (f 6)
+
+? ll example2
+   1) $main = let f = SC1 in (f 6)
+   2) SC1 x = letrec g = (SC0 g x) in (g 3)
+   3) SC0 g x y = (Cons (Times x x) (g y))
+ 
+? fll example2
+   1) $main = let f0 = SC1 in (f0 6)
+   2) SC1 x1 = let v4 = (Cons (Times x1 x1)) in
+               letrec g2 = (SC0 g2 v4) in (g2 3)
+   3) SC0 g2 v4 y3 = (v4 (g2 y3))
+
+------------------------------------------------------------------------------

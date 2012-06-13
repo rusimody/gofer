@@ -1,0 +1,83 @@
+------------------------------------------------------------------------------
+Another, rather different application of constructor classes, described
+to me by Stuart Clayman:
+
+I may want to implement a stack using different mechanisms, namely
+built in list type, or my own contructor.  Type classes don't allow
+this, but constructor classes do. Consider this:
+
+>   class Stack s where
+>	push  :: a -> s a -> s a
+>	pop   :: s a -> s a
+>	top   :: s a -> a
+>	empty :: s a
+>
+>   instance Stack [] where
+>	push v s = v:s
+>	pop (t:s) = s
+>	top (t:s) = t
+>	empty = []
+>
+>   teststack :: Stack s => s Int
+>   teststack  = push 5 (push 4 (push 3 (push 2 (push 1 empty))))
+
+This defines a stack of things.  Now we can instantiate it:
+
+>   stack1 :: [Int]
+>   stack1 = teststack
+
+to give a stack implemented as a list.  If we want to use our own
+constructor we can do this
+
+>   data List a = Nil | Cons a (List a)
+>
+>   instance Stack List where
+>	push v s = Cons v s
+>	pop (Cons t s) = s
+>	top (Cons t s) = t
+>	empty = Nil
+>
+>   stack2 :: List Int
+>   stack2 = teststack
+
+to give a different sort of stack.  In this way we can overload
+operators to any construct.  The use of restricted types can hide
+the real types of [Int] and List Int in stack1 and stack2.
+
+How about the following for a stack of numerics:
+
+>   newteststack :: (Num a,Stack s) => s a
+>   newteststack  = foldr push empty (map fromInteger [5,4,3,2,1])
+
+This can be instantiated in several different ways.  Generic stacks of
+integers or floats:
+
+>   inewstack :: Stack s => s Int
+>   inewstack  = newteststack
+
+>   fnewstack :: Stack s => s Float
+>   fnewstack  = newteststack
+
+List or [] stacks of generic numbers:
+
+>   lnewstack1 :: Num a => [a]
+>   lnewstack1  = newteststack
+
+>   lnewstack2 :: Num a => List a
+>   lnewstack2  = newteststack
+
+Or specific stack/number combinations:
+
+>   ilnewstack1 :: [Int]
+>   ilnewstack1  = newteststack
+
+>   ilnewstack2 :: List Int
+>   ilnewstack2  = newteststack
+
+>   flnewstack1 :: [Float]
+>   flnewstack1  = newteststack
+
+>   flnewstack2 :: List Float
+>   flnewstack2  = newteststack
+
+------------------------------------------------------------------------------

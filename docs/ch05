@@ -1,0 +1,132 @@
+
+
+Introduction to Gofer            5. STANDARD AND USER-DEFINED FUNCTIONS
+
+
+5. STANDARD AND USER-DEFINED FUNCTIONS
+
+The function "sum" used in the examples above, and indeed the  addition
+and multiplication functions (+) and (*), are  all  standard  functions
+which are included as part of a large collection  of  functions  called
+the `standard prelude' which are loaded into the Gofer system each time
+that you start the interpreter.  Quite a number of useful  calculations
+can be carried out using these functions alone, but  for  more  general
+use you can also define your own functions and store the definitions in
+a file so that these functions can be loaded and used by by  the  Gofer
+system.  For example, suppose that you create a file "fact"  containing
+the following definition:
+
+     fact n = product [1..n]
+
+The "product" function is another standard function which can  be  used
+to calculate the product of a list of integers, and so the  line  above
+defines a  function  "fact"  which  calculates  the  factorial  of  its
+argument.  In standard  mathematical notation,  fact n = n!   which  is
+usually defined informally by an equation of the form:
+
+                 n! = 1 * 2 * ... * (n-1) * n
+
+Once you become familiar with the notation used by Gofer, you will  see
+that the Gofer definition of the  factorial  function  is  really  very
+similar to this informal mathematical definition.
+
+In order to use this definition from the  Gofer  interpreter,  we  must
+first load the definitions of  the  file  into  the  interpreter.   The
+simplest way to do this uses the ":l" command:
+
+    ? :l fact
+    Reading script file "fact":
+    Parsing......................................................
+    Dependency analysis..........................................
+    Type checking................................................
+    Compiling....................................................
+
+    Gofer session for:
+    /gofer/prelude
+    fact
+    ?
+
+Notice the list of filenames displayed after "Gofer session for:"; this
+tells you which files of definitions are currently being used by Gofer,
+the first of which is the  file  containing  the  definitions  for  the
+standard prelude.  Since the file  containing  the  definition  of  the
+factorial function has now  been  loaded,  we  can  make  use  of  this
+function in expressions entered to the interpreter:
+
+    ? fact 6
+    720
+    (57 reductions, 85 cells)
+
+For another example, recall the  standard  mathematical  formula  which
+tells us that  the  number  of  ways  of  choosing  r  objects  from  a
+
+
+                                      6
+
+
+
+
+Introduction to Gofer            5. STANDARD AND USER-DEFINED FUNCTIONS
+
+
+collection of n objects is given by n! / (r! * (n-r)!).  In Gofer, this
+function can be defined by:
+
+    comb n r = fact n /(fact r * fact (n-r))
+
+In order to use this function, we can either edit the file "fact" which
+contains  the  definition  of  the  factorial  function,   adding   the
+definition of "comb" on a new line, or we can include the definition as
+part of an expression entered whilst using Gofer:
+
+    ? comb 5 2 where comb n r = fact n /(fact r * fact (n-r))
+    10
+    (110 reductions, 161 cells)
+    ? 
+
+The ability to define a function as part of an expression like this  is
+often quite useful.  However, if the function "comb" were likely to  be
+wanted on a number of occasions, it would be more sensible to  add  its
+definition to the contents of the file "fact",  instead  of  having  to
+repeat the definition each time it is used.
+
+You will learn more about the functions defined in the standard prelude
+and find out  how  to  define  your  own  functions  in  the  following
+sections.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      7
+
+

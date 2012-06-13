@@ -1,0 +1,71 @@
+-----------------------------------------------------------------------------
+-- Lambda Var:                         	                 November 3, 1992
+--
+-- The definitions in this file provide support for a simple implementation
+-- of Lambda Var -- as described by Odersky, Rabin and Hudak in their POPL
+-- paper, January 1993.  Note however, that the implementation of the
+-- fuction `pure' is not sound.  You must ensure that you use this function
+-- correctly -- the responsibility is on you, the programmer.
+--
+-- This file must be loaded with the constructor classes prelude, which is
+-- usually called `cc.prelude'.
+--
+-- Incidentally, the definitions in this file can only be used if the
+-- version of Gofer that you are using has been compiled with the correct
+-- set of primitives included.  In addition, there is no support for these
+-- primitives in gofc, the Gofer compiler.
+--
+-- Operator precedence table: -----------------------------------------------
+
+infixr 1 =:
+infixr 0 >>, >>=, ?
+
+-- Lambda var hacking: ------------------------------------------------------
+
+primitive pure         "primLvPure"   :: Proc a -> a
+primitive (?)          "primLvRead"   :: Var a -> (a -> Proc b) -> Proc b
+primitive primLvReturn "primLvReturn" :: a -> Proc a
+primitive primLvBind   "primLvBind"   :: Proc a -> (a -> Proc b) -> Proc b
+primitive (=:)	       "primLvAssign" :: a -> Var a -> Proc b
+primitive var	       "primLvVar"    :: (Var a -> Proc b) -> Proc b
+primitive newvar       "primLvNewvar" :: Proc (Var a)
+primitive primLvVarEq  "primLvVarEq"  :: Var a -> Var a -> Bool
+
+type Prog	  = Proc ()
+
+deref            :: Var a -> Proc a
+deref v           = v ? result
+
+(>>=)             :: Monad m => m a -> (a -> m b) -> m b
+(>>=)              = bind
+
+(>>)             :: Monad m => m a -> m b -> m b
+f >> g            = f >>= const g
+
+seq              :: Monad m => [m a] -> m ()
+seq		  = foldr (>>) (result ())
+
+instance Eq (Var a)   where (==)    = primLvVarEq
+
+instance Functor Proc where map f x = [ f y | y <- x ]
+
+instance Monad Proc   where result  = primLvReturn
+			    bind    = primLvBind
+
+-- Very simple monadic I/O in the Glasgow style: -----------------------------
+
+primitive getch	       "primLvGetch"    :: Proc Char
+primitive putchar      "primLvPutchar"  :: Char -> Proc ()
+
+getchar :: Proc Char
+getchar  = getch     >>= \c ->
+	   putchar c >>
+	   result c
+
+puts    :: String -> Proc ()
+puts     = seq . map putchar
+
+-- an abuse of pure to implement hbc's debugging hack:
+trace s a = pure (puts s >> result a)
+
+-- End of lambdaVr -----------------------------------------------------------

@@ -1,0 +1,8 @@
+gofc.c     (prelude.h, storage.h, connect.h, errors.h, command.h, machdep.c, commonui.c, output.c)
+cmachine.c (prelude.h, storage.h, connect.h, errors.h)
+cbuiltin.c (prelude.h, storage.h, connect.h, errors.h, prims.c)
+storage.c  (prelude.h, storage.h, connect.h, errors.h)
+input.c    (prelude.h, storage.h, connect.h, errors.h, parser.c, command.h)
+static.c   (prelude.h, storage.h, connect.h, errors.h)
+type.c     (prelude.h, storage.h, connect.h, errors.h, preds.c, kind.c, subst.c)
+compiler.c (prelude.h, storage.h, connect.h, errors.h)

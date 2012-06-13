@@ -1,0 +1,156 @@
+------------------------------------------------------------------------------
+--The files in this directory are based on the programs described in:
+--
+--    A Modular fully-lazy lambda lifter in Haskell
+--    Simon L. Peyton Jones and David Lester
+--    Software -- Practice and Experience
+--    Vol 21(5), pp.479-506
+--    MAY 1991
+--
+--See the Readme file for more details.
+------------------------------------------------------------------------------
+
+-- Instance of Text for printing expressions:
+
+instance Text Constant where
+    showsPrec p (CNum n)  = shows n
+    showsPrec p (CFun n)  = showString n
+
+instance Text (Expr [Char]) where
+    showsPrec p (EConst k)  = shows k
+    showsPrec p (EVar v)    = showString v
+
+    showsPrec p e@(EAp _ _) = showChar '(' . showsAp e . showChar ')'
+                              where showsAp (EAp l r) = showsAp l
+                                                          . showChar ' '
+                                                          . shows r
+                                    showsAp e         = shows e
+
+    showsPrec p (ELet isRec defns body)
+                            = showString (if isRec then "letrec" else "let")
+                                . showChar ' '
+                                . showsDefns defns
+                                . showString " in "
+                                . shows body
+
+    showsPrec p (ELam binders body)
+                            = showString "(\\"
+                                . foldr1 (\h t-> h . showChar ' ' . t)
+                                         (map showString binders)
+                                . showChar '.'
+                                . shows body
+                                . showChar ')'
+
+showWithSep          :: Text a => String -> [a] -> ShowS
+showWithSep s [x]     = shows x
+showWithSep s (x:xs)  = shows x . showString s . showWithSep s xs
+
+showsDefns           :: [Defn Name] -> ShowS
+showsDefns []         = showString "{}"
+showsDefns [d]        = showsDefn d
+showsDefns defns      = showChar '{'
+                           . foldr1 (\h t-> h . showString "; " . t)
+                                    (map showsDefn defns)
+                           . showChar '}'
+
+showsDefn            :: Defn Name -> ShowS
+showsDefn (x,e)       = showString x . showString " = " . shows e
+
+-- display lists of supercombinators:
+
+showSCs :: [SCDefn] -> String
+showSCs  = layn . map showSc
+ where showSc (name,args,body)
+           = foldr1 (\n ns -> n ++ " " ++ ns) (name:args)
+                ++ " = "
+                ++ show body
+
+-- Parser for input of expressions: (sorry, this is rather a hack!)
+
+number   :: Parser Int
+number    = sp (many1 (sat isDigit) `do` strToNum)
+            where strToNum = foldl (\n d->10*n+d) 0 . map (\c->ord c - ord '0')
+
+variable :: Parser String
+variable  = sp (sat isLower `seq` many (sat isAlpha) `do` (\(c,cs) -> c:cs))
+
+constant :: Parser String
+constant  = sp (sat isUpper `seq` many (sat isAlpha) `do` (\(c,cs) -> c:cs))
+
+expr     :: Parser Expression
+expr      = sptok "letrec" `seq` variable `seq` sptok "=" `seq` expr
+                         `seq` sptok "in" `seq` expr
+              `do` (\(lt,(v,(eq,(def,(inn,rhs)))))-> ELet True [(v,def)] rhs)
+                `orelse`
+            sptok "let" `seq` variable `seq` sptok "=" `seq` expr
+                         `seq` sptok "in" `seq` expr
+              `do` (\(lt,(v,(eq,(def,(inn,rhs)))))-> ELet False [(v,def)] rhs)
+                `orelse`
+            sptok "\\" `seq` listOf variable (sp (okay ())) `seq` sptok "."
+                       `seq` expr
+              `do` (\(l,(vs,(dot,e))) -> ELam vs e)
+                `orelse`
+            atomic
+
+atomic  :: Parser Expression
+atomic   = sptok "(" `seq` many1 expr `seq` sptok ")"
+                  `do` (\(o,(e,c))->foldl1 EAp e) 
+               `orelse` 
+           variable `do` EVar
+               `orelse`
+           constant `do` (EConst . CFun)
+               `orelse`
+           number `do` (EConst . CNum)
+
+
+inp     :: String -> Expression
+inp s    = case expr s of ((p,""):_) -> p
+                          _          -> error "Cannot parse input"
+
+-- Examples:
+
+ll, fll  :: Expression -> String
+ll        = showSCs . lambdaLift 
+fll       = showSCs . fullyLazyLift
+
+example1 :: Expression
+example1  = inp "let f = \\x. let g = \\y.(Plus (Times x x) y) in \
+                             \(Plus (g 3) (g 4)) \
+                \in (f 6)"
+
+{- Results:
+
+   ? ll example1				-- normal lambda lifting
+      1) $main = let f = SC1 in (f 6)
+      2) SC1 x = let g = (SC0 x) in (Plus (g 3) (g 4))
+      3) SC0 x y = (Plus (Times x x) y)
+ 
+   ? fll example1				-- fully lazy version
+
+      1) $main = let f0 = SC1 in (f0 6)
+      2) SC1 x1 = let v4 = (Plus (Times x1 x1)) in
+                  let g2 = (SC0 v4) in (Plus (g2 3) (g2 4))
+      3) SC0 v4 y3 = (v4 y3)
+ 
+-}
+
+example2 :: Expression
+example2  = inp "let \
+                \   f = \\x. letrec g = \\y. (Cons (Times x x) (g y)) \
+                \            in (g 3) \
+                \in (f 6)"
+
+{- Results:
+
+   ? ll example2				-- normal lambda lifting
+      1) $main = let f = SC1 in (f 6)
+      2) SC1 x = letrec g = (SC0 g x) in (g 3)
+      3) SC0 g x y = (Cons (Times x x) (g y))
+
+   ? fll example2				-- fully lazy version
+      1) $main = let f0 = SC1 in (f0 6)
+      2) SC1 x1 = let v4 = (Cons (Times x1 x1)) in
+                  letrec g2 = (SC0 g2 v4) in (g2 3)
+      3) SC0 g2 v4 y3 = (v4 (g2 y3))
+
+-}

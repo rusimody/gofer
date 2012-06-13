@@ -1,0 +1,21 @@
+-----------------------------------------------------------------------------
+-- trace :: String -> a -> a	Print the string and return the given value
+--
+-- This file brings in just enough of the lambda var primitives to implement
+-- a version of the impure hbc debugging function `trace'.  Note that, this
+-- can only be used in conjunction with a version of the Gofer interpreter
+-- that has been compiled to include these primitives.  See the file
+-- lambdaVr for more details.
+-----------------------------------------------------------------------------
+
+primitive primLvPure   "primLvPure"     :: Proc a -> a
+primitive primLvReturn "primLvReturn"   :: a -> Proc a
+primitive primLvBind   "primLvBind"     :: Proc a -> (a -> Proc b) -> Proc b
+primitive primLvPutch  "primLvPutchar"  :: Char -> Proc ()
+
+trace    :: String -> a -> a
+trace s a = primLvPure (f s)
+            where f []     = primLvReturn a
+                  f (x:xs) = primLvBind (primLvPutch x) (\_ -> f xs)
+
+-- End of trace --------------------------------------------------------------

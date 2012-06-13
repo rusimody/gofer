@@ -1,0 +1,132 @@
+
+
+Introduction to Gofer                2. BACKGROUND AND ACKNOWLEDGEMENTS
+
+
+2. BACKGROUND AND ACKNOWLEDGEMENTS
+
+The language supported by Gofer is both syntactically and  semantically
+similar to that of the functional programming language Haskell [5].  My
+principal task in the implementation of Gofer  has  therefore  been  to
+decide which  features  I  should  omit  and  then  to  implement  what
+remains.  Features common to both include:
+
+  o  Non-strict semantics (lazy evaluation).
+  o  Higher-order functions.
+  o  Extended polymorphic type system  with  support  for  user-defined
+     overloading.
+  o  User-defined algebraic datatypes.
+  o  Pattern matching.
+  o  List comprehensions.
+  o  Facilities for  I/O,  whilst  retaining  referential  transparency
+     within a program.
+
+For the  benefit  of  readers  familiar  with  Haskell,  the  following
+features of Haskell are not supported in the standard version of Gofer:
+
+  o  Modules.
+  o  Arrays.
+  o  Defaults for unresolved overloading.
+  o  Derived instances of standard classes.
+  o  Contexts in datatype definitions.
+  o  Full range of numeric types and classes.
+
+But Gofer is not just a partial  implementation  of  Haskell;  it  also
+includes a number of experimental features which extend the type system
+in several ways:
+
+  o  An alternative approach to type classes which avoids the need  for
+     construction  of  dictionaries  during  the   evaluation   of   an
+     expression.
+  o  Type classes may take multiple parameters.
+  o  Instances  of  type  classes   may   be   defined   at   arbitrary
+     non-overlapping types.
+  o  Contexts may include arbitrary type expressions.
+
+These extensions stem from my own research [8, 9, 10, 11, 12] and  were
+among the principal motivations for the  development  of  Gofer.   Full
+details of the differences between Gofer and Haskell 1.1 are  given  in
+appendix C.
+
+Gofer would not have been implemented without my original  introduction
+to functional programming using  Orwell  [6],  and  I  am  particularly
+grateful to Quentin Miller for answering so many of my questions  about
+functional programming and about the Orwell system  in  particular.   I
+should also like to mention the influence of the  Haskell  B.  compiler
+from Lennart Augustsson and Thomas Johnsson and based on their  earlier
+LML compiler [7].
+
+Right from the beginning, I wanted to be able to use Gofer on  a  range
+of machines - and in particular, on the humble PC that I use  at  home.
+With this in mind, Gofer was actually developed on that same  PC  using
+
+
+                                      2
+
+
+
+
+Introduction to Gofer                2. BACKGROUND AND ACKNOWLEDGEMENTS
+
+
+Borland's Turbo C 1.5 and a public domain version of  the  yacc  parser
+generator that I picked up some time ago.  Gofer was also written  with
+some degree of portability in mind and has subsequently  been  compiled
+to run on Sun workstations.  I hope it will also be possible to port it
+to other platforms.  It is  my  intention  that  Gofer  be  distributed
+complete with source code and I hope that this will be of  interest  to
+some users.
+
+Many of the ideas used in the back-end of the Gofer  system  (i.e.  the
+compiler and abstract machine) originate from  the  chapters  of  Simon
+Peyton Jones textbook [2]; I very much doubt whether Gofer  would  have
+been  completed  without  frequent  reference  to   that   book.    The
+lambda-lifter used in Gofer is based  on  Thomas  Johnsson's  algorithm
+described in [3].
+
+On  the  theoretical  side,  I'm  grateful  to  Phil  Wadler  for   the
+encouragement that he has given me with my  work  on  qualified  types.
+Many of the basic ideas that I have used were inspired by his  original
+paper motivating the use of type classes [4].
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      3
+
+

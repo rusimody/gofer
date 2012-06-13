@@ -1,0 +1,264 @@
+
+
+Introduction to Gofer                    APPENDIX A: SUMMARY OF GRAMMAR
+
+
+APPENDIX A: SUMMARY OF GRAMMAR
+
+This section gives a summary of the grammar for the  language  used  by
+Gofer.  The non-terminals <interp> and <module> describe the syntax  of
+expressions that can be entered into the Gofer interpreter and that  of
+files of definitions that can be loaded into Gofer respectively.
+
+The following notational conventions are used in the Grammar  which  is
+specified using a variant of BNF:
+
+  o <angle brackets> are used to distinguish names of nonterminals from
+    keywords.
+
+  o vertical | bars  are used to separate alternatives.
+
+  o {braces} enclose items which may be repeated zero or more times.
+
+  o [brackets] are used for optional items.
+
+  o (parentheses) are used for grouping.
+
+  o "quotes" surround characters which might otherwise be confused with
+    the notations introduced above.
+
+The following terminal symbols are used but not defined by the grammar:
+
+  VARID    identifier beginning with lower case letter as described in
+           section 6.
+  CONID    like VARID, but beginning with upper case letter.
+  VAROP    operator symbol not beginning with a colon, as described in
+           section 6.
+  CONOP    constructor function operator, like VAROP, but beginning
+           with a colon character.
+  INTEGER  integer constant, as described in section 7.3.
+  FLOAT    floating point constant, as described in section 7.4.
+  CHAR     character constant, as described in section 7.5.
+  STRING   string constant, as described in section 7.7.
+
+
+Top-level grammar
+-----------------
+
+    <module>   ::= "{" <topdecls> "}"               module
+
+    <interp>   ::= <exp> [<where>]                  top-level expression
+
+    <topdecls> ::= <topdecls>; <topdecls>           multiple declarations
+                |  data <typeLhs> = <constrs>       datatype declaration
+                |  type <typeLhs> = <type>          synonym declaration
+                |  infixl [<digit>] <op> {, <op>}   fixity declarations
+                |  infixr [<digit>] <op> {, <op>}
+                |  infix  [<digit>] <op> {, <op>}
+                |  primitive <prims> :: <type>      primitive bindings
+                |  <class>                          class declaration
+                |  <inst>                           instance declaration
+                |  <decls>                          value declarations
+
+
+                                      93
+
+
+
+
+Introduction to Gofer                    APPENDIX A: SUMMARY OF GRAMMAR
+
+
+    <typeLhs>  ::= CONID {VARID}                    type declaration lhs
+
+    <constrs>  ::= <constrs> "|" <constrs>          multiple constructors
+                |  <type> CONOP <type>              infix constructor
+                |  CONID {<type>}                   constructor, n>=0
+
+    <prims>    ::= <prims>, <prims>                 multiple bindings
+                |  <var> <string>                   primitive binding
+
+Type expressions
+----------------
+
+    <sigType>  ::= [<context> => ] <type>           [qualified] type
+
+    <context>  ::= "(" [<pred> {, <pred>}] ")"      general form
+                |  <pred>                           singleton context
+    <pred>     ::= CONID <type> {<type>}            predicate
+
+    <type>     ::= <ctype> [ -> <type> ]            function type
+    <ctype>    ::= CONID {<atype>}                  datatype or synonym
+                |  <atype>
+    <atype>    ::= VARID                            type variable
+                |  "(" ")"                          unit type
+                |  "(" <type> ")"                   parenthesised type
+                |  "(" <type>,<type> {,<type>} ")"  tuple type
+                |  "[" <type> "]"                   list type
+
+Class and instance declarations
+-------------------------------
+
+    <class>    ::= class [<context> =>] <pred> [<cbody>]
+    <cbody>    ::= where "{" <cdecls> "}"           class body
+    <cdecls>   ::= <cdecls>; <cdecls>               multiple declarations
+                |  <var> {, <var>} :: <type>        member functions
+                |  <fun> <rhs> [<where>]            default bindings
+
+    <inst>     ::= instance [<context> =>] <pred> [<ibody>]
+    <ibody>    ::= where "{" <idecls> "}"           instance body
+    <idecls>   ::= <idecls>; <idecls>               multiple declarations
+                |  <fun> <rhs> [<where>]            member definition
+
+Value declarations
+------------------
+
+    <decls>  ::= <decls>; <decls>                 multiple declarations
+              |  <var> {, <var>} :: <sigType>     type declaration
+              |  <fun> <rhs> [<where>]            function binding
+              |  <pat> <rhs> [<where>]            pattern binding
+
+    <rhs>    ::= = <exp>                          simple right hand side
+              |  <gdRhs> {<gdRhs>}                guarded right hand sides
+
+    <gdRhs>  ::= "|" <exp> = <exp>                guarded right hand side
+
+    <where>  ::= where "{" <decls> "}"            local definitions
+
+
+
+                                      94
+
+
+
+
+Introduction to Gofer                    APPENDIX A: SUMMARY OF GRAMMAR
+
+
+    <fun>    ::= <var>                            function of arity 0
+              |  <pat> <varop> <pat>              infix operator
+              |  "(" <pat> <varop> ")"            section-like notation
+              |  "(" <varop> <pat> ")"
+              |  <fun> <apat>                     function with argument
+              |  "(" <fun> ")"                    parenthesised lhs
+
+Expressions
+-----------
+
+    <exp>    ::= \ <apat> {<apat>} -> <exp>       lambda expression
+              |  let "{" <decls> "}" in <exp>     local definition
+              |  if <exp> then <exp> else <exp>   conditional expression
+              |  case <exp> of "{" <alts> "}"     case expression
+              |  <opExp> :: <sigType>             typed expression
+              |  <opExp>
+    <opExp>  ::= <opExp> <op> <opExp>             operator application
+              |  <pfxExp>
+    <pfxExp> ::= - <appExp>                       negation
+              |  <appExp>
+    <appExp> ::= <appExp> <atomic>                function application
+              |  <atomic>
+    <atomic> ::= <var>                            variable
+              |  <conid>                          constructor
+              |  INTEGER                          integer literal
+              |  FLOAT                            floating point literal
+              |  CHAR                             character literal
+              |  STRING                           string literal
+              |  "(" ")"                          unit element
+              |  "(" <exp> ")"                    parenthesised expr.
+              |  (<exp> <op>)                     sections
+              |  (<op> <exp>)
+              |  "[" <list> "]"                   list expression
+              |  "(" <exp>, <exp> {, <exp>} ")"   tuple
+
+    <list>   ::= [ <exp> {, <exp>} ]              enumerated list
+              |  <exp> "|" <quals>                list comprehension
+              |  <exp> ..                         arithmetic sequence
+              |  <exp>, <exp> ..
+              |  <exp> .. <exp>
+              |  <exp>, <exp> .. <exp>
+    <quals>  ::= <quals>, <quals>                 multiple qualifiers
+              |  <pat> <- <exp>                   generator
+              |  <pat> = <exp>                    local definition
+              |  <exp>                            boolean guard
+
+    <alts>   ::= <alts>; <alts>                   multiple alternatives
+              |  <pat> <altRhs> [<where>]         alternative
+    <altRhs> ::= -> <exp>                         single alternative
+              |  <gdAlt> {<gdAlt>}                guarded alternatives
+    <gdAlt>  ::= "|" <exp> -> <exp>               guarded alternative
+
+Patterns
+--------
+
+    <pat>    ::= <pat> <conop> <pat>              operator application
+
+
+                                      95
+
+
+
+
+Introduction to Gofer                    APPENDIX A: SUMMARY OF GRAMMAR
+
+
+              |  <var> + <integer>                (n+k) pattern
+              |  <appPat>
+    <appPat> ::= <appPat> <apat>                  application
+              |  <apat>
+    <apat>   ::= <var>                            variable
+              |  <var> @ <pat>                    as pattern
+              |  ~ <pat>                          irrefutable pattern
+              |  _                                wildcard
+              |  <conid>                          constructor
+              |  INTEGER                          integer literal
+              |  CHAR                             character literal
+              |  STRING                           string literal
+              |  "(" ")"                          unit element
+              |  "(" <pat> ")"                    parenthesised expr.
+              |  (<pat> <conop>)                  sections
+              |  (<conop> <pat>)
+              |  "[" [ <pat> {, <pat>} ] "]"      list
+              |  "(" <pat>, <pat> {, <pat>} ")"   tuple
+
+Variables and operators
+-----------------------
+
+    <var>    ::= <varid>  |  "(" - ")"            variable
+    <op>     ::= <varop>  |  <conop>   |  -       operator
+
+    <varid>  ::= VARID    |  "(" VAROP ")"        variable identifier
+    <varop>  ::= VAROP    |  ` VARID `            variable operator
+
+    <conid>  ::= CONID    |  "(" CONOP ")"        constructor identifier
+    <conop>  ::= CONOP    |  ` CONID `            constructor operator
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      96
+
+

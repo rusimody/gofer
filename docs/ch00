@@ -1,0 +1,198 @@
+
+
+
+
+
+
+         __________   __________   __________   __________   ________
+        /  _______/  /  ____   /  /  _______/  /  _______/  /  ____  \
+       /  / _____   /  /   /  /  /  /______   /  /______   /  /___/  /
+      /  / /_   /  /  /   /  /  /  _______/  /  _______/  /  __   __/
+     /  /___/  /  /  /___/  /  /  /         /  /______   /  /  \  \ 
+    /_________/  /_________/  /__/         /_________/  /__/    \__\
+
+    Functional programming environment, Version 2.20
+
+    Copyright Mark P Jones 1991.
+
+
+
+
+
+
+            A N   I N T R O D U C T I O N   T O   G O F E R
+
+
+     draft version only --- please report any errors, suggestions for
+    improvements, extensions (or deletions!) to jones-mark@cs.yale.edu
+
+
+           This version includes a number of small corrections
+                   made since the original release.
+
+   --------------------------------------------------------------------
+   Permission to use, copy, modify, and distribute this software and its
+   documentation for any personal or educational use without fee is hereby
+   granted, provided that:
+    a) This copyright notice is retained in both source code and
+       supporting documentation.
+    b) Modified versions of this software are redistributed only if
+       accompanied by a complete history (date, author, description) of
+       modifications made; the intention here is to give appropriate
+       credit to those involved, whilst simultaneously ensuring that any
+       recipient can determine the origin of the software.
+    c) The same conditions are also applied to any software system
+       derived either in full or in part from Gofer.
+
+   The name "Gofer" is not a trademark, registered  or  otherwise,  and
+   you are free to mention this name in published material, public  and
+   private correspondence, or other documents  without  restriction  or
+   obligation.
+
+   Gofer is provided "as is" without express or implied warranty.
+   --------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Introduction to Gofer                                                  
+
+
+                      T A B L E   O F   C O N T E N T S 
+
+
+    1. INTRODUCTION. . . . . . . . . . . . . . . . . . . . . . . . . .  1
+
+    2. BACKGROUND AND ACKNOWLEDGEMENTS . . . . . . . . . . . . . . . .  2
+
+    3. STARTING GOFER. . . . . . . . . . . . . . . . . . . . . . . . .  4
+
+    4. USING GOFER - A BASIC INTRODUCTION. . . . . . . . . . . . . . .  5
+
+    5. STANDARD AND USER-DEFINED FUNCTIONS . . . . . . . . . . . . . .  6
+
+    6. FUNCTION NAMES - IDENTIFIERS AND OPERATORS. . . . . . . . . . .  8
+
+    7. BUILT-IN TYPES. . . . . . . . . . . . . . . . . . . . . . . . . 12
+    7.1  Functions . . . . . . . . . . . . . . . . . . . . . . . . . . 12
+    7.2  Booleans. . . . . . . . . . . . . . . . . . . . . . . . . . . 13
+    7.3  Integers. . . . . . . . . . . . . . . . . . . . . . . . . . . 13
+    7.4  Floating point numbers. . . . . . . . . . . . . . . . . . . . 14
+    7.5  Characters. . . . . . . . . . . . . . . . . . . . . . . . . . 14
+    7.6  Lists . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+    7.7  Strings . . . . . . . . . . . . . . . . . . . . . . . . . . . 16
+    7.8  Tuples and the unit type. . . . . . . . . . . . . . . . . . . 18
+
+    8. ERRORS. . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19
+    8.1  Errors detected on input. . . . . . . . . . . . . . . . . . . 19
+    8.2  Errors during evaluation. . . . . . . . . . . . . . . . . . . 19
+
+    9. MORE ABOUT VALUE DECLARATIONS . . . . . . . . . . . . . . . . . 21
+    9.1  Simple pattern matching . . . . . . . . . . . . . . . . . . . 21
+    9.2  Guarded equations . . . . . . . . . . . . . . . . . . . . . . 23
+    9.3  Local definitions . . . . . . . . . . . . . . . . . . . . . . 24
+    9.4  Recursion with integers . . . . . . . . . . . . . . . . . . . 24
+    9.5  Recursion with lists. . . . . . . . . . . . . . . . . . . . . 26
+    9.6  Lazy evaluation . . . . . . . . . . . . . . . . . . . . . . . 27
+    9.7  Infinite data structures. . . . . . . . . . . . . . . . . . . 29
+    9.8  Polymorphism. . . . . . . . . . . . . . . . . . . . . . . . . 30
+    9.9  Higher-order functions. . . . . . . . . . . . . . . . . . . . 31
+    9.10 Variable declarations . . . . . . . . . . . . . . . . . . . . 32
+    9.11 Pattern bindings and irrefutable patterns . . . . . . . . . . 33
+    9.12 Type declarations . . . . . . . . . . . . . . . . . . . . . . 35
+
+    10. INCREASING YOUR POWER OF EXPRESSION. . . . . . . . . . . . . . 37
+    10.1 Arithmetic sequences. . . . . . . . . . . . . . . . . . . . . 37
+    10.2 List comprehensions . . . . . . . . . . . . . . . . . . . . . 38
+    10.3 Lambda expressions. . . . . . . . . . . . . . . . . . . . . . 41
+    10.4 Case expressions. . . . . . . . . . . . . . . . . . . . . . . 42
+    10.5 Operator sections . . . . . . . . . . . . . . . . . . . . . . 43
+    10.6 Explicitly typed expressions. . . . . . . . . . . . . . . . . 44
+
+    11. USER-DEFINED DATATYPES AND TYPE SYNONYMS . . . . . . . . . . . 46
+    11.1 Datatype definitions. . . . . . . . . . . . . . . . . . . . . 46
+    11.2 Type synonyms . . . . . . . . . . . . . . . . . . . . . . . . 47
+
+
+
+
+
+
+
+
+
+Introduction to Gofer                                                  
+
+
+    12. DIALOGUES: INPUT AND OUTPUT. . . . . . . . . . . . . . . . . . 49
+    12.1 Basic description . . . . . . . . . . . . . . . . . . . . . . 49
+    12.2 Continuation style I/O. . . . . . . . . . . . . . . . . . . . 52
+    12.3 Interactive programs. . . . . . . . . . . . . . . . . . . . . 55
+
+    13. LAYOUT . . . . . . . . . . . . . . . . . . . . . . . . . . . . 57
+    13.1 Comments. . . . . . . . . . . . . . . . . . . . . . . . . . . 57
+    13.2 The layout rule . . . . . . . . . . . . . . . . . . . . . . . 57
+
+    14. OVERLOADING IN GOFER . . . . . . . . . . . . . . . . . . . . . 61
+    14.1 Type classes and predicates . . . . . . . . . . . . . . . . . 61
+    14.2 The type class Eq . . . . . . . . . . . . . . . . . . . . . . 62
+    14.2.1 Implicit overloading. . . . . . . . . . . . . . . . . . . . 62
+    14.2.2 Instances of class Eq . . . . . . . . . . . . . . . . . . . 63
+    14.2.3 Testing equality of represented values. . . . . . . . . . . 65
+    14.2.4 Instance declarations without members . . . . . . . . . . . 66
+    14.2.5 Equality on function types. . . . . . . . . . . . . . . . . 66
+    14.2.6 Non-overlapping instances . . . . . . . . . . . . . . . . . 67
+    14.3 Dictionaries. . . . . . . . . . . . . . . . . . . . . . . . . 68
+    14.3.1 Superclasses. . . . . . . . . . . . . . . . . . . . . . . . 71
+    14.3.2 Combining classes . . . . . . . . . . . . . . . . . . . . . 73
+    14.3.3 Simplified contexts . . . . . . . . . . . . . . . . . . . . 74
+    14.4 Other issues. . . . . . . . . . . . . . . . . . . . . . . . . 76
+    14.4.1 Unresolved overloading. . . . . . . . . . . . . . . . . . . 76
+    14.4.2 `Recursive' dictionaries. . . . . . . . . . . . . . . . . . 79
+    14.4.3 Classes with multiple parameters. . . . . . . . . . . . . . 81
+    14.4.4 Overloading and numeric values. . . . . . . . . . . . . . . 83
+    14.4.5 Constants in dictionaries . . . . . . . . . . . . . . . . . 86
+    14.4.6 The monomorphism restriction. . . . . . . . . . . . . . . . 88
+
+    APPENDIX A: SUMMARY OF GRAMMAR . . . . . . . . . . . . . . . . . . 93
+
+    APPENDIX B: CONTENTS OF STANDARD PRELUDE . . . . . . . . . . . . . 97
+
+    APPENDIX C: RELATIONSHIP WITH HASKELL 1.1. . . . . . . . . . . . .113
+
+    APPENDIX D: USING GOFER WITH BIRD+WADLER . . . . . . . . . . . . .117
+
+    APPENDIX E: PRIMITIVES . . . . . . . . . . . . . . . . . . . . . .119
+
+    APPENDIX F: INTERPRETER COMMAND SUMMARY. . . . . . . . . . . . . .121
+
+    APPENDIX G: BIBLIOGRAPHY . . . . . . . . . . . . . . . . . . . . .123
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

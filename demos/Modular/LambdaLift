@@ -1,0 +1,125 @@
+------------------------------------------------------------------------------
+--The files in this directory are based on the programs described in:
+--
+--    A Modular fully-lazy lambda lifter in Haskell
+--    Simon L. Peyton Jones and David Lester
+--    Software -- Practice and Experience
+--    Vol 21(5), pp.479-506
+--    MAY 1991
+--
+--See the Readme file for more details.
+------------------------------------------------------------------------------
+
+-- 3.3 A data type for compilation -- a happy ending:
+
+data Constant           = CNum Int | CBool Bool | CFun Name
+type Name               = String
+
+data Expr binder        = EVar   Name                              |
+                          EConst Constant                          |
+                          EAp    (Expr binder) (Expr binder)       |
+                          ELet   IsRec [Defn binder] (Expr binder) |
+                          ELam   [binder] (Expr binder)
+
+type Defn binder        = (binder, Expr binder)
+
+type Expression         = Expr Name
+
+type IsRec              = Bool
+recursive               = True
+nonRecursive            = False
+
+type AnnExpr  binder a  = (a, AnnExpr' binder a)
+data AnnExpr' binder a  = AVar   Name                                        |
+                          AConst Constant                                    |
+                          AAp    (AnnExpr binder a) (AnnExpr binder a)       |
+                          ALet   IsRec [AnnDefn binder a] (AnnExpr binder a) |
+                          ALam   [binder] (AnnExpr binder a)
+
+type AnnDefn binder a   = (binder, AnnExpr binder a)
+
+bindersOf              :: [(binder,rhs)] -> [binder]
+bindersOf defns         = [ binder | (binder,rhs) <- defns ]
+
+rhssOf                 :: [(binder,rhs)] -> [rhs]
+rhssOf defns            = [ rhs | (binder, rhs) <- defns ]
+
+-- 4 Lambda lifting:
+
+lambdaLift :: Expression -> [SCDefn]
+lambdaLift  = collectSCs . abstract . freeVars
+
+type SCDefn = (Name, [Name], Expression)
+
+-- 4.2 Free variables:
+
+freeVars            :: Expression -> AnnExpr Name (Set Name)
+
+freeVars (EConst k)  = (setEmpty, AConst k)
+freeVars (EVar v)    = (setSingleton v, AVar v)
+freeVars (EAp e1 e2) = (setUnion (freeVarsOf e1') (freeVarsOf e2'),AAp e1' e2')
+                        where e1' = freeVars e1
+                              e2' = freeVars e2
+
+freeVars (ELam args body)
+  = (setDifference (freeVarsOf body') (setFromList args), ALam args body')
+    where body' = freeVars body
+
+freeVars (ELet isRec defns body)
+  = (setUnion defnsFree bodyFree, ALet isRec defns' body')
+    where binders        = bindersOf defns
+          binderSet      = setFromList binders
+          values'        = map freeVars (rhssOf defns)
+          defns'         = zip binders values'
+          freeInValues   = foldr setUnion setEmpty (map freeVarsOf values')
+          defnsFree
+             | isRec     = setDifference freeInValues binderSet
+             | not isRec = freeInValues
+          body'          = freeVars body
+          bodyFree       = setDifference (freeVarsOf body') binderSet
+
+freeVarsOf                 :: AnnExpr Name (Set Name) -> Set Name
+freeVarsOf (freeVars, expr) = freeVars
+
+-- 4.3 Generating supercombinators:
+
+abstract               :: AnnExpr Name (Set Name) -> Expression
+abstract (_, AVar v)    = EVar v
+abstract (_, AConst k)  = EConst k
+abstract (_, AAp e1 e2) = EAp (abstract e1) (abstract e2)
+abstract (free, ALam args body)
+                        = foldl EAp sc (map EVar fvList)
+                          where fvList = setToList free
+                                sc     = ELam (fvList++args) (abstract body)
+abstract (_,ALet isRec defns body)
+                        = ELet isRec
+                               [(name,abstract body) | (name,body) <- defns]
+                               (abstract body)
+
+-- 4.4 Collecting supercombinators:
+
+collectSCs   :: Expression -> [SCDefn]
+collectSCs e  = [("$main",[],e')] ++ bagToList scs
+                where (_, scs, e') = collectSCs_e initialNameSupply e
+
+collectSCs_e :: NameSupply -> Expression -> (NameSupply,Bag SCDefn,Expression)
+collectSCs_e ns (EConst k)  = (ns, bagEmpty, EConst k)
+collectSCs_e ns (EVar v)    = (ns, bagEmpty, EVar v)
+collectSCs_e ns (EAp e1 e2) = (ns'', bagUnion scs1 scs2, EAp e1' e2')
+                              where (ns',  scs1, e1') = collectSCs_e ns  e1
+                                    (ns'', scs2, e2') = collectSCs_e ns' e2
+
+collectSCs_e ns (ELam args body)
+ = (ns'', bagInsert (name,args,body') bodySCs, EConst (CFun name))
+   where (ns', bodySCs,body') = collectSCs_e ns body
+         (ns'',name)          = newName ns' "SC"
+
+collectSCs_e ns (ELet isRec defns body)
+ = (ns'', scs, ELet isRec defns' body')
+   where ((ns'',scs),defns')   = mapAccuml collectSCs_d (ns',bodySCs) defns
+         (ns', bodySCs, body') = collectSCs_e ns body
+
+         collectSCs_d (ns,scs) (name,value)
+                              = ((ns',bagUnion scs scs'), (name, value'))
+                                where (ns',scs',value') = collectSCs_e ns value
+

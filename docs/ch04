@@ -1,0 +1,66 @@
+
+
+Introduction to Gofer             4. USING GOFER - A BASIC INTRODUCTION
+
+
+4. USING GOFER - A BASIC INTRODUCTION
+
+Using Gofer is rather like using a high-level programmable  calculator;
+Once the interpreter is loaded, the system  prints  a  prompt  "?"  and
+waits for you to enter an expression, and then press the enter (return)
+key.  Once the input is complete, Gofer evaluates  the  expression  and
+prints its value on the terminal,  before  returning  to  the  original
+prompt and waiting for the next expression.  For example:
+
+    ? (2+3)*8
+    40
+    (5 reductions, 9 cells)
+    ? sum [1..10]
+    55
+    (91 reductions, 130 cells)
+    ? 
+
+In the first example, the user entered the expression "(2+3)*8",  which
+was evaluated by Gofer and the result "40" printed on the terminal.  At
+the end of any calculation, Gofer displays the number of reductions  (a
+measure of the amount of work) and cells (a measure of  the  amount  of
+memory) that were used during the calculation.  These  figures  can  be
+useful for comparing the performance of different ways of carrying  out
+the same calculation.
+
+In the second example, the user typed  the  expression  "sum  [1..10]".
+The notation "[1..10]" represents the list of integers between 1 and 10
+inclusive, and "sum" is a  standard  function  which  can  be  used  to
+determine the sum of a list of integers.  Thus the result  obtained  by
+Gofer is:
+
+          1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10  =  55
+
+We could have typed this sum into Gofer directly:
+
+    ? 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10
+    55
+    (10 reductions, 23 cells)
+    ? 
+
+and this calculation is certainly more efficient as it uses only  1/9th
+of the number of reductions and 1/5th of the number  of  cells  as  the
+original calculation.  On the other hand, the  original  expression  is
+much shorter and you are much less likely to make a mistake  typing  in
+the expression "sum [1..200]" than you would be if you tried  to  enter
+the sum of the integers from 1 to 200 directly.
+
+You will learn more about the kind of expressions that can  be  entered
+into Gofer in the rest of this document.
+
+
+
+
+
+
+
+
+
+                                      5
+
+

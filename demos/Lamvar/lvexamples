@@ -1,0 +1,244 @@
+--
+-- Examples for use with LambdaVr
+--
+
+-- Simple functional version: -------------------------------------------------
+
+data Tree a = Leaf a | Tree a :^: Tree a
+
+label     :: Tree a -> Tree (a,Int)
+label tree = fst (lab tree 0)
+ where lab (Leaf n)  c  =  (Leaf (n,c), c+1)
+       lab (l :^: r) c  =  (l' :^: r', c'')
+                           where (l',c')  = lab l c
+                                 (r',c'') = lab r c'
+
+-- Lambda var version: --------------------------------------------------------
+
+counter = var (\cnt -> 0 =: cnt >>
+                       result (cnt        ? \c ->
+                               c+1 =: cnt >>
+                               result c))
+
+label0 tree = pure (counter >>= lab tree)
+
+lab (Leaf n)  ctr = ctr                   >>= \c ->
+                    result (Leaf (n,c))
+lab (l :^: r) ctr = lab l ctr             >>= \l' ->
+                    lab r ctr             >>= \r' ->
+                    result (l' :^: r')
+
+{- Here is an example where pure is not safe:
+
+label0 tree = pure (lab tree)
+ where ctr           = pure counter
+       lab (Leaf n)  = ctr                   >>= \c ->
+                       result (Leaf (n,c))
+       lab (l :^: r) = lab l                 >>= \l' ->
+                       lab r                 >>= \r' ->
+                       result (l' :^: r')
+
+ gives    label0 aTree = (Leaf (1,0) :^: Leaf (2,1)) :^:
+                         (Leaf (3,2) :^: Leaf (4,3))
+
+whereas:
+
+label0 tree = pure (lab tree)
+ where lab (Leaf n)  = pure counter          >>= \c ->
+                       result (Leaf (n,c))
+       lab (l :^: r) = lab l                 >>= \l' ->
+                       lab r                 >>= \r' ->
+                       result (l' :^: r')
+
+ gives    label0 aTree = (Leaf (1,0) :^: Leaf (2,0)) :^:
+                         (Leaf (3,0) :^: Leaf (4,0))
+-}
+
+-- State monad version: -------------------------------------------------------
+
+data State s a = ST (s -> (a,s))
+
+instance Functor (State s) where
+    map f (ST st) = ST (\s -> let (x,s') = st s in (f x, s'))
+
+instance Monad (State s) where
+    result x      = ST (\s -> (x,s))
+    ST m `bind` f = ST (\s -> let (x,s') = m s
+                                  ST f'  = f x
+                              in  f' s')
+
+startingWith         :: State s a -> s -> a
+ST m `startingWith` v = fst (m v)
+
+incr :: State Int Int
+incr  = ST (\s -> (s,s+1))
+
+label1     :: Tree a -> Tree (a,Int)
+label1 tree = lab tree `startingWith` 0
+ where lab (Leaf n)  = incr                  `bind` \c ->
+                       result (Leaf (n,c))
+       lab (l :^: r) = lab l                 `bind` \l' ->
+                       lab r                 `bind` \r' ->
+                       result (l' :^: r')
+
+label2     :: Tree a -> Tree (a,Int)
+label2 tree = lab tree `startingWith` 0
+ where lab (Leaf n)  = [ Leaf (n,c) | c <- incr ]
+       lab (l :^: r) = [  l :^: r   | l <- lab l, r <- lab r ]
+
+
+-- sample data: ---------------------------------------------------------------
+
+aTree = balance [1..4]
+
+balance ns | len == 1   =  Leaf (head ns)
+           | otherwise  =  balance (take h ns) :^: balance (drop h ns)
+             where len = length ns
+                   h   = len `div` 2
+
+balance' ns = bal (length ns) ns
+ where bal l ns | l == 1    = Leaf (head ns)
+                | otherwise = let h = l `div` 2
+                              in  bal h (take h ns) :^: bal (l-h) (drop h ns)
+
+-------------------------------------------------------------------------------
+-- A swap function:
+
+swap    :: Var a -> Var a -> Proc ()
+swap v w = v ? \x ->
+           w ? \y ->
+           x =: w >>
+           y =: v
+
+valOf v = v ? result 
+
+-- usage: swap elements of arrays a and b in the range between 1 and n
+--
+--seq [swap (a!i) (b!i) | i <- [1..n]]
+
+
+increment v = v ? \val -> val+1 =: v
+
+anotherTest = var (\v -> 0 =: v      >>
+                         increment v >>
+                         increment v >>
+                         increment v >>
+                         increment v >>
+                         v           ?
+                         result)
+
+swapTest = var (\v ->
+           var (\w ->
+           "I'm v" =: v >>
+           "I'm w" =: w >>
+           swap v w     >>
+           v            ? \vValue ->
+           w            ? \wValue ->
+           result (vValue,wValue)))
+
+
+swapTest2 = var           (\v ->
+            var           (\w -> 
+            0  =: v       >>
+            10 =: w       >>
+            v             ? \vValue ->
+            vValue+1 =: v >>
+            swap v w      >>
+            v             ? \vValue ->
+            w             ? \wValue ->
+            result (vValue,wValue)))
+            
+-- A queue implementation
+
+-- First, its interface:
+
+type Queue a = ( a -> Proc (),  -- put
+                 Proc a,        -- get
+                 Proc Bool      -- isempty
+               )
+
+-- Procedures to take apart the method tuple:
+
+put (p, g, i) = p
+get (p, g, i) = g
+isempty (p, g, i) = i
+
+-- Now, the implementation in terms of a linked list:
+
+data Link a = Link a (Var (Link a))
+
+mkqueue :: Proc (Queue Int)
+mkqueue = 
+  var (\v ->
+  var (\front -> v =: front >>
+  var (\rear  -> v =: rear  >>
+   result
+    ( \x ->                             -- put x
+      rear ? \r -> 
+      var (\r' ->
+      Link x r' =: r >>
+      r' =: rear)
+    ,
+      front ? \f ->                     -- get
+      f ? \ (Link x f') ->
+      f' =: front >>
+      result x
+    ,
+      front ? \f ->                     -- isempty
+      rear ? \r ->
+      result (f == r)
+    )
+   )))
+
+-- Usage:
+
+qTest = pure (mkqueue        >>= \q     ->
+              put q 1        >>
+              get q          >>= \first ->
+              isempty q      >>= \empty ->
+              result (if first == 1 && empty then "so should it be"
+                                             else "something's wrong"))
+
+-- An alternative way to write the same thing:
+
+mkqueue1 :: Proc (Queue Int)
+mkqueue1  = 
+  newvar     >>= \v     ->
+  newvar     >>= \front ->
+  v =: front >>
+  newvar     >>= \rear  ->
+  v =: rear  >>
+  let
+      put x   = rear?             \r ->
+                newvar         >>= \r' ->
+                Link x r' =: r >>
+                r' =: rear
+
+      get     = front?            \f ->
+                f?                \(Link x f') ->
+                f' =: front    >>
+                result x
+
+      isempty = front          ?  \f ->
+                rear           ?  \r ->
+                result (f==r)
+  in
+      result (put, get, isempty)
+
+-- Usage:
+
+qTest1 = pure (mkqueue1       >>= \q     ->
+               put q 1        >>
+               get q          >>= \first ->
+               isempty q      >>= \empty ->
+               result (if first == 1 && empty then "so should it be"
+                                              else "something's wrong"))
+
+qTest2 = mkqueue1       >>= \q     ->
+         put q 1        >>
+         get q          >>= \first ->
+         isempty q      >>= \empty ->
+         result (if first == 1 && empty then "so should it be"
+                                        else "something's wrong")
+
+-------------------------------------------------------------------------------

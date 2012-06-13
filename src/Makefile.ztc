@@ -1,0 +1,86 @@
+HFILES      = prelude.h storage.h connect.h errors.h command.h
+CFILES      = gofer.c storage.c input.c static.c type.c \
+		  output.c compiler.c machine.c builtin.c  \
+		  gofc.c cmachine.c cbuiltin.c runtime.c
+INCFILES    = parser.c preds.c prims.c kind.c subst.c \
+		  machdep.c commonui.c
+GC_SRC      = markscan.c twospace.c
+YFILES      = parser.y
+SOURCES     = $(HFILES) $(CFILES) $(INCFILES) $(YFILES) prelude
+OBJECTS     = storage.obj input.obj static.obj type.obj compiler.obj
+IOBJECTS    = gofer.obj builtin.obj  machine.obj output.obj $(OBJECTS)
+COBJECTS    = gofc.obj cbuiltin.obj cmachine.obj $(OBJECTS)
+TESTS       = apr0.exe apr1.exe apr2.exe apr3.exe apr4.exe apr5.exe apr6.exe apr7.exe apr8.exe apr9.exe apr10.exe
+
+# Edit the following settings as required.
+# There are two choices of command line editor that can be used with Gofer:
+#
+#  GNU readline:        usual GNU sources (e.g. bash distribution)
+#  add -DUSE_READLINE=1 to CFLAGS and libreadline.a -ltermcap to LDFLAGS
+#                     (or maybe -lreadline -ltermcap)
+#
+#  editline:            (comp.sources.misc, vol 31, issue 71)
+#  add -DUSE_READLINE=1 to CFLAGS and libedit.a to LDFLAGS
+#                     (or maybe -ledit)
+#
+# The best bet is to `touch prelude.h' after changing these settings to
+# ensure that the whole collection of files is recompiled with the correct
+# settings.
+
+CC      = ztc
+CFLAGS      = -mx -w2
+LDFLAGS     = 
+OPTFLAGS    = 
+
+all     : gofer.exe gofc.exe runtime.obj
+
+tests       : $(TESTS)
+
+gofer.exe       : $(IOBJECTS)
+		  $(CC) $(CFLAGS) $(OPTFLAGS) $(IOBJECTS) -ogofer.exe $(LDFLAGS)
+   
+
+gofc.exe        : $(COBJECTS)
+		  $(CC) $(CFLAGS) $(OPTFLAGS) $(COBJECTS) -ogofc.exe $(LDFLAGS)
+
+
+.c.obj        :
+		  $(CC) -c $(CFLAGS) $(OPTFLAGS) $<
+
+clean       :
+		  rm *.obj $(TESTS)
+
+install     :
+		  mv gofer.exe ..
+		  mv gofc.exe ..
+
+.gs.exe   :
+		  gofc $*.gs
+		  $(CC) $(CFLAGS) $(OPTFLAGS) $*.c c:\gofer\lib\runtime.obj -o$*.exe $(LDFLAGS)
+		  rm $*.c
+
+.gp     :
+		  gofc + $*.gp
+		  $(CC) $(CFLAGS) $(OPTFLAGS) $*.c c:\gofer\lib\runtime.obj -o$*.exe $(LDFLAGS)
+		  rm $*.c
+
+parser.c    : parser.y
+		  yacc parser.y
+		  mv y.tab.c parser.c
+
+gofer.obj     : prelude.h storage.h connect.h errors.h \
+		  command.h machdep.c commonui.c
+gofc.obj      : prelude.h storage.h connect.h errors.h \
+		  command.h machdep.c commonui.c output.c
+runtime.obj   : prelude.h gofc.h machdep.c $(GC_SRC)
+storage.obj   : prelude.h storage.h connect.h errors.h
+input.obj     : prelude.h storage.h connect.h errors.h parser.c command.h
+static.obj    : prelude.h storage.h connect.h errors.h
+type.obj      : prelude.h storage.h connect.h errors.h preds.c kind.c subst.c
+output.obj    : prelude.h storage.h connect.h errors.h
+compiler.obj  : prelude.h storage.h connect.h errors.h
+		  $(CC) -c -O1 $(CFLAGS) compiler.c
+machine.obj   : prelude.h storage.h connect.h errors.h
+cmachine.obj  : prelude.h storage.h connect.h errors.h
+builtin.obj   : prelude.h storage.h connect.h errors.h prims.c
+cbuiltin.obj  : prelude.h storage.h connect.h errors.h prims.c

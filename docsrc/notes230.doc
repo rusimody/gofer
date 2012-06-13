@@ -1,0 +1,598 @@
+.co This is the source form of the release notes for Gofer 2.30a
+.co
+.co Mark P Jones June 1994
+.co-------------------------------------------------------------------|
+.>release.230
+-----------------------------------------------------------------------
+       __________   __________   __________   __________   ________
+      /  _______/  /  ____   /  /  _______/  /  _______/  /  ____  \
+     /  / _____   /  /   /  /  /  /______   /  /______   /  /___/  /
+    /  / /_   /  /  /   /  /  /  _______/  /  _______/  /  __   __/
+   /  /___/  /  /  /___/  /  /  /         /  /______   /  /  \  \ 
+  /_________/  /_________/  /__/         /_________/  /__/    \__\
+
+  Functional programming environment, Version 2.30a
+
+  Copyright Mark P Jones 1994.  This release is subject to the same
+  conditions of use and distribution as previous versions, documented
+  in src/goferite.h and in the main user manual.
+
+  Release notes
+-----------------------------------------------------------------------
+
+This document is intended to be used as a supplement to the original
+user manual ``An introduction to Gofer version 2.20'' and release
+notes for Gofer 2.21 and Gofer 2.28.  These notes replace the
+preliminary version distributed with Gofer 2.30.
+
+ACKNOWLEDGMENTS:
+A lot of people have contributed to the development of Gofer 2.30a
+with their support, encouragement, suggestions, comments and bug
+reports.  There are a lot of people to thank:
+
+       Jim Blandy        Jonathan Bowen           Rodney Brown
+      Nick Chapman          Derek Charleston      Stuart Clayman
+     Terry Dineen             Luc Duponcheel        Dirk Dussart
+ Sebastian Egner          Stephen Eldridge        Jeroen Fokker
+      Jeff Fried             Andy Gill           Michial Gunter
+     Kevin Hammond         Daniel Harris          Barney Hilken
+     Steve Hill               Ian Holyer         Richard Jones
+   Fumiaki Kamiya             Eak Khoon         Hiroyuki Matsuda
+      Sava Mintchev        Torben Mogensen          Dirk Nehring
+      Chin Wei Ngan          Kurt Olender          Palle Nielsen
+       Ian Poole          Bambang Prastowo          Jaan Priisalu
+  Giuliano Procida          Jerry Prothero       Laurenz Pruessner
+    Niklas R\"ojemo    Kristoffer Rose          Bernhard Rumpe
+     David Rushall        Carsten Schultz          Viren Shah
+      Dave Sherratt           Guy Steele Jr.      Donald Smith
+   Matthew Smith          Michael Stout          Bernard Sufrin
+     Peter Thiemann       Stephen Thomas            Bert Thompson
+   Ignacio Trejos-Zelaya   Goeran Uddeborg         Robin Watts
+     Gavin Wraith           David Wright            Isii Yuuitirou
+
+This also includes the names of people who sent comments and bug
+reports after the release of version 2.28 and who may not have been
+credited in previous release notes.  The list probably isn't complete,
+and I apologize if I have inadvertently left your name out.
+
+Enjoy!            jones-mark@cs.yale.edu   (Until mid-July 1994)
+Mark              mpj@cs.nott.ac.uk        (From  Sept/Oct 1994)
+.pa
+.ti Release Notes v2.30
+.co-------------------------------------------------------------------|
+.ST 1. MINOR ENHANCEMENTS AND BUGFIXES
+
+The following sections list the minor enhancements and bugfixes that
+have been made to Gofer since the release of version 2.28.  More
+significant changes are described in Section 2.
+
+
+.ST 1.1  Enhancements
+-----------------
+  o  A new command, :gc, has been added, making it possible to force the
+     interpreter to carry out a garbage collection.
+
+  o  The infamous `too many variables in type checker' message that has
+     caused problems with some programs, particularly machine generated
+     Gofer scripts like the parsers produced by Ratatosk, should now be
+     a thing of the past.  The message may still appear when running
+     such programs on smaller machines where the amount of free memory
+     available for such things is very limited.
+
+  o  It is now possible to compile Gofer without support for old style
+     Dialogue based I/O and, independently, without support for (n+k)
+     and (c*n) patterns.  You may take this as a hint that these
+     features may not be supported in future versions, although no firm
+     decisions have been made just yet.
+
+  o  As a convenience, the parser allows constructor expressions of
+     the form (t ->) as an abbreviation for ((->) t).
+
+  o  Tuple patterns (with irrefutable components) are now treated as
+     irrefutable patterns, but without changing the previous lifted
+     semantics.  This is marginallly more efficient.  It also means
+     that it is no longer necessary to use ~ for generators of the form
+     (x,y) <- expr in monad comprehensions, too avoid restricting the
+     enclosing comprehension to monads with a zero.
+
+  o  Type expressions appearing in primitive declarations may now
+     include synonyms, classes etc. defined in the same script.
+
+  o  Other minor tweaks and improvements.
+
+
+.ST 1.2  Bug fixes
+--------------
+Nobody really likes to dwell on bugs, especially when they have been
+eliminated.  But for those of you who want to know, here is a summary of
+the bugs discovered and fixed in Gofer 2.30:
+
+  o  Test programs apr*.gs that were included in previous distributions
+     are no longer included in the src directory.  These programs were
+     intended only for quick tests, not for public distribution.  The
+     fact that some of the test programs (intentionally) caused errors,
+     was a source of unnecessary concern for some since the expected
+     behaviour was not documented.
+
+  o  Some minor fixes to the parser/grammar to give better error
+     messages.
+
+  o  Fixed problems with the :edit command on some machines,
+     particularly noticable on the RISCOS version.
+
+  o  Large integer constants that are outside the range for Int
+     values are no longer implicitly coerced to type Float.
+
+  o  The implementations of assignment in the LAMBDAVAR and LAMBDANU
+     extensions, and the implementation of the system primitive for
+     LAMBDANU contained subtle bugs that have now been fixed.  Note
+     however that these extensions are now regarded as obsolete, and
+     will probably not be supported in future versions.  (LAMBDAVAR and
+     LAMBDANU where never formally included as an official feature of
+     Gofer anyway.)
+
+  o  Infix data constructors can now be used in a datatype definition
+     such as:
+
+         data  Tree a  =   Empty  |  Tree a `Fork` Tree a
+
+  o  A very subtle bug in the unification algorithm has been fixed.
+
+  o  Some bugs in mildly complicated examples involving pattern
+     matching of integer constants and singleton lists have been
+     fixed.
+
+  o  Fixed some small problems with a couple of the demonstration
+     programs.
+
+  o  Modified prelude definitions of the index function (in class Ix)
+     to include a bounds check.
+
+  o  Other minor bug fixes and tweaks.
+
+Someone is bound to find a new one within hours of the release of 2.30,
+if past experience is anything to go by.  If that someone is you,
+please let me know!
+
+
+.co-------------------------------------------------------------------|
+.ST 2. LANGUAGE DIFFERENCES
+
+This section outlines a number of more substantial extensions that are
+supported in Gofer 2.30.  One of the most important motivations for
+some of these extensions, and part of an ongoing process, is to provide
+greater compatibility with standard Haskell.
+
+
+.ST 2.1  Contexts in datatype definitions
+-------------------------------------
+For greater compatibility with Haskell, it is now possible to include
+contexts in datatype definitions.  These are treated in exactly the
+same way as in Haskell.  For example, the only effect of using a
+context in the datatype definition:
+
+    data Eq a => Set a = NilSet | ConsSet a (Set a)
+
+ is to treat the ConsSet constructor function as having type:
+
+    ConsSet :: Eq a => a -> Set a -> Set a
+
+ See Section 4.2.1 of the Haskell report, version 1.2, for further
+ details.
+
+
+.ST 2.2  Contexts in member function types
+--------------------------------------
+For greater compatibility with Haskell, it is now possible to include
+contexts in the type of member function definitions in a class
+specification.  For example, you can now try out the class definition
+for pseudo monads given in the Yale Research Report YALEU/DCS/RR-1004
+entitled `Composing Monads' by myself and Luc Duponcheel:
+
+    class Premonad m => Pseudomonad m where
+      pbind :: Monad m => p a -> (a -> m (p b)) -> m (p b)
+
+Unlike Haskell, Gofer does not make the restriction that the additional
+constraints on the types of the member functions should not mention any
+of the types in the first line of the class declaration.  This appears
+to have been a consequence of the formal system underlying the original
+theoretical work on type classes by Blott.  For the qualified type
+system that is used as a basis for Gofer, such restrictions are
+unnecessary, although one might argue that they should be retained on
+stylistic grounds ...
+
+See Section 4.3.1 of the Haskell report, version 1.2, for further
+details.
+
+
+.ST 2.3  Haskell arrays
+-------------------
+For closer compatibility with Haskell, Gofer now supports a built-in
+implementation of Haskell style arrays.  To include support for these
+arrays, Gofer must be compiled with the HASKELL_ARRAYS flag set to 1.
+This is the default for all but the very smallest PC version of Gofer.
+
+The implementation includes is based on new primitive datatype:
+
+    data Array a b
+
+The array primitives are not currently incorporated into any of the
+preludes supplied with Gofer.  However a separate script file,
+array.gs, is included in the same directory with the following
+interface:
+
+    data Assoc a b =  a := b  deriving (Eq, Ord, Text)
+
+    array      :: Ix a => (a,a) -> [Assoc a b] -> Array a b
+    listArray  :: Ix a => (a,a) -> [b] -> Array a b
+    (!)        :: Ix a => Array a b -> a -> b
+    bounds     :: Ix a => Array a b -> (a,a)
+    indices    :: Ix a => Array a b -> [a]
+    elems      :: Ix a => Array a b -> [b]
+    assocs     :: Ix a => Array a b -> [Assoc a b]
+    accumArray :: Ix a => (b -> c -> b) -> b -> (a,a)
+                            -> [Assoc a c] -> Array a b
+    (//)       :: Ix a => Array a b -> [Assoc a b] -> Array a b
+    accum      :: Ix a => (b -> c -> b) -> Array a b
+                            -> [Assoc a c] -> Array a b
+    amap       :: Ix a => (b -> c) -> Array a b -> Array a c
+    ixmap      :: (Ix a, Ix b) => (a,a) -> (a -> b)
+                                    -> Array b c -> Array a c
+
+    instance (Ix a, Eq [Assoc a b]) => Eq (Array a b)
+    instance (Ix a, Ord [Assoc a b]) => Ord (Array a b)
+    instance (Ix a, Text (a,a), Text [Assoc a b])
+               => Text (Array a b)
+
+    instance (Ix a, Ix b) => Ix (a,b)
+    rangeSize :: (Ix a) => (a,a) -> Int
+
+For example, to use these primitives in a Gofer session, just include
+array.gs as the first file that you load, or as the one of the first
+file names in a project file.
+
+Arrays, and the primitives above are supported in both the interpreter
+and the compiler.  Because of restrictions in memory management, the
+current implementation does not provide true O(1) lookup/indexing in
+the interpreter or the compiler using the markscan garbage collector.
+True O(1) access is supported when the twospace collector is used for
+compiled programs.
+
+See Section 6.9 of the Haskell report, version 1.2, for further details
+about the use of arrays and the primitives described above.  Please
+bear in mind that the current implementation is still preliminary, and
+may contain bugs.  Please let me know if you encounter any problems
+with it!  A few short demo programs are included in demos/arrayEx.gs.
+
+
+.ST 2.4  Monadic I/O
+----------------
+A preliminary implementation of the monadic I/O is supported, built on
+top of the framework for lazy functional state threads that has been
+proposed by John Launchbury and Simon Peyton Jones (PLDI '94).  The
+details of monadic I/O can be expected to change in future releases as
+a new standard for monadic I/O is established.  For the time being, the
+primitives described here will be of most interest to those looking to
+experiment with simple monadic I/O and the Launchbury/Peyton Jones
+system.  To include support for monadic I/O, Gofer must be compiled
+with the IO_MONAD flag set to 1.  This is the default for all but the
+very smallest PC version of Gofer.
+
+The current implementation provides several new primitive types:
+
+    data ST s a        -- lazy state threads monad
+    data World         -- representation of `the world'
+    type IO = ST World -- the I/O monad proper
+    data MutVar s a    -- a mutable variable
+
+An interface to monadic I/O can be obtained by loading the file
+iomonad.gs which may be found in the same directory as the prelude
+files.  This provides the following operations:
+
+    returnST     :: a -> ST s a
+    thenST       :: ST s a -> (a -> ST s b) -> ST s b
+    thenST_      :: ST s () -> ST s b -> ST s b
+    seqST        :: [ST s ()] -> ST s ()
+
+    newVar       :: a -> ST s (MutVar s a)
+    readVar      :: MutVar s a -> ST s a
+    writeVar     :: MutVar s a -> a -> ST s ()
+    mutvarEq     :: MutVar s a -> MutVar s a -> Bool
+
+    instance Eq (MutVar s a)
+
+    getch        :: IO Char
+    getchar      :: IO Char
+    putchar      :: Char -> IO ()
+    putString    :: String -> IO ()
+    thenIO       :: ST s a -> (a -> ST s b) -> ST s b
+    interleaveST :: ST s a -> ST s a
+
+The thenIO function is a stricter version of thenST that is suitable
+only for computations in the IO monad.  See the Launchbury and
+Peyton Jones paper referenced below for further details.
+
+There is also a built-in special form, runST expr, which is typed
+using the rule:
+
+    expr :: forall s. ST s a        (s not appearing in a)
+    ------------------------
+       runST expr :: a
+
+This special form is used for encapsulating state based computations
+within a purely functional program.  See references below for more
+details.
+
+If the version of Gofer being used also includes support for arrays, as
+described above, you can also use the definitions in ioarray.gs to
+support monadic array operations:
+
+    newArr    :: Ix a => (a,a) -> b -> ST s (MutArr s a b)
+    readArr   :: Ix a => MutArr s a b -> a -> ST s b
+    writeArr  :: Ix a => MutArr s a b -> a -> b -> ST s ()
+    freezeArr :: Ix a => MutArr s a b -> ST s (Array a b)
+
+Some sample programs using the functions described here may be found in
+the demos/IO directory.  For further details about monadic I/O, please
+consult the papers:
+
+    Imperative Functional Programming, S.L. Peyton Jones and
+    P. Wadler, POPL '93.
+
+     Lazy Functional State Threads, J. Launchbury and S.L. Peyton
+    Jones, PLDI '94.
+
+.cc 4
+See also:
+
+    Lazy depth-first search and linear graph algorithms in
+    Haskell, D. King and J. Launchbury, 1993.
+
+For some very nice applications of lazy functional state threads.
+All of these papers are currently available by anonymous ftp from
+the University of Glasgow, ftp.dcs.glasgow.ac.uk.
+
+Monadic I/O as described above is supported in both the Gofer
+interpreter and compiler.  No special optimizations are used in
+the current implementation which should still be treated as
+preliminary, and may contain bugs.  Please let me know if you
+encounter any problems with it!
+
+
+.ST 2.5  Trace primitive
+--------------------
+A simple trace function, inspired by the original implementation in
+LML, can now be accessed by including the primitive definition:
+
+    primitive trace "primTrace" :: String -> a -> a
+
+in a Gofer script.  When called, trace prints the string in its first
+argument, then returns the second argument as its result.  The trace
+function is not referentially transparent, and should only be used for
+debugging, or monitoring execution.  That is why it is not included in
+any of the preludes.  Be warned also that, unless you understand
+something about the way that Gofer programs are actually executed,
+results obtained using trace may be rather confusing.
+
+Because of it's intended use, the trace primitive is not supported
+by the Gofer compiler, gofc.  It is however possible to `hack' in
+a version of trace for gofc using the external function call
+mechanism described below with the following C program:
+
+    #include <stdio.h>
+    #include "/usr/local/lib/Gofer/gofc.h"
+   
+    #define emptyList mkCfun(0)
+   
+    extern Cell primTrace(str,val)
+    Cell str, val; {
+        eval(str);
+        while (whnf!=emptyList) {
+            eval(pop());
+            putchar(charOf(whnf));
+            eval(pop());
+        }
+        fflush(stdout);
+        return val;
+    }
+
+See Section 2.7 below for further details.
+
+
+.ST 2.6  Constructor synonyms
+-------------------------
+Type synonym definitions have been generalized to allow arbitrary
+constructor synonyms such as:
+
+    type List     = []
+    type Function = (->)
+    type Infer    = StateM Int Error
+
+Previously, it was assumed that both the constructors on the left and
+right hand sides were types, i.e. constructors of kind *.  This
+restriction has now been lifted, although both sides are still required
+to have the same kind.  However, the restriction that all arguments to
+a synonym must be given is still imposed.
+
+
+.ST 2.7  External function calls
+----------------------------
+The Gofc compiler, translating Gofer programs to C provides a simple
+external function calling mechanism.
+
+External functions are specified using a primitive declaration of the
+form:
+
+    primitive foo "bar" :: a1 -> a2 -> a3 -> ... -> an -> r
+
+where foo is the Gofer name for the function, bar is the name of the
+corresponding C function (which must not be a string referring to one
+of the built in primitives ... if you avoid the `prim' prefix, this
+should not be a problem), the ai are the argument types, and r is the
+result type.  Arguments of type Int, Bool, Char and Float are evaluated
+before the bar function is invoked, and their results passed to bar in
+parameters of suitable types.  All other values are passed as
+unevaluated Cell values.  (Special treatment is also provided for
+arrays, mutable variables, and mutable arrays for versions of Gofer
+that support these facilities.)
+
+Results of type Int, Bool, Char and Float returned from an external
+function are automatically converted to suitable representations for
+Gofer.  Values of any other type should be passed back as Cell values
+by the C code for the external function.
+
+A result type of the form IO r should be used for external functions
+that may have some side effects.  A result type of the form IO () can
+be used to call a function that does not return any useful value and is
+executed only for its effect.
+
+Here is a simple example using the external function mechanism.  It
+involves the following short Gofer and C programs:
+
+(gix1.gs):    primitive howdy "sayHello" :: Int -> IO ()
+
+              main = howdy (length (filter even [1..5]))
+
+.cc 8
+(cix1.c):     #include <stdio.h>
+              #include "gofc.h"
+
+              Void sayHello(i)
+              Int i; {
+                  while (i-- > 0)
+                      printf("hello, world\n");
+              }
+
+First, we compile gix1.gs to get a C program gix1.c:
+
+    machine% gofc gix1.gs
+    Gofer->C Version 1.02 (2.30) ...
+
+    Reading script file "/usr/local/lib/Gofer/standard.prelude":
+    Reading script file "gix1.gs":
+                   
+    Writing C output file "gix1.c":
+    [Leaving Gofer->C]
+
+Now we compile the C programs, and link them into a single executable
+file, ix1:
+
+    machine% cc -O -o ix1 gix1.c cix1.c runtime.o
+
+Finally, we get to run the program:
+
+    machine% ix1
+    hello, world
+    hello, world
+
+See Section 2.5 above for another example using the external function
+mechanism, and also illustrating how values of type String can be
+evaluated and used in a C function.  You will probably need to refer
+to the report described in Section 3 below if you plan to do anything
+very ambitious with external function calls.
+
+Note that the external function call mechanism described here cannot be
+used in the Gofer interpreter.  The external function call mechanism is
+a prototype only.  It should also be emphasized that we do not, in
+general, regard the Gofc compiler as suitable for serious applications
+development.  If you want to do something along those lines, try one of
+the full Haskell systems available (e.g. the Lisp or C interfaces for
+Yale Haskell, or the C interface for Glasgow Haskell).
+
+
+.ST 2.8  The do notation
+--------------------
+Gofer 2.30 supports a new, experimental syntax for monad comprehensions
+which we will refer to as `do {...} notation'.  To maintain
+compatibility with previous releases of Gofer, the do notation is
+only supported if the system is compiled with the DO_COMPS flag in
+prelude.h set to to 1, and the DO_COMPS section of parser.y included.
+See the comments in these files and in src/Readme for further
+details.
+
+The do notation is useful for monadic programming.  It requires the
+cc.prelude, and provides the following syntax:
+
+    <expr>   ::=  do "{" <dquals> <expr> "}"  -- uses layout rule
+
+    <dquals> ::=  {<dqual> ;}
+
+    <dqual>  ::=  <expr> <- <pat>             -- generator
+              |   <expr>                      -- command
+              |   let "{" decls "}"           -- local definitions
+              |   if <expr>                   -- guard
+
+With this notation, a guard is written as if <expr>, while a single
+expression of the form <expr> is treated as a command, i.e. a generator
+of the form _ <- <expr>.  For example, a general version of the filter
+function can be defined as:
+
+    myFilter     :: Monad0 m => (a -> Bool) -> m a -> m a
+    myFilter p xs = do x <- xs
+                       if p x
+                       result x
+
+If you prefer, this can be written as follows, using explicit layout:
+
+    myFilter p xs = do { x <- xs;
+                         if p x;
+                         result x
+                       }
+
+In standard comprehension notation, this would be written:
+
+    myFilter p xs = [ x | x <- xs, p x ]
+
+Perhaps the most significant difference between these two examples is
+the fact that the call to result must be written explicitly in the
+first case.  In fact, if the comprehension is interpreted in a monad,
+m, then any expression of type (m a) can be used as the final
+expression in a do comprehension.  This is useful for describing `tail
+recursive' procedures.  For example, compare:
+
+    echo' = do c <- getchar
+               if c==EOF
+                 then result ()
+                 else do putchar c
+                         echo'
+
+with:
+
+    echo' = [ () | c  <- getchar,
+                   () <- if c==EOF then result ()
+                                   else [ () | _ <- putchar c,
+                                               () <- echo' ] ]
+
+It is, of course, a matter of personal opinion which of these you
+prefer.  The intention of do notation is to provide a more attractive
+syntax for monadic programming, to be compared with programs using
+`bind` in which the example above would be written:
+
+    echo' = getchar `bind` \c ->
+            if c==EOF then result ()
+                      else putchar c  `bind` \_ ->
+                           echo'
+
+See which notation you prefer for practical programming, and let me
+know!
+
+.co-------------------------------------------------------------------|
+.ST 3. THE IMPLEMENTATION OF GOFER
+
+For those interested in the actual implementation of Gofer, there is
+a (relatively new) technical report available that describes the
+implementation of Gofer 2.30:
+
+    The implementation of the Gofer functional programming system
+    Mark P. Jones
+    Research Report YALEU/DCS/RR-1030
+    Yale University, Department of Computer Science,
+    May 1994.
+
+Copies of this report are currently available by anonymous ftp from
+nebula.cs.yale.edu in the directory pub/yale-fp/reports, together
+with a number of other recent reports by members of the Yale Haskell
+project.
+
+
+.co-------------------------------------------------------------------|

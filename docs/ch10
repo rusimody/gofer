@@ -1,0 +1,594 @@
+
+
+Introduction to Gofer           10. INCREASING YOUR POWER OF EXPRESSION
+
+
+10. INCREASING YOUR POWER OF EXPRESSION
+ 
+This section describes a number of useful extensions to the basic range
+of expressions used in the previous sections.  None of  these  add  any
+extra computational power to Gofer -- anything that can  be  done  with
+these constructs  could  also  be  done  with  the  constructs  already
+described.  They are however included in Gofer because they allow  many
+expressions and function definitions to be  written  more  clearly  and
+concisely than the equivalent expressions without these notations.
+
+10.1 Arithmetic sequences
+-------------------------
+A number of useful  lists  can  be  generated  using  the  notation  of
+arithmetic  sequences  (so  named  because  of  their   similarity   to
+arithmetic progressions in mathematics).  The following list summarises
+the four forms of sequence  expression  that  can  be  used  in  Gofer,
+together with their translation using the standard functions  enumFrom,
+enumFromTo, enumFromThen and enumFromThenTo:
+
+    [ n .. ]         enumFrom n
+
+                     Produces the (potentially infinite) list of values
+                     starting with the value of  n  and  increasing  in
+                     single steps.
+
+                     e.g. [1..] = [1, 2, 3, 4, 5, 6, 7, 8, 9, etc...
+
+    [ n .. m ]       enumFromTo n m
+
+                     Produces the list of  elements  from  n  upto  and
+                     including m in single steps.  If m is less than  n
+                     then the list is empty.
+
+                     e.g. [-3..3] = [-3, -2, -1, 0, 1, 2, 3]
+                          [1..1]  = [1]
+                          [9..0]  = []
+
+    [ n, m .. ]      enumFromThen n m
+
+                     Produces the (potentially infinite) list of values
+                     whose first two elements are given by the values n
+                     and m.  If m is greater than n then the  following
+                     elements of the list are increasing  in  steps  of
+                     the same size.  A similar result is obtained if  m
+                     is less than n  in  which  case  the  elements  of
+                     [n,m..] will be decreasing.  If n and m are  equal
+                     then [n,m..] is an infinite  list  in  which  each
+                     element is equal to n.
+
+                     e.g. [1,3..] = [1, 3, 5, 7, 9, 11, 13, etc...
+                          [0,0..] = [0, 0, 0, 0, 0, 0, 0, etc...
+                          [5,4..] = [5, 4, 3, 2, 1, 0, -1, etc...
+
+    [ n, n' .. m ]   enumFromThenTo n n' m
+
+                     Produces the list of elements from  [n,n'..]  upto
+
+
+                                      37
+
+
+
+
+Introduction to Gofer                         10.1 Arithmetic sequences
+
+
+                     the limit value m.   If  m  is  less  than  n  and
+                     [n,n'..] is increasing, or m is greater than n and
+                     [n,n'..] is decreasing the  resulting list will be
+                     empty.
+
+                     e.g. [1,3..12] = [1, 3, 5, 7, 9, 11]
+                          [0,0..10] = [0, 0, 0, 0, 0, 0, 0, etc...
+                          [5,4..1]  = [5, 4, 3, 2, 1]
+
+In  the  standard  prelude,   the   functions   enumFrom,   enumFromTo,
+enumFromThen and enumFromThenTo are overloaded and may also be used  to
+enumerate lists of characters or floating point values:
+
+    ? ['0'..'9'] ++ ['A'..'Z']
+    0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ
+    (397 reductions, 542 cells)
+
+    ? [1.2, 1.35 .. 2.00]
+    [1.2, 1.35, 1.5, 1.65, 1.8, 1.95]
+    (56 reductions, 133 cells)
+
+    ?
+
+Arithmetic sequences such as those described above play the  same  role
+in functional programming languages as the iterative  `for'  constructs
+in traditional imperative languages.  A good example  of  this  is  the
+example in section 4 used to calculate the sum of the integers  from  1
+upto 10 -- "sum [1..10]".   An  equivalent  program  in  an  imperative
+language might look something like (especially if you think of C!):
+
+    int i;
+    int total=0;
+    for (i=1; i<=10; i++)
+        total = total + i;
+    return total;
+
+The advantages of the functional notation in this case are clear:
+
+   o  It is more compact.
+
+   o  It separates the task of  generating  the  sequence  of  integers
+      [1..10] from the task of finding their sum.
+
+   o  It does not require the declaration or use of auxiliary variables
+      such as "i" and "total" in the above.
+
+
+10.2 List comprehensions
+-------------------------
+List comprehensions provide another very powerful and compact  notation
+for describing certain kinds of list expression.  The basic form  of  a
+list comprehension is:
+
+                      [ <expr> | <qualifiers> ]
+
+There are three kinds of qualifier that can be used in Gofer:
+
+
+                                      38
+
+
+
+
+Introduction to Gofer                          10.2 List comprehensions
+
+
+  o  Generators: A qualifier of the form pat<-exp is  used  to  extract
+     each element that matches the pattern pat from the list exp in the
+     order that they elements appear in that list.  A simple example of
+     this is the expression [x*x | x<-[1..10]] which denotes  the  list
+     of the squares of the integers between  1  and  10  inclusive  and
+     evaluates to [1, 4, 9, 16, 25, 36, 49, 64, 81, 100] as expected.
+
+     Formally, we can define the meaning of a list comprehension with a
+     single generator by the equation:
+
+          [ e | pat <- exp ]  =  loop exp
+                                 where loop []       = []
+                                       loop (pat:xs) = e : loop xs
+                                       loop (_:xs)   = loop xs
+
+     If pat is an irrefutable pattern (for example,  a  variable)  then
+     this is equivalent to:
+
+          [ e | pat <- exp ]  =  map f exp
+                                 where f pat = e
+
+     The full definition is needed for those cases  where  the  pattern
+     pat may not match all of the elements in the list  exp.   This  is
+     the case in expressions such as [ y | (3,y)<-[(1,2),(3,4),(5,6)] ]
+     which evaluates to the singleton list [4].
+
+  o  Filters: A boolean  valued  expression  may  also  be  used  as  a
+     qualifier in which case it is  often  called  a  filter.   We  can
+     define the meaning of a list comprehension with a single filter by
+     the equation:
+
+            [ e | condition ]  =  if condition then [e] else []
+
+     Whilst this form of list comprehension is occasionally  useful  as
+     it stands, it is more common to use filters  in  conjunction  with
+     generators as described below.
+
+  o  Local definitions: A qualifier of the form pat=expr can be used to
+     introduce a local definition within  a  list  comprehension.   Its
+     meaning can be defined formally using the equation:
+
+         [ e | pat = exp ]  =  [ let pat=exp in e ]
+
+     As in the case of filters, local  definitions  are  more  commonly
+     used within lists of more than one qualifier as  described  below.
+     Particular care should be taken to distinguish  a  filter  of  the
+     form pat==expr from a local definition of the form pat=expr.
+
+     [ASIDE: I originally suggested this form of qualifier in a message
+     sent to the Haskell mailing list, only to discover that a  similar
+     (and more comprehensive) suggestion had been made by Kevin Hammond
+     almost a year earlier.  There was a certain amount of  controversy
+     surrounding the choice of an appropriate syntax and semantics  for
+     the construct and consequently, this feature is not currently part
+     of the Haskell  standard.   The  syntax  and  semantics  above  is
+     implemented by Gofer in the hope  that  it  will  give  functional
+
+
+                                      39
+
+
+
+
+Introduction to Gofer                          10.2 List comprehensions
+
+
+     programmers an opportunity to experiment  with  this  facility  in
+     their own programs.]
+
+The real power of this notation is that it is possible to  use  several
+qualifiers, separated by commas on the right of the  vertical  bar  `|'
+symbol in a list comprehension.  Formally, if qs1 and qs2 are two  such
+lists of qualifiers,  then  we  can  define  the  meaning  of  multiple
+qualifiers using:
+
+         [ e | qs1, qs2 ]  =  concat [ [ e | qs2 ] | qs1 ]
+
+The  following  examples  illustrate  how  this  definition  works   in
+practice:
+
+  o  Variables generated by later qualifiers  vary  more  quickly  than
+     those generated by earlier qualifiers:
+
+         ? [ (x,y) | x<-[1..3], y<-[1..2] ]
+         [(1,1), (1,2), (2,1), (2,2), (3,1), (3,2)]
+         (107 reductions, 246 cells)
+         ?
+
+  o  Later qualifiers may use the values generated by earlier ones:
+
+         ? [ (x,y) | x<-[1..3], y<-[1..x]]
+         [(1,1), (2,1), (2,2), (3,1), (3,2), (3,3)]
+         (107 reductions, 246 cells)
+
+         ? [ x | x<-[1..10], even x ]
+         [2, 4, 6, 8, 10]
+         (108 reductions, 171 cells)
+         ?
+
+  o  Variables defined in later qualifiers  hide  those  introduced  by
+     earlier  ones.   The  following   expressions   are   valid   list
+     comprehensions, but this style of definition in  which  names  are
+     reused can result in programs which are difficult  to  understand,
+     and is not recommended:
+
+         ? [ x | x<-[[1,2],[3,4]], x<-x ]
+         [1, 2, 3, 4]
+         (18 reductions, 53 cells)
+
+         ? [ x | x<-[1,2], x<-[3,4] ]
+         [3, 4, 3, 4]
+         (18 reductions, 53 cells)
+         ?
+
+  o  Changing  the  order  of  qualifiers  has  a  direct   effect   on
+     efficiency.  The following two examples produce the  same  result,
+     but the first uses more reductions and cells  because  it  repeats
+     the evaluation of "even x" for each possible value of "y".
+
+         ? [ (x,y) | x<-[1..3], y<-[1..2], even x ]
+         [(2,1), (2,2)]
+         (110 reductions, 186 cells)
+
+
+                                      40
+
+
+
+
+Introduction to Gofer                          10.2 List comprehensions
+
+
+         ? [ (x,y) | x<-[1..3], even x, y<-[1..2] ]
+         [(2,1), (2,2)]
+         (62 reductions, 118 cells)
+         ? 
+
+     The following example illustrates a similar kind of behaviour with
+     local definitions; in the first case the expression  "fact  x"  is
+     evaluated twice for each possible value of "x", whilst the  second
+     expression uses a local definition to ensure that  the  evaluation
+     is not repeated:
+
+         ? [ fact x + y | x<-[1..3], y<-[1..2] ]
+         [2, 3, 3, 4, 7, 8]
+         (246 reductions, 398 cells)
+
+         ? [ factx + y | x<-[1..3], factx = fact x, y<-[1..2] ]
+         [2, 3, 3, 4, 7, 8]
+         (173 reductions, 294 cells)
+         ?
+
+
+10.3 Lambda expressions
+------------------------
+In addition to  named  function  definitions,  Gofer  also  allows  the
+definition and use of unnamed functions using a `lambda expression'  of
+the form:
+
+                  \ <atomic patterns> -> <expr>
+
+[ASIDE:  This  is  a  slight  generalisation  of  the  form  of  lambda
+expression  used  in  most   theoretical   treatments   of   functional
+programming and  dating  back  to  the  pioneering  work  of  logicians
+including  Alonzo Church and  Haskell Curry,  from whom the programming
+language takes its name.  The `\' character used at the beginning of  a
+Gofer lambda expression has been  chosen  for  its  resemblance  to the
+greek letter lambda that might be used if the  standard  character  set
+were  a little larger.]
+
+This expression denotes a function taking a number of  parameters  (one
+for each pattern) and producing the result specified by the  expression
+to the right of the -> symbol.  For example, (\x->x*x)  represents  the
+function which takes a single integer argument  `x'  and  produces  the
+square of that  number as its result.   Another  example is the  lambda
+expression (\x y->x+y) which takes two integer  arguments  and  outputs
+their sum; this expression is in fact equivalent to the (+) operator:
+
+    ? (\x y->x+y) 2 3
+    5
+    (3 reductions, 7 cells)
+    ?
+
+A lambda expression of the form illustrated above is equivalent to  the
+following expression using a local definition:
+
+      (let newName <atomic patterns> = <expr> in newName)
+
+
+
+                                      41
+
+
+
+
+Introduction to Gofer                           10.3 Lambda expressions
+
+
+where "newName" is a new variable name, chosen to avoid conflicts  with
+other variables that are already in use.  This name will be printed  if
+you enter an expression involving a lambda expression without supplying
+the full number of parameters for that function:
+
+    ? (\x y -> x+y) 42
+    v117 42
+    (2 reductions, 14 cells)
+    ?
+
+Lambda expressions  are  particularly  useful  for  certain  styles  of
+functional programming; an example of this  is  the  continuation-based
+approach to I/O described in section 12.
+
+
+10.4 Case expressions
+---------------------
+A case expression can be used to evaluate an expression and,  depending
+on the result, return one of a number of  possible  values.   As  such,
+case statements are a  straightforward  generalisation  of  conditional
+expressions.  Indeed, an expression of the form "if e then t else f" is
+in fact equivalent to the case expression:
+
+                        case e of 
+                          True  -> t
+                          False -> f
+
+In general, a case expression takes the form "case exp of  alts"  where
+exp  is  the  expression  to  be  evaluated  and  alts  is  a  list  of
+alternatives, each of which is of the form:
+
+        pat -> rhs                    for a simple alternative
+
+    or: pat | condition1 -> rhs1      using guard expressions as
+            | condition2 -> rhs2      described in section 9.2 for
+                  .                   function definitions
+                  .
+            | conditionn -> rhsn
+
+In Gofer, a case expression of the form case e of alts  is  implemented
+by choosing a new function name "newName" as in  the  previous  section
+and  using  the  alternatives  in  alts  to  construct  an  appropriate
+definition for this function (essentially by replacing each `->' symbol
+with a `=' symbol).  The complete case expression is  then  treated  as
+being equivalent to the expression "newName e".  A  simple  example  of
+this is the "scanl" function whose definition in the standard prelude:
+
+    scanl f q xs = q : (case xs of
+                        []   -> []
+                        x:xs -> scanl f (f q x) xs)
+
+is equivalent to:
+
+    scanl f q xs = q : scanl' xs
+                   where scanl' []     = []
+                         scanl' (x:xs) = scanl f (f q x) xs
+
+
+                                      42
+
+
+
+
+Introduction to Gofer                             10.4 Case expressions
+
+
+This latter form is precisely the definition used in [1] (but using the
+name "scan" where Gofer uses "scanl").
+
+Evaluating a case expression in which none of  the  alternatives  match
+the value  of  the  discriminant  results  in  an  error  such  as  the
+following:
+
+    ? case [1,2] of [] -> "empty list"
+    {v117 [1, 2]}
+    (6 reductions, 31 cells)
+    ?
+
+The function name "v117" which appears here is the name of the function
+which is used internally by Gofer  to  implement  the  case  expression
+whilst the expression "[1, 2]" gives the discriminant value which could
+not be matched.
+
+By combining case expressions with the lambda expressions introduced in
+the previous section, any function declaration can be translated into a
+single equation of the form <functionName> = <expr>.  For example,  the
+standard function "map" whose definition is usually written as:
+
+    map f []     = []
+    map f (x:xs) = f x : map f xs
+
+can also be defined by the equation:
+
+    map = \f xs -> case xs of
+                     []     -> []
+                     (y:ys) -> f y : map f ys
+
+This kind  of  translation  is  used  in  the  implementation  of  many
+functional programming languages, including Gofer.   See  Simon  Peyton
+Jones book [2] for more details of this.
+
+
+10.5 Operator sections
+----------------------
+As we have seen, most functions in Gofer taking more than one  argument
+are treated as a function of a  single  argument,  whose  result  is  a
+function which can then be applied to the  remaining  arguments.   Thus
+"(+) 1" denotes the function which takes an integer  argument  "n"  and
+returns the integer value "1+n".   Functions  of  this  kind  involving
+operator symbols are sufficiently common that Gofer provides a  special
+syntax for them.  Using e to denote an atomic expression and the symbol
+"*" to represent an arbitrary infix operator, there are functions (e *)
+and (* e), known as `sections of the operator (*)' defined by:
+
+                  (e *) x  = e * x
+                  (* e) x  = x * e
+
+or, using lambda expressions as introduced in section 10.3:
+
+                  (e *)    =  \x -> e * x
+                  (* e)    =  \x -> x * e
+
+
+
+                                      43
+
+
+
+
+Introduction to Gofer                            10.5 Operator sections
+
+
+For example: (1+)   is the successor function which returns the value
+                    of its argument plus 1,
+             (1.0/) is the reciprocal function,
+             (/2)   is the halving function,
+             (:[])  is the function which maps any value to the
+                    singleton list containing that element.
+
+In Gofer, the expressions "(e *)" and "(* e)" are actually  treated  as
+abbreviations for "(*) e" and "flip (*) e" respectively,  where  "flip"
+is the function defined by:
+
+     flip        :: (a -> b -> c) -> b -> a -> c
+     flip  f x y  =  f y x
+
+There is an important special case which occurs with an  expression  of
+the form (- e); this is interpreted  as  "negate  e"  and  not  as  the
+section which subtracts the value of "e" from its argument.  The latter
+function can be written as the section (+ (- e))  or  as  "subtract  e"
+where "subtract" is the function defined in the standard prelude using:
+
+    subtract = flip (-)
+
+
+10.6 Explicitly typed expressions
+----------------------------------
+As described in section 9.12, it is often useful to be able to  declare
+the type of a variable defined in a function or pattern  binding.   For
+much the same reasons, Gofer allows expressions of the form:
+
+                         <expr> :: <type>
+
+so that the type of an expression can be  specified  explicitly.   Note
+that the :t command can be used  to  find  the  type  of  a  particular
+expression that is inferred by Gofer:
+
+    ? :t  \x -> [x]
+    \x -> [x] :: a -> [a]
+
+    ? :t  sum . map length
+    sum . map length :: [[a]] -> Int
+
+    ? 
+
+The types inferred in each case can be modified by  including  explicit
+types in these expressions:
+
+    ? :t  (\x -> [x]) :: Char -> String
+    \x -> [x] :: Char -> String
+
+    ? :t  sum . map (length :: String -> Int)
+    sum . map length :: [String] -> Int
+
+    ?
+
+Note that an error occurs if the type declared in an  explicitly  typed
+expression is not compatible with the type inferred by Gofer:
+
+
+                                      44
+
+
+
+
+Introduction to Gofer                 10.6 Explicitly typed expressions
+
+
+    ? :t (\x -> [x]) :: Int -> a
+    ERROR: Declared type too general
+    *** Expression    : \x -> [x]
+    *** Declared type : Int -> a
+    *** Inferred type : Int -> [Int]
+
+    ?
+
+Explicitly typed expressions  are  most  commonly  used  together  with
+overloaded functions and values as described in section 14.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      45
+
+

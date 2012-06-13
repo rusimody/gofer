@@ -1,0 +1,66 @@
+
+
+Introduction to Gofer                          APPENDIX G: BIBLIOGRAPHY
+
+
+APPENDIX G: BIBLIOGRAPHY
+
+[1]  Introduction to functional programming, Richard  Bird  and  Philip
+     Wadler, Prentice Hall International, 1989.
+
+[2]  The Implementation of functional programming languages,  Simon  L.
+     Peyton Jones, Prentice Hall International, 1987.
+
+[3]  Lambda Lifting:  Transforming  Programs  to  Recursive  Equations,
+     Thomas  Johnsson,  in  Lecture  Notes  in  Computer  Science  201,
+     Springer Verlag, 1985.  [but try to get a copy of the  version  of
+     this paper included in Johnsson's thesis which  benefits  from  an
+     extended typeface and is a little easier to read!]
+
+[4]  How to make ad-hoc polymorphism less  ad-hoc,  Philip  Wadler  and
+     Stephen Blott, University of Glasgow, in the  proceedings  of  the
+     16th ACM annual symposium on Principles of Programming  Languages,
+     Austin, Texas, January 1989.
+
+[5]  Report on the programming language Haskell,  a  non-strict  purely
+     functional language (Version 1.1), Paul Hudak,  Philip  Wadler  et
+     al.  Technical report Yale University/Glasgow University.  August,
+     1991.
+
+[6]  Introduction to Orwell 6.00, Philip  Wadler  and  Quentin  Miller,
+     University of Oxford, 1990.
+
+[7]  Lazy ML user's manual, Lennart  Augustsson  and  Thomas  Johnsson,
+     1990.
+
+[8]  Computing with lattices: An application of type classes,  Mark  P.
+     Jones, Technical report PRG-TR-11-90, Programming Research  Group,
+     Oxford University Computing Laboratory, June 1990.
+
+[9]  Towards a theory of qualified  types,  Mark  P.  Jones,  Technical
+     report PRG-TR-6-91, Programming Research Group, Oxford  University
+     Computing Laboratory, April 1991.
+
+[10] Type inference for  qualified  types,  Mark  P.  Jones,  Technical
+     report PRG-TR-10-91, Programming Research Group, Oxford University
+     Computing Laboratory, June 1991.
+
+[11] A new approach to type classes,  Mark  P.  Jones,  distributed  to
+     Haskell mailing list 1991.
+
+[12] Practical issues in the implementation of qualified types, Mark P.
+     Jones, Forthcoming 1991.
+
+
+
+
+
+
+
+
+
+
+
+                                      123
+
+

@@ -1,0 +1,1386 @@
+
+
+                                                                      
+
+
+-----------------------------------------------------------------------
+       __________   __________   __________   __________   ________
+      /  _______/  /  ____   /  /  _______/  /  _______/  /  ____  \
+     /  / _____   /  /   /  /  /  /______   /  /______   /  /___/  /
+    /  / /_   /  /  /   /  /  /  _______/  /  _______/  /  __   __/
+   /  /___/  /  /  /___/  /  /  /         /  /______   /  /  \  \ 
+  /_________/  /_________/  /__/         /_________/  /__/    \__\
+
+  Functional programming environment, Version 2.21
+
+  Copyright Mark P Jones 1991.
+
+
+  Release notes
+
+-----------------------------------------------------------------------
+
+This document is intended as a supplement to the user manual ``An
+introduction to Gofer'' supplied with the previous public release of
+Gofer, version 2.20.1.  It provides brief descriptions of the changes
+and new features incorporated in version 2.21.  With the exception of
+bug fixes, which will be distributed as soon as they become available,
+there are no plans to release a further update of Gofer for some time
+(at least six months).
+
+If you would like to be informed when bug-fixes or further versions
+become available, please send email to me at mpj@prg.ox.ac.uk or
+jones-mark@cs.yale.edu (if you have not already done so) and I will
+add your name to the mailing list.
+
+Please contact me if you have any questions about the Gofer system, or
+if you need some advice or help to complete a port of Gofer to a new
+platform.
+
+In addition to PC and Sun workstations, I have now had reports that
+Gofer has been successfully compiled and used on a number of other
+machines including Apollo, DecStation, Mips, MicroVax and Acorn ARM
+machines, with little or no changes to the original source.
+
+
+ACKNOWLEDGMENTS
+
+Many of the features described in this document were motivated by
+comments and suggestions from users of the previously released version
+of Gofer.  My thanks in particular to Julian Seward, but also to Brent
+Benson, Stuart Clayman, Andy Gill, Peter Hancock, Ian Holyer, Hiroyuki
+Matsuda, Aiden McCaughey, Tobias Nipkow, Will Partain, Ian Poole,
+Bernard Sufrin and Phil Wadler.
+
+
+
+
+
+
+
+
+
+
+                                      1
+
+
+
+
+Release Notes                                    1. MINOR ENHANCEMENTS
+
+
+1. MINOR ENHANCEMENTS
+
+A number of small enhancements have been made to make the source code
+for Gofer a little more flexible.  In particular, this includes:
+
+  o  Gofer can now be compiled using the Gnu C compiler gcc, for those
+     who prefer this to the standard cc compiler provided on their
+     machine.
+
+  o  Default table sizes for the Unix version have been expanded which
+     makes it possible to support larger programs in Gofer (a program
+     of over 5000 lines has already been tested with this release).
+
+  o  The Makefile has been made less SunOS specific and should be
+     usable on a wider range of machines without modification.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      2
+
+
+
+
+Release Notes                             2. USER INTERFACE EXTENSIONS
+
+
+2. USER INTERFACE EXTENSIONS
+
+The user interface of the previous release has been extended to support
+a range of new features, intended to make the Gofer environment more
+convenient for program development.  Further details are given in the
+following sections.
+
+2.1 Command line options
+------------------------
+Although the previous version of Gofer accepted some command line
+options, these were not documented.  Those who discovered the
+Gofer command line options in the previous release by reading the
+source code should note that a different syntax is now used which is
+not compatible with the older system.
+
+Options may be set when loading Gofer (on the UNIX/DOS command line)
+or within the interpreter itself using the :set command.  Using this
+command on its own with no arguments prints a menu of all of the
+available options and displays the current settings:
+
+    ? :set
+    Groups of options begin with +/- to turn options on/off resp.
+ 
+    TOGGLES:
+    s    Print no. reductions/cells after eval
+    t    Print type after evaluation
+    d    Show dictionary values in output exprs
+    f    Terminate evaluation on first error
+    g    Print no. cells recovered after gc
+    c    Test conformality for pattern bindings
+    l    Treat input files as literate scripts
+    e    Warn about errors in literate scripts
+    i    Apply fromInteger to integer literals
+    o    Optimise use of (&&) and (||)
+    u    Catch ambiguously typed top-level vars
+    a    Use any evidence, not nec. best
+    E    Fail silently if evidence not found
+
+    OTHER OPTIONS: (leading + or - makes no difference)
+    hnum Set heap size (cannot be changed within Gofer)
+    pstr Set prompt string to str
+    xnum Set maximum depth for evidence search
+
+    Current settings: +sdcoaE -tfgleiu -h100000 -p? -x8
+    ?
+
+Most options are toggles meaning that they can either be switched on
+(by preceding the option with a `+' character) or off (by using a `-'
+character).  Several options may be grouped together so that:
+
+  :set +std -le     is equivalent to       :set +s +t +d -l -e
+
+In order to distinguish command line options from filenames, a leading
+`+' or `-' must also be used with the `h', `p' and `x' options, although
+the choice in each case is not significant.
+
+
+
+                                      3
+
+
+
+
+Release Notes                                 2.1 Command line options
+
+
+Options may also be used in :a and :l commands, and within project files
+(see section 2.2), although it should be noted that they will be acted
+upon as soon as they are encountered and will not be reapplied when
+reloading files.
+
+Most of the options listed above are described in more detail in the
+following sections.
+
+
+2.1.1  Set Gofer prompt
+-----------------------
+The standard Gofer prompt "? " may be changed using a command line
+option of the form -pstr where for any string str.  The new prompt is
+formed from the given string, followed by a single space:
+
+    ? :set -pGofer>
+    Gofer> :set -p?
+    ?
+
+2.1.2  Print statistics
+-----------------------
+In normal operation, Gofer displays the number of reductions and cells
+used by a particular calculation when the result has been evaluated or
+if the calculation is interrupted:
+
+    ? map (\x -> x*x) [1..10]
+    [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
+    (112 reductions, 204 cells)
+    ? [1..]
+    [1, 2, 3, 4, ^C{Interrupted!}
+
+    (18 reductions, 54 cells)
+    ?
+
+Printing of these statistics can be suppressed using the -s option
+(and subsequently restored using +s):
+
+    ? :set -s
+    ? map (\x -> x*x) [1..10]
+    [1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
+    ? [1..]
+    [1, 2, 3, 4, ^C{Interrupted!}
+
+    ? :set +s
+    ? 2 + 4
+    6
+    (2 reductions, 6 cells)
+    ?
+
+
+2.1.3  Print type
+-----------------
+Before evaluating an expression entered into the interpreter, the Gofer
+type checker is used to determine the type of the resulting value.
+This is used to detect errors in the original input expression, avoid
+the use of runtime type checks and determine how the value should be
+
+
+                                      4
+
+
+
+
+Release Notes                                        2.1.3  Print type
+
+
+output.  The actual type of the term is not usually displayed unless a
+type error is detected.  This behaviour can be changed using the +t
+option which displays the type of each value as soon as evaluation is
+complete.
+
+    ? :set +t
+    ? map (\x -> x*x) [1..10]
+    [1, 4, 9, 16, 25, 36, 49, 64, 81, 100] :: [Int]
+    (108 reductions, 204 cells)
+
+    ? map concat
+    map concat :: [[[a]]] -> [[a]]
+    (2 reductions, 17 cells)
+
+    ? fix where fix f = f (fix f)
+    v112 :: (a -> a) -> a
+    (1 reduction, 7 cells)
+    ?
+
+Note that values of type String and Dialogue (or equivalent forms) are
+displayed in a different manner to other values, and no type information
+is printed after such values to avoid any possibility of confusion:
+
+    ? map                              -- the map function
+    map :: (a -> b) -> [a] -> [b]
+    (1 reduction, 6 cells)
+
+    ? "map"                            -- a string expression
+    map
+    (0 reductions, 4 cells)
+
+    ? print "map"                      -- a dialogue
+    "map"
+    (18 reductions, 44 cells)
+    ?
+
+
+2.1.4  Show dictionaries
+------------------------
+The implementation of overloading in Gofer uses a translation of each
+expression entered into the interpreter to a new expression involving
+dictionary variables and constants.  These additional parameters are
+usually included in expressions displayed by the interpreter and are
+often useful for understanding and resolving overloading problems:
+
+    ? \x -> x + x
+    ERROR: Unresolved overloading
+    *** type        : Num a => a -> a
+    *** translation : \d125 x -> (+) d125 x x
+
+    ? :t map (1+) [1..10]
+    map ((+) {dict} 1) (enumFromTo {dict} 1 10) :: [Int]
+    ?
+
+If necessary (perhaps to make the output of Gofer easier for a beginner
+to understand), the printing of dictionary parameters may be suppressed
+
+
+                                      5
+
+
+
+
+Release Notes                                 2.1.4  Show dictionaries
+
+
+using the -d option:
+
+    ? :set -d
+    ? \x -> x + x
+    ERROR: Unresolved overloading
+    *** type        : Num a => a -> a
+    *** translation : \x -> x + x
+
+    ? :t map (1+) [1..10]
+    map (1 +) (enumFromTo 1 10) :: [Int]
+    ?
+
+The original behaviour can be obtained using :set +d within the
+interpreter.
+
+
+2.1.5  Terminate on error
+-------------------------
+When an irreducible subexpression is encountered during the evaluation
+of a particular expression, the irreducible redex is printed with
+surrounding braces and the Gofer interpreter attempts to continue the
+evaluation with other parts of the original expression:
+
+    ? take (1/0) [1..]          -- value is bottom
+    {primDivInt 1 0}
+    (4 reductions, 33 cells)
+    ? [1/0]                     -- value is [bottom]
+    [{primDivInt 1 0}]
+    (5 reductions, 34 cells)
+    ? [1/0, 2]                  -- value is [bottom, 2]
+    [{primDivInt 1 0}, 2]
+    (7 reductions, 43 cells)
+    ?
+
+Notice that, reading an expression enclosed in {braces} as bottom, each
+of the values printed by Gofer gives the correct value.  Of course, it
+is not possible to arrange for anything to be printed when a value of
+bottom is generated by a nonterminating computation:
+
+    ? last [1..]
+    ^C{Interrupted!}            -- nothing printed until interrupted
+
+    (10470 reductions, 15712 cells)
+    ?
+
+An alternative behaviour is provided by the +f option, which causes the
+evaluation of an expression to be abandoned completely if an error
+occurs:
+
+    ? :set +f
+    ? take (1/0) [1..]
+
+    Aborting evaluation: {primDivInt 1 0}
+    (3 reductions, 55 cells)
+
+
+
+
+                                      6
+
+
+
+
+Release Notes                                2.1.5  Terminate on error
+
+
+    ? [1/0]
+
+    Aborting evaluation: {primDivInt 1 0}
+    (3 reductions, 54 cells)
+ 
+    ? [1/0,2]
+
+    Aborting evaluation: {primDivInt 1 0}
+    (3 reductions, 56 cells)
+
+    ?
+
+Note that we are no longer able to distinguish between the values
+produced by these three terms from the output produced by Gofer -- the
+only differences are in the number of reductions and cells used which
+tells us nothing about the values of the terms.  Note that the basic
+method of evaluation in Gofer is unchanged -- the +f option simply
+modifies the printing mechanism (i.e the means by which values are
+displayed) to be more strict (in the technical sense of the word).
+
+Although the use of the +f option makes the Gofer printing mechanism
+less accurate, it is sometimes useful during program development so
+that an error can be detected as soon as it occurs.  The original
+behaviour can of course be restored at any time using the -f
+option.
+
+
+2.1.6  Heap size
+----------------
+The -hnumber option can be used to set the heap size (i.e. total number
+of cells available at any one time), but cannot be used once the
+interpreter has been loaded.  For example, starting the interpreter
+with the command:
+
+    gofer -h20000
+
+will typically start the Gofer interpreter with a heap of 20000 cells.
+Note that the heap is used to hold an intermediate (parsed) form of an
+input file while it is being read, type checked and compiled.  It
+follows that, the larger the input file, the larger the heap required
+to enable that file to be loaded into Gofer.  In practice, most large
+programs are written (and loaded) as a number of separate files (see
+section 2.2) which means that this does not usually cause problems.
+
+
+2.1.7  Garbage collector notification
+-------------------------------------
+It is sometimes helpful to be able to tell when the garbage collector
+is being used, in order to monitor the amount of time involved and the
+number of cells recovered with each garbage collection.  If the +g
+command line option is given (for example, using the command :set +g)
+then the garbage collector prints a message of the form {{Gc:num}} each
+time that the garbage collector is invoked.  The number after the colon
+indicates the total number of cells that have been recovered.
+
+
+
+
+                                      7
+
+
+
+
+Release Notes                    2.1.7  Garbage collector notification
+
+
+The garbage collector messages are actually printed in three sections,
+which indicate which stage the garbage collector has reached (this is
+only noticeable on slower machines of course!):
+
+            {{Gc                :              number}}
+
+   garbage       marking cells      preparing           garbage
+   collection      which are       unused cells         collection
+   begins         still in use      for reuse           completed
+
+Garbage collector messages may be printed at almost any stage in a
+computation (or indeed whilst loading, type checking or compiling a
+file of definitions).  For this reason, it is often better to turn
+the garbage collector messages off (using :set -g for example) when
+they are not required.
+
+
+2.1.8  Conformality testing
+---------------------------
+As described briefly in section 9.11 of the documentation for Gofer
+version 2.20, pattern bindings of the form pat=expr are implemented
+using a `conformality check' to ensure that the value of expr does
+indeed match the pattern pat.  For example, the pattern binding:
+
+    (x:xs) = [1..]
+
+is actually implemented as if it had been defined by:
+
+    (x:xs) = conformality [1..]
+             where conformality v@(_:_) = v
+
+which is in turn treated as a group of bindings:
+
+    xxs    = conformality [1..] where conformality v@(_:_) = v
+    x      = head xxs
+    xs     = tail xxs
+
+[The variables conformality and xxs used here are given as examples
+only -- in practice, Gofer maintains a supply of variable names and
+selects new names from this supply to avoid clashes with variables
+which are already in use.]
+
+The conformality check does not cause any problems in the example
+above because the list [1..] is always guaranteed to match the
+pattern (x:xs) (i.e. a non-empty list).  We can however see the
+conformality check in action if we try examples in which the pattern
+does not match:
+
+    ? x where (x:xs) = []
+    {v114 []}
+    (3 reductions, 25 cells)
+
+    ? xs where (0:xs) = [1..]
+    {v114 [1] ++ iterate (primPlusInt 1) (primPlusInt 1 1)}
+    (13 reductions, 94 cells)
+    ?
+
+
+                                      8
+
+
+
+
+Release Notes                              2.1.8  Conformality testing
+
+
+The variable v114 in each of these examples is the variable name
+representing the conformality check.  As the second example shows, the
+value of the expression on the right hand side of the pattern binding
+is evaluated as much as necessary to determine whether the pattern
+fits.
+
+[ASIDE: This example also demonstrates a small problem with the printer
+in that, when the first element of the list is encountered, it is
+unable to detect that the tail of the list has not yet been evaluated.
+Consequently, the expression:
+
+    [1] ++ iterate (primPlusInt 1) (primPlusInt 1 1)
+
+is not enclosed in parentheses as it should be.  This is a little
+annoying, but not important because the expression only appears in an
+error message.  The problem cannot in general be solved unless we avoid
+the use of the [...] notation for enumerating the elements of a list.]
+
+The conformality check must be used for compatibility with Haskell.
+However, it is sometimes useful to be able to suppress the conformality
+check using the -c option (for example, to use some programs written
+for a language without conformality checks within Gofer):
+
+    ? :set -c
+    ? x where (x:xs) = []
+    {_SEL (:) [] 1}
+    (5 reductions, 36 cells)
+    ? xs where (0:xs) = [1..]
+    [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14^C{Interrupted!}
+
+    (55 reductions, 146 cells)
+    ?
+
+In the first example, the expression _SEL (:) [] 1 indicates that the
+first component of an object constructed using the (:) operator is to
+be extracted from the object [].  Clearly this is impossible, and hence
+the expression _SEL (:) [] 1 is irreducible.  In the second case, the
+value of xs is equivalent to _SEL (:) (1:[2..]) 2 which reduces to
+the infinite list [2..] as shown, despite the fact that [1..] does not
+match the pattern (0:xs).
+
+[ASIDE: The _SEL function is used internally by Gofer and cannot be
+entered directly into the the interpreter.  One particular reason for
+this is that it is not in general possible to assign a sensible type
+to _SEL.  Constructor functions appearing as the first argument to _SEL
+are printed in the normal manner.  There is no standard syntax for
+writing tuple constructors in Gofer or Haskell which are therefore
+printed in the form (,,,) for example, where the number of commas
+indicates the number of components in the tuple.  In the following
+example the constructor (,) denotes the pairing constructor.
+
+    ? f a b where f (n+1) y = n+y;  (a,b) = (0,1)
+    {v113 0 (_SEL (,) (0,1) 2)}
+    (10 reductions, 63 cells)
+    ?
+
+
+
+                                      9
+
+
+
+
+Release Notes                              2.1.8  Conformality testing
+
+
+The same notation is sometimes used in the messages produced when type
+errors are detected:
+
+    ? (1,2) 3
+    ERROR: Type error in application
+    *** expression     : (1,2) 3
+    *** term           : (,)
+    *** type           : a -> b -> (a,b)
+    *** does not match : c -> d -> e -> f
+
+    ?
+
+This syntax for tuple constructor functions cannot be used in
+expressions entered directly into Gofer.  It may however be a nice
+extension to consider for future versions, allowing definitions such
+as zip = zipWith (,)  and  distl x = map (x,).]
+
+
+2.1.9  Literate scripts
+-----------------------
+In common with most programming languages, Gofer typically treats input
+from a file as a list definitions in which program text is the norm,
+and comments play a secondary role, introduced by the character
+sequences ``--'' and ``{- ... -}''.
+
+An alternative approach, using an idea described by Knuth as ``literate
+programming'', gives more emphasis to comments and documentation, with
+additional characters needed to distinguish program text from comments.
+Gofer supports a form of literate programming based on an idea due to
+Richard Bird and originally implemented as part of the functional
+programming language Orwell.  The same idea has subsequently been
+adopted by several other functional language systems.
+
+A literate script contains a sequence of lines.  Program lines are
+distinguished from comments by a `>' character in the first column.
+This makes it particularly easy to write a document which is both an
+executable program script and at the same time, without need for any
+preprocessing, suitable for use with document preparation software such
+as LaTeX.  Indeed, this document is itself a literate script containing
+the following definition of the squaring function.
+
+> sqr x = x * x
+
+The +l option sets Gofer to treat each input file as a literate
+script.  It should not be used on the command line unless the prelude
+file has been edited to make a literate script.
+
+The effect of using literate scripts can be thought of as applying a
+preprocessor to each input file before it is loaded into Gofer.  This
+program has a particularly simple definition in Gofer:
+
+   illiterate   :: String -> String
+   illiterate cs = unlines [ xs | ('>':xs) <- lines cs ]
+
+The system of literate scripts used in Orwell is actually a little more
+complicated than this and requires that the programmer adopt two simple
+
+
+                                      10
+
+
+
+
+Release Notes                                  2.1.9  Literate scripts
+
+
+conventions in an attempt to try to catch simple errors in literate
+scripts:
+
+  o  Every input file must contain at least one line whose first
+     character is `>'.  This means that programs containing no
+     definitions (because the programmer has forgotten to use the `>'
+     character to mark definitions) from being accepted.
+
+  o  Lines containing definitions must be separated from comment lines
+     by one or more blank lines (i.e. lines containing only space and
+     tab characters).  This is useful for catching programs where the
+     leading `>' character has been omitted from one or more lines in
+     the definition of a function.  For example:
+
+     >   map f []     = []
+         map f (x:xs) = f x : map f xs
+
+     would result in an error if the `>' character appeared in the first
+     column of the first line.
+
+Gofer will report on errors of this kind if the +l option is combined
+with the +e option (for example as +le).
+
+
+2.1.10 Optimise (&&) and (||)
+-----------------------------
+The operator symbols (&&) and (||) are usually used to represent the
+boolean connectives conjunction (and) and disjunction (or).  By
+default, Gofer uses the following equations to produce better code for
+expressions involving these operators:
+
+         x && y  =  if  x  then  y     else  False
+         x || y  =  if  x  then  True  else  y
+
+This optimization is only valid if the operator symbols (&&) and (||)
+are indeed bound to the appropriate values at the top level (the
+standard full definitions are required in order to support partial
+applications involving these operators).  Although this optimization is
+in general valid (because the appropriated definitions are included in
+the standard prelude), it may be necessary in certain cases (for
+example, when working with a non-standard prelude) to suppress the
+optimization using the -o option.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      11
+
+
+
+
+Release Notes                                       2.2  Project Files
+
+
+2.2  Project Files
+------------------
+Project files provide a simple way to use programs which are
+spread across a number of source files.  Larger programs are often
+written in this way, to separate the different components of the
+program into smaller pieces which can be developed and tested
+independently of other components.
+
+A project file is a simple text file containing a list of program
+filenames.  The project file may also contain comments using either of
+the Gofer conventions for comments.  As a simple example, a simple
+project file, in a file named "miniProlog", suitable for the
+stack-based version of the mini Prolog interpreter included as a
+demonstration program with Gofer 2.21 is as follows:
+
+    -- This is a project file suitable for loading the stack-based
+    -- version of the mini Prolog interpreter into Gofer 2.21
+    --
+    -- Load into Gofer using the command:   :p miniProlog
+    --        or from command line using:   gofer + miniProlog
+
+    Parse       -- general purpose parsing library
+    Interact    -- general purpose library for interactive programs
+    PrologData  -- definition of main data structures
+    Subst       -- substitutions and unification
+    StackEngine -- inference engine
+    Main        -- top level program
+
+As indicated in the comments at the top, there are two ways of using
+this file with Gofer.  Within the interpreter we can use the command
+:p miniProlog.  Once this command has been entered, Gofer reads the
+contents of the project file and then attempts to load each of the
+files named.  In general, if a particular project file "proj" contains
+the options op1, ..., opn and the filenames f1, ..., fm, then the
+command :p proj is equivalent to the sequence of commands:
+
+    :l                -- clear any previously loaded scripts
+    :set op1 ... opn  -- set options
+    :l f1 ... fm      -- load files
+
+The project file name may also be specified on the command line used to
+start the interpreter by preceding the project file name with a single
+`+' character.  Note that there must be at least one space on each side
+of the `+'.  This may be combined with standard command line options,
+but any additional filename arguments will be ignored.  Starting Gofer
+with a command of the form "gofer + proj" is equivalent to starting
+Gofer without the "+ project" arguments and then giving the command
+:p proj.
+
+In addition, Gofer records the name of the project file and displays
+this with the list of files loaded.  For example:
+
+    Gofer session for: (project: miniProlog)
+    /users/mpj/public/Gofer/prelude 
+    Parse
+    Interact
+
+
+                                      12
+
+
+
+
+Release Notes                                       2.2  Project Files
+
+
+    PrologData
+    Subst
+    StackEngine
+    Main
+    ? 
+
+Once a project file has been selected, the command :p (without any
+arguments) can be used to force Gofer to reread the project file and
+load fresh copies of each of the files listed there.  There are two
+places in which this is particularly useful:
+
+  o  If the project file itself has been modified since the last time
+     that it was read.
+
+  o  To force Gofer to reload all of the files in the project,
+     regardless of the last time they were modified.
+
+As usual, the :r command can be used to reload each of the files in the
+current project without rereading the project file itself, and avoiding
+the need to read certain files which have not been modified since the
+previous time they were loaded.
+
+The use of project files integrates smoothly with the other parts of
+the Gofer environment.  As an example consider a project file proj
+containing the four filenames f1, f2, f3 and f4, and suppose that the
+file f3 contains an error of some kind.  This leads to the following
+sequence of commands and results:
+
+    :p proj       -- attempt to load project proj
+                  -- reads filenames f1, f2, f3, f4 from proj
+                  -- load definitions from f1
+                  -- load definitions from f2
+                  -- load definitions from f3 -- error occurs
+                  -- error message printed
+    :e            -- starts up editor at relevant line in f3
+                  -- correct error
+                  -- exit editor
+                  -- load definitions from f3
+                  -- load definitions from f4
+
+After just these two commands, the error in f3 has been corrected and
+all of the files mentioned in proj have been loaded, ready for use.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      13
+
+
+
+
+Release Notes                                  2.3  Other new features
+
+
+2.3  Other new features
+-----------------------
+
+2.3.1  :find - find definition
+------------------------------
+The command ":f name" starts up an editor to allow you to inspect (and
+possibly modify) the definition of a particular name from the files
+currently loaded into Gofer.  If supported (using the EDITLINE
+variable), Gofer will attempt to initialize the editor so that the
+cursor is initially positioned at the first line in the definition.
+There are three possibilities:
+
+  o  If the name is defined by a function or variable binding then
+     the cursor is positioned at the first line in the definition of
+     the name (ignoring any type declaration, if present).
+
+  o  If the name is a constructor function, then the cursor is
+     positioned at the first line in the definition of the
+     corresponding data definition.
+
+  o  If the name represents an internal Gofer function, then the
+     cursor will be positioned at the beginning of the standard
+     prelude file.
+
+Note that names of infix operators should be given without any
+enclosing them in parentheses.  Thus ":f ++" starts an editor on the
+standard prelude at the first line in the definition of (++).
+
+
+2.3.2  :! - shell escape
+------------------------
+A command of the form ":! cmd" can be used to execute a specified
+system command without leaving the Gofer interpreter.  For example,
+":! ls" (or ":! dir" on MS DOS machines) can be used to list the
+contents of the current directory.
+
+The command ":!" without any arguments starts a new shell:
+
+  o  On a unix machine, the SHELL environment variable is used to
+     determine which shell to use (the default is "/bin/sh").
+
+  o  On an MS DOS machine, the COMSPEC environment variable is used
+     to determine which shell to use.  This is usually COMMAND.COM
+     and you may return to Gofer using the EXIT command.
+
+As usual, it is not possible to use a shell escape to change the
+current working directory.  The :cd command described in the following
+section can be used for this purpose.
+
+
+2.3.3  :cd - change directory
+-----------------------------
+The command ":cd dir" changes the current working directory to the path
+given by "dir".  This command is ignored if the pathname is omitted.
+
+
+
+
+                                      14
+
+
+
+
+Release Notes                               2.3.4  :names - list names
+
+
+2.3.4  :names - list names
+--------------------------
+The :n command lists the names of variables and functions whose
+definitions are currently loaded into the Gofer interpreter.  Using
+this command without any arguments produces the list of all names
+known to the system.  For example, with just the standard prelude
+loaded we obtain:
+
+    ? :n
+    !! && * + ++ - . / /= : < <= == > >= AppendChan AppendFile Echo
+    Failure False FormatError OtherError ReadChan ReadError ReadFile
+    SearchError Str Success True WriteError WriteFile [] \\ ^ abort abs
+    all and any appendChan appendFile asTypeOf break chr cjustify
+    concat const copy curry cycle div done drop dropWhile echo elem
+    enumFrom enumFromThen enumFromThenTo enumFromTo error even exit
+    filter flip foldl foldl' foldl1 foldr foldr1 fromInteger fst fst3
+    gcd head help id inRange index init insert interact isAlpha
+    isAlphanum isAscii isControl isDigit isLower isPrint isSpace
+    isUpper iterate last layn lcm length lines ljustify map max maximum
+    merge min minimum mod negate not notElem nub null odd or ord
+    otherwise primDivFloat primDivInt primEqFloat primEqInt
+    primIntToFloat primLeFloat primLeInt primMinusFloat primMinusInt
+    primMulFloat primMulInt primNegFloat primNegInt primPlusFloat
+    primPlusInt primPrint print prints product products qsort range
+    readChan readFile rem repeat reverse rjustify run scanl scanl'
+    scanl1 scanr scanr1 show show' showChar showList showString shows
+    showsPrec signum snd snd3 sort space span splitAt stdecho stderr
+    stdin stdout strDispatch strict subtract succDispatch sum sums tail
+    take takeUntil takeWhile thd3 toLower toUpper transpose uncurry
+    undefined unlines until until' unwords words writeFile zip zip3
+    zip4 zip5 zip6 zip7 zipWith zipWith3 zipWith4 zipWith5 zipWith6
+    zipWith7 ||
+    (201 names listed)
+    ?
+
+Note that the names are listed in the standard alphabetical order.
+
+The :n can also accept one or more pattern strings which limits the list
+of names printed to those names matching one or more of the given
+pattern strings:
+
+    ? :n fold*
+    foldl foldl' foldl1 foldr foldr1
+    (5 names listed)
+    ?
+
+Each pattern string consists of a string of characters and may use the
+standard wildcard characters: `*' (matches anything), `?' (matches any
+single character), `\c' (matches exactly the character c) and ranges of
+characters of the form `[a-zA-Z]' etc.  For example:
+
+    ? :n *ap* *[Cc]han \\\\ ?
+    * + - . / : < > AppendChan ReadChan \\ ^ appendChan appendFile
+    map readChan
+    (16 names listed)
+    ?
+
+
+                                      15
+
+
+
+
+Release Notes                       2.3.5  $$ - recall last expression
+
+
+2.3.5  $$ - recall last expression
+----------------------------------
+The previously entered expression can be recalled at any stage whilst
+using the Gofer interpreter (even if the list of currently loaded files
+has subsequently been changed) by using the operator symbol $$:
+
+    ? 42
+    42
+    (1 reduction, 5 cells)
+    ? [$$]
+    [42]
+    (3 reductions, 12 cells)
+    ? [$$]
+    [[42]]
+    (5 reductions, 19 cells)
+    ? ($$, length $$)
+    ([[42]],1)
+    (14 reductions, 43 cells)
+    ?
+
+The $$ symbol is bound to a new value each time that an expression is
+evaluated, or its type determined using the :t command:
+
+    ? :t $$
+    ([[42]],length [[42]]) :: ([[Int]],Int)
+    ? :t map (1+) [1..10]
+    map ((+) {dict} 1) (enumFromTo {dict} 1 10) :: [Int]
+    ? $$
+    [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    (100 reductions, 189 cells)
+    ?
+
+Note that $$ can also be used when the last expression entered used
+a where clause (such expressions are simply translated into the
+appropriate let expressions):
+
+    ? fibs where fibs = 0:1:zipWith (+) fibs (tail fibs)
+    [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55^C{Interrupted!}
+
+    (41 reductions, 136 cells)
+    ? :t $$
+    let {...} in fibs :: [Int]
+    ? take 5 $$
+    [0, 1, 1, 2, 3]
+    (24 reductions, 77 cells)
+    ?
+
+Note that $$ expands to the unevaluated form of the expression, so that
+a certain amount of computation may be repeated if $$ is used more than
+once in a subsequent expression:
+
+    ? sum [1..10]
+    55
+    (92 reductions, 130 cells)
+    ? $$ + $$
+    110
+
+
+                                      16
+
+
+
+
+Release Notes                       2.3.5  $$ - recall last expression
+
+
+    (176 reductions, 254 cells)
+    ? x + x where x = sum [1..10]
+    110
+    (89 reductions, 131 cells)
+    ?
+
+Note that the value of $$ is updated after the expression has been parsed
+but before it is type checked:
+
+    ? 42
+    42
+    (1 reduction, 5 cells)
+    ? 4)
+    ERROR: Syntax error in input (unexpected `)')
+    ? $$ 4
+    ERROR: Type error in application
+    *** expression     : 42 4
+    *** term           : 42
+    *** type           : Int
+    *** does not match : a -> b
+
+    ?
+
+
+2.3.6  Command names
+--------------------
+Command names of the form :X (where X represents an arbitrary capital
+letter) are no longer supported.  Each command has a mnemonic full name
+of the form :name which can be abbreviated to :n where `n' is the first
+letter of the full name.  The complete list of commands produced by the
+:? command is as follows:
+
+    ? :?
+    LIST OF COMMANDS:  Any command may be abbreviated to :c where
+    c is the first character in the full name.
+ 
+    :set <options>      set command line options
+    :set                help on command line options
+    :?                  display this list of commands
+    <expr>              evaluate expression
+    :type <expr>        print type of expression
+    :names [pat]        list names currently in scope
+    :load <filenames>   load scripts from specified files
+    :load               clear all files except prelude
+    :also <filenames>   read additional script files
+    :reload             repeat last load command
+    :project <filename> use project file
+    :edit <filename>    edit file
+    :edit               edit last file
+    :find <name>        edit file containing definition of name
+    :! command          shell escape
+    :cd dir             change directory
+    :quit               exit Gofer interpreter
+    ?
+
+
+
+
+                                      17
+
+
+
+
+Release Notes                                  3. LANGUAGE DIFFERENCES
+
+
+3. LANGUAGE DIFFERENCES
+
+There are very few changes to the language supported by Gofer -- most
+programs that ran correctly under the previous release should run
+without any changes.  The features described in the following sections
+are (for the most part) extensions to the previous version.
+
+3.1 c*p and p+k patterns
+------------------------
+Motivated by recent discussion on the Haskell mailing list, starting
+with a posting from Tony Davie, Gofer now supports a more general form
+of n+k pattern, together with a new form of pattern, c*p.  The syntax
+of patterns is extended to include:
+
+        pattern ::= .... | pattern + integer | integer * pattern
+
+Note that, in the previous version of Gofer, only variables were
+permitted for the pattern p in a p+k pattern.  Certain restrictions are
+placed on the constants c and k used in c*p and p+k patterns; Gofer
+currently requires c>1 and k>0.
+
+The semantics of these new patterns are described by the equations
+(suggested by Kent Karlsson):
+
+    case e0 of {p+k -> e; _ -> e'}
+      = if e0 >= k then case e0-k of {p -> e; _ -> e'} else e'
+
+    case e0 of {c*p -> e; _ -> e'}
+      = if e0 >= 0 then  case e0 `divRem` c of {(p, 0) -> e; _ -> e'}
+                   else  e'
+
+In Gofer, both forms of pattern match nonnegative integers only (there
+is no possibility for overloading here as there is in Haskell).
+
+These features are included in Gofer to enable experimentation with the
+use of c*p patterns.  They are not currently supported by Haskell, and
+are subject to change as we gain more experience using them.  To
+illustrate the potential uses for these extensions, here are two
+examples provided by Tony Davie in his original message which can be
+used in Gofer:
+
+    x^^0       = 1                     -- fast exponentiation 
+    x^^(2*n)   = xn*xn where xn = x^^n -- compare with definition
+    x^^(2*n+1) = x * x^^(2*n)          -- of (^) in the prelude
+
+    fib 1       = 1                    -- fast fibonnacci
+    fib 2       = 1
+    fib (2*n)   = (fib(n+1))^^2 - (fib(n-1))^^2
+    fib (2*n+1) = (fib(n+1))^^2 + (fib n   )^^2
+
+
+
+
+
+
+
+
+
+                                      18
+
+
+
+
+Release Notes                                 3.2 Errors during output
+
+
+3.2 Errors during output
+------------------------
+If an error of the form "error str" occurs during an output request in
+a program using the facilities for I/O, the IOError value passed to
+the failure continuation is the (WriteError str), rather than
+(WriteError "{error str}") as in the previous release.  This enables
+further evaluation of the string str (for example to produce a
+compound error message by concatenating several strings together).
+
+You are strongly advised to consider using the standard prelude
+continuation "exit" in your programs in place of the "abort" predicate;
+whereas "abort" causes a program to terminate without any indication of
+the problem, "exit" attempts to print a suitable error message before
+the program terminates.
+
+
+3.3 Type synonyms in predicates
+-------------------------------
+Type synonyms may now be used in predicates (The previous release
+allowed only data constructors).  This means that programs such as the
+cat program described in section 14.2.6 (page 68) of the Gofer
+documentation can now be written as:
+
+    class    Cat a        where cat  :: a -> Dialogue
+    instance Cat String   where cat n = showFile n done
+    instance Cat [String] where cat   = foldr showFile done
+
+    showFile name cont = readFile name abort
+                             (\s->appendChan stdout s abort cont)
+
+This uses the type synonym String in place of the expanded form [Char]
+required by the original program.  Note that it is still not permitted
+to define overlapping instances; an attempt to add an instance for Cat
+[Char] to the above will not be accepted.
+
+
+3.4 Reporting on ambiguous types
+--------------------------------
+Class declarations whose member functions have ambiguous types are no
+longer permitted.  For example, in the class declaration:
+
+    class Box a where
+        mem :: Int
+
+The type of the member function mem is Box a => Int which is ambiguous
+and produces the error message:
+
+    ERROR "examp" (line 3): Ambiguous type signature in class declaration
+    *** ambiguous type : Box a => Int
+    *** assigned to    : mem
+
+    ?
+
+Similar error messages are produced when an explicit type signature
+includes an ambiguous type.  For example:
+
+
+
+                                      19
+
+
+
+
+Release Notes                         3.4 Reporting on ambiguous types
+
+
+    func   :: Eq a => Int -> Int
+    func x  = 2*x+1
+
+Results in an error of the form:
+
+    ERROR "examp" (line 12): Ambiguous type signature in type declaration
+    *** ambiguous type : Eq a => Int -> Int
+    *** assigned to    : func
+
+    ?
+
+By default, no error is signalled if an ambiguous type is assigned to a
+variable or function by the type checker.  This makes it possible to
+write definitions such as:
+
+    f y xs  =  if xs==[] then 0 else g y
+    g y     =  f y []
+
+The types obtained for each of these terms is as follows:
+
+    f :: Eq [a] => b -> [a] -> Int
+    g :: Eq [a] => b -> Int
+
+Note that the second type is ambiguous.  Making the analogy between
+these mutually recursive functions and a two state machine, we can
+think of a direct call to f as initializing the machine correctly so
+that there is no problem when we enter g.  On the other hand, entering
+the system at g does not initialize the machine correctly, as signalled
+by the ambiguity.
+
+Using the +u command line flag forces Gofer to generate an error when
+an attempt to assign an ambiguous type to a top-level function occurs.
+For the above example this gives:
+
+    ERROR "examp" (line 20): Ambiguous type signature in inferred type
+    *** ambiguous type : Eq [a] => b -> Int
+    *** assigned to    : g
+ 
+    ?
+
+The restriction to top-level functions means that f can still be
+implemented by writing:
+
+    f :: Eq [a] => b -> [a] -> Int
+    f  = f'  where  f' y xs = if xs==[] then 0 else g y
+                    g' y    = f y []
+
+which prevents external access to g' (preventing entry to the finite
+machine described above in state g).  Note that the type signature in
+this example is necessary to avoid the monomorphism restriction.
+
+
+
+
+
+
+
+
+                                      20
+
+
+
+
+Release Notes                                         4. OTHER MATTERS
+
+
+4. OTHER MATTERS
+
+4.1 Contributions
+-----------------
+I would like to hear from anyone with interesting Gofer programs or
+other useful items which might be included (with full credit to the
+original author(s) of course!) in subsequent releases of Gofer.  There
+is already one example of this in the new release; a small gnuemacs
+mode for running the Gofer interpreter from within gnuemacs on Unix
+machines, contributed by Stuart Clayman.  See the file gofer.el for
+more details.
+
+4.2 Future directions
+---------------------
+There will not be another release of Gofer for some time.  There are
+however a number of areas which I would like to investigate at some
+point as extensions to the Gofer system:
+
+  o  The ability to use Haskell style type classes.
+
+  o  Facilities for working with modules, based on the approach
+     described in the Haskell report.  A particular problem here is
+     in finding an elegant way to provide the full power of the
+     module system from the interactive environment.
+
+  o  The ability to write stand alone applications programs using
+     Gofer.
+
+  o  An improved user interface.  There are a number of grand ideas
+     based on the use of windowing/mouse/pulldown-menus etc.  The
+     current user interface is closer to this kind of approach than
+     might at first be realized.  More interesting ideas include the
+     design of class, data type and value browsers, along the lines
+     of a Smalltalk system.
+
+I would be interested to hear from anyone with comments or suggestions
+on any of these (or other ideas).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      21
+
+

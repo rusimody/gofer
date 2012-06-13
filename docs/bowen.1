@@ -1,0 +1,134 @@
+.TH GOFER 1 "13 August 1993" "" ""
+." location of Gofer files - site specific
+.ds RT /usr/local/gofer
+.ds LB \*(RT/lib
+.ds BN \*(RT/bin
+.ds DC \*(RT/doc*
+.SH NAME
+gofer \- Gofer functional language interpreter
+.SH SYNOPSIS
+.B gofer
+[ \fIoptions\fP ]
+.SH DESCRIPTION
+.I Gofer
+is a shell script that invokes a Gofer functional language
+environment, based on Haskell. Help on the commands available
+may be obtained by typing \fB:?\fP followed by the return key
+within the interpreter.
+.PP
+The following commands are available:
+.IP
+.nf
+.ta 2i
+\fB:load \fI<filenames>\fR	load scripts from specified files
+\fB:load\fP	clear all files except prelude
+\fB:also \fI<filenames>\fR	read additional script files
+\fB:reload\fP	repeat last load command
+\fB:project \fI<filename>\fR	use project file
+\fB:edit \fI<filename>\fR	edit file
+\fB:edit\fP	edit last file
+\fI<expr>\fP	evaluate expression
+\fB:type \fI<expr>\fR	print type of expression
+\fB:?\fP	display this list of commands
+\fB:set \fI<options>\fR	set command line options
+\fB:set\fP	help on command line options
+\fB:names \fI[pat]\fR	list names currently in scope
+\fB:info \fI<names>\fR	describe named objects
+\fB:find \fI<name>\fR	edit file containing definition of name
+\fB:!\fIcommand\fR	shell escape
+\fB:cd \fIdir\fR	change directory
+\fB:quit\fP	exit Gofer interpreter
+.fi
+.PP
+Any command may be abbreviated to \fB:\fIc\fR where
+\fIc\fP is the first character in the full name.
+.SH OPTIONS
+Help concerning the command line options may be obtained by
+typing \fB:s\fP followed by the return key within the
+interpreter.
+.LP
+Many options are toggled with \fB+\fP or \fB\-\fP to turn them one or
+off respectively. The following such options are available:
+.IP
+.nf
+.ta 0.75i
+\fBs\fP	Print number of reductions/cells after eval
+\fBt\fP	Print type after evaluation
+\fBd\fP	Show dictionary values in output exprs
+\fBf\fP	Terminate evaluation on first error
+\fBg\fP	Print number of cells recovered after gc
+\fBc\fP	Test conformality for pattern bindings
+\fBl\fP	Literate scripts as default
+\fBe\fP	Warn about errors in literate scripts
+\fBi\fP	Apply fromInteger to integer literals
+\fBo\fP	Optimize use of (&&) and (\|\(or\|\(or\|)
+\fBu\fP	Catch ambiguously typed top-level vars
+\fB\&.\fP	Print dots to show progress
+\fBw\fP	Always show which files loaded
+\fB1\fP	Overload singleton list notation
+\fBk\fP	Show kind errors in full
+.fi
+.LP
+Other options which may be preceded by \fB+\fP or \fB\-\fP
+(making no difference) are:
+.IP
+.nf
+.ta 0.75i
+\fBh\fInum\fR	Set heap size (cannot be changed within \fIGofer\fP)
+\fBp\fIstr\fR	Set prompt string to \fIstr\fP
+\fBr\fIstr\fR	Set repeat last expression string to \fIstr\fP
+.fi
+.LP
+The default settings are:
+\fB+sfceow1 \-tdgliu.k \-h100000 \-p? \-r$$\fP
+.SH ENVIRONMENT
+The following environment variables may be set in the user's
+\fI.login\fP or \fI.profile\fP file:
+.TP 20
+.BI GOFER= file
+Set the standard prelude file to be used by \fIGofer\fP.
+The default file is \fI\*(LB/standard.prelude\fP.
+.TP 20
+.BI GOFERARGS= options
+Set the default options to be used by \fIgofer\fP.
+The default is none.
+As an example, the following is a possibility:
+\fB\-pGofer: \-rit \-s +k\fP
+.TP 20
+.BI VISUAL= editor
+Set the editor to be used by \fIgofer\fP. The default is
+\fI/usr/ucb/vi\fP.
+.TP 20
+.BI EDITOR= editor
+As for \fBVISUAL\fP if \fBVISUAL\fP is not set.
+.SH FILES
+.PD 0
+.TP 30
+\*(BN/Gofer
+executable binary
+.TP 30
+\*(DC
+documentation files
+.TP 30
+\*(LB
+support files
+.TP 30
+\*(LB/standard.prelude
+standard \fIgofer\fP prelude
+.PD
+.SH "SEE ALSO"
+\fIAn Introduction to Gofer\fP by Mark Jones.
+.br
+emacs(1),
+mira(1),
+vi(1)
+.SH AUTHOR
+Executable and preludes (Version 2.28, 1993): Mark Jones.
+.br
+Manual page: Jonathan Bowen, Oxford University, UK
+\fI<Jonathan.Bowen@comlab.ox.ac.uk>\fP.
+.br
+Shell script: Mark Jones (modified by Jonathan Bowen).
+.SH BUGS
+The shell script and manual page may change without notice.
+

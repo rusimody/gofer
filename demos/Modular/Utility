@@ -1,0 +1,113 @@
+------------------------------------------------------------------------------
+--The files in this directory are based on the programs described in:
+--
+--    A Modular fully-lazy lambda lifter in Haskell
+--    Simon L. Peyton Jones and David Lester
+--    Software -- Practice and Experience
+--    Vol 21(5), pp.479-506
+--    MAY 1991
+--
+--See the Readme file for more details.
+------------------------------------------------------------------------------
+
+-- Utilities:
+-- The following general purpose function is defined in the above paper:
+mapAccuml           :: (b -> a -> (b,c)) -> b -> [a] -> (b,[c])
+mapAccuml f b []     = (b,[])
+mapAccuml f b (a:as) = (b'',c:cs)  where (b',c) = f b a
+                                         (b'',cs) = mapAccuml f b' as
+
+-- All subsequent definitions are my own implementations of functions
+-- specified only by type signatures and informal descriptions in the
+-- paper -- so blame me for any errors or misinterpretations!
+
+-- Sets: sets are implemented as ordered lists with no repetitions, as
+--       suggested by the use of (Ord) in the given signatures.
+--       Just for a change, we'll write these definitions out as
+--       iterations...
+
+data Set a = Set [a]
+
+setDifference                  :: Ord a => Set a -> Set a -> Set a
+setDifference (Set xs) (Set ys) = Set (differ xs ys)
+ where differ (x:xs) (y:ys)
+                         | x==y = differ xs ys
+                         | x<y  = x : differ xs (y:ys)
+                         | y<x  = differ (x:xs) ys
+       differ xs     _          = xs
+
+setIntersect                  :: Ord a => Set a -> Set a -> Set a
+setIntersect (Set xs) (Set ys) = Set (intersect xs ys)
+ where intersect (x:xs) (y:ys)
+                        | x==y = x : intersect xs ys
+                        | x<y  = intersect xs (y:ys)
+                        | y<x  = intersect (x:xs) ys
+       intersect _      _      = []
+
+setUnion                      :: Ord a => Set a -> Set a -> Set a
+setUnion (Set xs) (Set ys)     = Set (union xs ys)
+ where union (x:xs) (y:ys)
+                        | x==y = x : union xs ys
+                        | x<y  = x : union xs (y:ys)
+                        | y<x  = y : union (x:xs) ys
+       union xs     ys         = xs ++ ys
+
+setUnionList                  :: Ord a => [Set a] -> Set a
+setUnionList                   = foldr setUnion setEmpty
+
+setToList                     :: Set a -> [a]
+setToList (Set xs)             = xs
+
+setFromList                   :: Ord a => [a] -> Set a
+setFromList                    = Set . sort . nub
+
+setSingleton                  :: a -> Set a
+setSingleton a                 = Set [a]
+
+setEmpty                      :: Set a
+setEmpty                       = Set []
+
+-- Bags: the given interface doesn't impose any constraint on the types
+--       that can be held in bags, so it doesn't seem that there is much
+--       to do other than make a bag type out of lists... for the benefits
+--       of type checking, I'll make a separate Bag data type constructor,
+--       although a synonym would have been acceptable...
+
+data Bag a    = Bag [a]
+
+bagUnion                  :: Bag a -> Bag a -> Bag a
+bagUnion (Bag xs) (Bag ys) = Bag (xs++ys)
+
+bagInsert                 :: a -> Bag a -> Bag a
+bagInsert x (Bag xs)       = Bag (x:xs)
+
+bagToList                 :: Bag a -> [a]
+bagToList (Bag bag)        = bag
+
+bagFromList               :: [a] -> Bag a
+bagFromList                = Bag
+
+bagSingleton              :: a -> Bag a
+bagSingleton x             = Bag [x]
+
+bagEmpty                  :: Bag a
+bagEmpty                   = Bag []
+
+-- Association lists:
+
+type Assn a b = [(a,b)]
+
+assLookup      :: Eq a => Assn a b -> a -> b
+assLookup ps a  = head [ b | (a',b) <- ps, a==a' ]
+
+-- Name supply:
+
+type NameSupply = Int
+
+initialNameSupply :: NameSupply
+initialNameSupply  = 0
+
+newName           :: NameSupply -> String -> (NameSupply,String)
+newName ns prefix  = (ns+1, prefix ++ show ns)
+
+-- That's it!!!

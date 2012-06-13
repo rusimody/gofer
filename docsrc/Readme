@@ -1,0 +1,12 @@
+This directory contains the source code for the Gofer documentation.
+It is made up of three files:
+
+    usrguide.doc	User manual for version 2.20
+    notes221.doc	Release notes for version 2.21
+    notes228.doc	Release notes for version 2.28
+
+and a crude page formatter for producing the plain ascii versions of
+these documents.  I have no idea where the hacked up source for the
+page formatter originally came from, but it is certainly in the public
+domain ...
+

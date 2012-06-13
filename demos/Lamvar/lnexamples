@@ -1,0 +1,62 @@
+--
+-- Examples for use with LambdaNu
+--
+
+imap f xs	    =  begin
+                         (new 
+			   (\t ->
+			     assign t xs >>
+			     let loop = deref t >>= \ys ->
+			                case ys of 
+				          (y:ys') -> out (f y :) >>
+					             assign t ys' >>
+						     loop
+				          [] -> outConst []
+                             in loop))
+
+imap' f xs  = newvar      >>= \t ->
+              assign t xs >>
+              let loop = t ? \ys ->
+                         case ys of (z:zs) -> out (f z :) >>
+                                              assign t zs >>
+                                              loop
+                                    []     -> outConst []
+             in  loop
+
+
+ones = 1:ones
+					 
+test1 = imap (+1) [1,2,3]
+test2 = imap (+1) ones
+
+funny x = begin (new (\t -> assign t x >>
+                            deref t    >>= \x' ->
+                            outConst x'))
+
+funny' x y = begin (new (\t ->
+                   (new (\s -> assign t x >>
+                               assign s y >>
+                               deref t    >>= \x' ->
+                               deref s    >>= \y' ->
+                               outConst (x',y')))))
+
+double xs = begin
+              (new
+                (\t -> assign t xs >>
+                       let loop = deref t >>= \zs ->
+                                  case zs of
+                                    (y:ys) -> out (\zs -> y:y:zs) >>
+                                              assign t ys         >>
+                                              loop
+                                    []     -> out (const [])
+                       in  loop))
+
+
+double' xs = begin
+              (let loop (y:ys) = out (\zs -> y:y:zs) >> loop ys
+                   loop []     = out (const [])
+               in  loop xs)
+
+
+double'' (y:ys) = y : y : double'' ys
+double'' []     = []

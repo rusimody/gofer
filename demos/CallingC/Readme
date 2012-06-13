@@ -1,0 +1,42 @@
+Here is a simple example using the external function mechanism.
+It involves the following short Gofer and C programs:
+
+(gix1.gs):    primitive howdy "sayHello" :: Int -> IO ()
+
+              main = howdy (length (filter even [1..5]))
+
+
+(cix1.c):     #include <stdio.h>
+              #include "gofc.h"
+
+              Void sayHello(i)
+              Int i; {
+                  while (i-- > 0)
+                      printf("hello, world\n");
+              }
+
+First, we compile gix1.gs to get a C program gix1.c:
+
+    machine% gofc gix1.gs
+    Gofer->C Version 1.02 (2.30)  Copyright (c) Mark P Jones 1992-1994
+
+    Reading script file "/usr/local/lib/Gofer/standard.prelude":
+    Reading script file "gix1.gs":
+                   
+    Writing C output file "gix1.c":
+    [Leaving Gofer->C]
+
+Now we compile the C programs, and link them into a single executable
+file, ix1:
+
+
+    machine% cc -O -o ix1 gix1.c cix1.c runtime.o
+
+Finally, we get to run the program:
+
+    machine% ix1
+    hello, world
+    hello, world
+
+Wow!
+

@@ -1,0 +1,198 @@
+
+
+Introduction to Gofer      11. USER-DEFINED DATATYPES AND TYPE SYNONYMS
+
+
+11. USER-DEFINED DATATYPES AND TYPE SYNONYMS
+
+11.1 Datatype definitions
+-------------------------
+In addition to the  wide  range  of  built-in  datatypes  described  in
+section 7, Gofer also allows the  definition  of  new  datatypes  using
+declarations of the form:
+
+     data DatatypeName a1 ... an = constr1 | ... | constrm
+
+where DatatypeName is the name of a new type constructor of arity n>=0,
+a1, ..., an are distinct type variables representing the  arguments  of
+DatatypeName and constr1, ..., constrm (m>=1) describe the way in which
+elements of the new datatype are constructed.  Each constr can take one
+of two forms:
+
+  o  Name type1 ... typer where Name is a previously unused constructor
+     function  name  (i.e.  an  identifier  beginning  with  a  capital
+     letter).  This declaration introduces Name as  a  new  constructor
+     function of type: type1 -> ...-> typer -> DatatypeName a1 ... an.
+
+  o  type1 CONOP type2 where CONOP is a previously  unused  constructor
+     function  operator (i.e.  an  operator  symbol  beginning  with  a
+     colon).  This declaration introduces (CONOP) as a new  constructor
+     function of type: type1 -> type2 -> DatatypeName a1 ... an.
+
+[N.B. only the  type variables  a1, ..., an  may  appear  in  the  type
+expressions in each constr in the definition of DatatypeName.]
+
+
+As a simple example, the following definition introduces a new type Day
+with elements Sun, Mon, Tue, Wed, Thu, Fri and Sat:
+
+    data Day = Sun | Mon | Tue | Wed | Thu | Fri | Sat
+
+Simple functions manipulating elements of type Day can be defined using
+pattern matching:
+
+    what_shall_I_do Sun = "relax"
+    what_shall_I_do Sat = "go shopping"
+    what_shall_I_do _   = "looks like I'll have to go to work"
+
+Another example uses a pair of constructors to provide a representation
+for temperatures which may be given using either of the  centigrade  or
+fahrenheit scales:
+
+    data Temp = Centigrade Float | Fahrenheit Float
+
+    freezing                  :: Temp -> Bool
+    freezing (Centigrade temp) = temp <= 0.0
+    freezing (Fahrenheit temp) = temp <= 32.0
+
+The following example uses a type variable on the left hand side of the
+datatype  definition  to  implement  a   Set   type   constructor   for
+representing sets using a list of values:
+
+
+
+                                      46
+
+
+
+
+Introduction to Gofer                         11.1 Datatype definitions
+
+
+    data Set a = Set [a]
+
+For example, Set [1,2,3] is an element of type  Set  Int,  representing
+the set of integers {1, 2, 3} whilst Set ['a'] represents  a  singleton
+set of type Set Char.  As this example shows, it is possible to use the
+same  name  simultaneously  as  both  a  type  constructor  and  as   a
+constructor function.
+
+Datatype definitions may also be  recursive,  using  the  name  of  the
+datatype  being  defined  on  the  right  hand  side  of  the  datatype
+definition  (mutually   recursive   datatype   definitions   are   also
+permitted).  The following example is taken from the Haskell report [5]
+and  defines  a  type  representing  binary  trees  with  values  of  a
+particular type at their leaves:
+
+    data Tree a = Lf a | Tree a :^: Tree a
+
+For example, (Lf 12 :^: (Lf 23 :^: Lf 13)) :^: Lf 10 has type Tree  Int
+and represents the binary tree:
+
+                              ,--- 12
+                           ,--| 
+                           |  |  ,--- 23
+                           |  `--| 
+                           |     `--- 13
+                         --| 
+                           `--- 10
+
+As an example of a function defined on trees, here are two  definitions
+using recursion and pattern matching on tree valued  expressions  which
+calculate the list of elements at the leaves of a tree  traversing  the
+branches of the tree from left to right.  The first definition  uses  a
+simple definition, whilst the second uses an  `accumulating  parameter'
+giving a more efficient algorithm:
+
+    leaves, leaves'  :: Tree a -> [a]
+
+    leaves (Lf l)  = [l]
+    leaves (l:^:r) = leaves l ++ leaves r
+
+    leaves' t = leavesAcc t []
+                 where leavesAcc (Lf l)  = (l:)
+                       leavesAcc (l:^:r) = leavesAcc l . leavesAcc r
+
+Using the binary tree above as an example:
+
+    ? leaves ((Lf 12 :^: (Lf 23 :^: Lf 13)) :^: Lf 10)
+    [12, 23, 13, 10]
+    (24 reductions, 73 cells)
+    ? leaves' ((Lf 12 :^: (Lf 23 :^: Lf 13)) :^: Lf 10)
+    [12, 23, 13, 10]
+    (20 reductions, 58 cells)
+    ?
+
+
+
+
+
+                                      47
+
+
+
+
+Introduction to Gofer                                11.2 Type synonyms
+
+
+11.2 Type synonyms
+------------------
+Type synonyms are used to provide  convenient  abbreviations  for  type
+expressions.  A type synonym is introduced  by  a  declaration  of  the
+form:
+
+     type Name a1 ... an = expansion
+
+where Name is the name of a new type constructor  of  arity  n>=0,  a1,
+..., an are distinct type variables representing the arguments of  Name
+and expansion is a type expression.  Note that the only type  variables
+permitted in the expansion type are those on the left hand side of  the
+synonym definition.  Using this declaration any type expression of  the
+form:
+
+                  Name type1 ... typen 
+
+is treated as an abbreviation of  the  type  expression  obtained  from
+expansion by replacing each of the type variables a1, ..., an with  the
+corresponding type type1, ..., typen.
+
+The most frequently used type synonym is almost  certainly  the  String
+type which is a synonym for [Char]:
+
+    type String = [Char]
+
+[ASIDE: This definition is actually built in to the Gofer  system,  but
+the effect is the same as if this  declaration  were  included  in  the
+standard prelude.]
+
+Note that the types of expressions inferred by Gofer will  not  usually
+contain any type synonyms unless an explicit type signature  is  given,
+either using an explicitly typed expression (section 10.6)  or  a  type
+declaration (section 9.12):
+
+    ? :t ['c']
+    ['c'] :: [Char]
+    ? :t ['c'] :: String
+    ['c'] :: String
+    ?
+
+Unlike the datatype declarations described  in  the  previous  section,
+recursive  (and  mutually  recursive)  synonym  declarations  are   not
+permitted.  This rules out examples such as:
+
+    type BadSynonym = [BadSynonym]
+
+and ensures that the process of expanding all of the type synonyms used
+in any particular type expression  will  always  terminate.   The  same
+property does not hold for the illegal definition above, in  which  any
+attempt to expand the type BadSynonym would lead to the non-terminating
+sequence:
+
+    BadSynonym ==> [BadSynonym] ==> [[BadSynonym]] ==> ....
+
+
+
+
+                                      48
+
+

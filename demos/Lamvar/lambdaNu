@@ -1,0 +1,76 @@
+-----------------------------------------------------------------------------
+-- Lambda Nu:                         	                  January 25, 1993
+--
+-- The definitions in this file provide support for a simple implementation
+-- of Lambda Nu -- a generalisation of Lambda Var as described by Odersky,
+-- Rabin and Hudak in their POPL paper, January 1993.
+--
+-- Of course, the implementation of the fuction `begin' is not sound.  You must
+-- ensure that you use this function correctly -- the responsibility is on you,
+-- the programmer.
+--
+-- Incidentally, the definitions in this file can only be used if the
+-- version of Gofer that you are using has been compiled with the correct
+-- set of primitives included.  In addition, there is no support for these
+-- primitives in gofc, the Gofer compiler.
+--
+-- Operator precedence table: -----------------------------------------------
+
+infixr 3 =:
+infixr 2 >>, >>=, ?
+
+-- Lambda nu hacking: -------------------------------------------------------
+
+primitive return	"primLnReturn" :: a -> Cmd b a
+primitive (>>=)		"primLnBind"   :: Cmd a b -> (b -> Cmd a c) -> Cmd a c
+primitive primLnTagEq	"primLnTagEq"  :: Tag a -> Tag a -> Bool
+primitive newvar	"primLnNew"    :: Cmd a (Tag b)
+primitive assign	"primLnAssign" :: Tag a -> a -> Cmd b ()
+primitive (?)		"primLnRead"   :: Tag a -> (a -> Cmd b c) -> Cmd b c
+primitive io		"primLnIo"     :: ((a -> b) -> b) -> Cmd b a
+primitive begin		"primLnBegin"  :: Cmd a b -> a
+
+instance Eq (Tag a) where
+    (==) = primLnTagEq
+
+(>>)         :: Cmd c a -> Cmd c b -> Cmd c b
+f >> g        = f >>= const g
+
+seq          :: [Cmd m a] -> Cmd m ()
+seq           = foldr (>>) (return ())
+
+new          :: (Tag a -> Cmd b c) -> Cmd b c
+new           = (>>=) newvar
+
+(=:)         :: a -> Tag a -> Cmd b ()
+value =: tag  = assign tag value
+
+out          :: (a -> a) -> Cmd a ()
+out a         = io (\c -> a (c ()))
+
+outConst      = out . const
+
+pure         :: Cmd a a -> a
+pure a        = begin (a >>= outConst)
+
+deref        :: Tag a -> Cmd b a
+deref t       = t ? return
+
+-- Very simple monadic I/O in the Glasgow style: -----------------------------
+
+primitive getch	       "primLnGetch"    :: Cmd a Char
+primitive putchar      "primLnPutchar"  :: Char -> Cmd a ()
+primitive system       "primLnSystem"   :: String -> Cmd a Int
+
+getchar :: Cmd a Char
+getchar  = getch     >>= \c ->
+	   putchar c >>
+	   return c
+
+puts    :: String -> Cmd a ()
+puts     = seq . map putchar
+
+-- an abuse of pure to implement hbc's debugging hack:
+trace s a = pure (puts s >> return a)
+
+-- End of lambdaNu -----------------------------------------------------------

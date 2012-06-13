@@ -1,0 +1,264 @@
+
+
+Introduction to Gofer                                        13. LAYOUT
+
+
+13. LAYOUT
+
+13.1 Comments
+-------------
+Comments provide an informal but useful way  of  annotating  a  program
+with  a  description  of  its  purpose,  structure   and   development.
+Following  the  definition  of  Haskell,  two  styles  of  comment  are
+supported by Gofer:
+
+  o  A one line comment begins with the  two  characters  "--"  and  is
+     terminated at the end of the same line.   Note  that  an  operator
+     symbol cannot begin with "--" as  this  will  be  treated  as  the
+     beginning of a comment.  It is however possible  to  use  the  two
+     characters "--" at any other position within an  operator  symbol.
+     Thus a line such as:
+
+                           (xs ++ ys) -- xs
+
+     includes a comment and will actually be treated as if the line had
+     been written:
+                               (xs ++ ys)
+
+     Whereas the line:
+
+                           xs >--> ys >--> zs
+
+     does not contain any comments (although it  will  cause  an  error
+     unless ">-->" has been defined  using  an  appropriate  infixl  or
+     infixr declaration).
+
+  o  A nested comment begins with the characters "{-",  ends  with  the
+     characters "-}" and may span  any  number  of  lines.   [N.B.  the
+     initial "{-" string  cannot  overlap  with  the  terminating  "-}"
+     string so that the shortest possible nested comment is "{--}", and
+     not "{-}"].  An unterminated nested comment will be treated as  an
+     error.
+
+     As the name suggests, comments of this kind may be nested so  that
+     "{- {- ... -} ... {- ... -} -}" is treated as  a  single  comment.
+     This makes nested comments particularly convenient  for  enclosing
+     parts  of  a  program  which  may  already  contain  other  nested
+     comments.
+
+Both kinds of comment may be used in expressions entered directly  into
+the Gofer system, or more usually, in files of definitions loaded  into
+Gofer.  The two  styles  of  comment  may  be  mixed  within  the  same
+expression or program, remembering that the string "--" has no  special
+significance within a nested comment and that the strings "{-" and "-}"
+have no special significance in a single line comment.  Thus:
+
+            [ 2, -- {-                 [ 2, {-
+              3, -- -}                   -- -} 3,
+              4 ]                        4 ]
+
+are both equivalent to the list expression [2,3,4].
+
+
+
+                                      57
+
+
+
+
+Introduction to Gofer                              13.2 The layout rule
+
+
+13.2 The layout rule
+--------------------
+In a tradition dating back at least a quarter of a century to  Landin's
+ISWIM family of languages,  most  Gofer  programs  use  indentation  to
+indicate the structure of a program.  For example, in a definition such
+as:
+
+                    f x y = g (x + w)
+                            where g u = u + v
+                                        where v = u * u
+                                  w   = 2 + y
+
+it is clear from the layout that the definition of w is intended to  be
+local to f rather than to g.  Another example  where  layout  plays  an
+important role is in distinguishing the two definitions:
+
+         example x y z = a + b       example x y z = a + b
+               where a = f x y             where a   = f x
+                     b = g z                     y b = g z
+
+There are three situations in Gofer where indentation is typically used
+to determine the structure of a program:
+
+  o  At the top-level of a file of definitions.
+
+  o  In a group of local declarations following either of the  keywords
+     "let" or "where".
+
+  o  In a group of alternatives in a  case  expression,  following  the
+     keyword "of".
+
+In each case, Gofer actually expects to find a list of  items  enclosed
+between braces `{' and `}' with individual  items  separated  from  one
+another by semicolons `;'.  However, if the leading brace is not  found
+then Gofer uses the layout rule described below to arrange for `{', `}'
+and `;' tokens to be  inserted  into  the  input  stream  automatically
+according to the indentation of each line.
+
+In this way, the first example above will in fact be treated as if the
+user had entered:
+
+                    f x y = g (x + w)
+                            where {g u = u + v
+                                         where {v = u * u
+                                  }; w   = 2 + y
+                    }
+
+or, equivalently, just:
+
+  f x y = g (x + w) where {g u = u + v where {v = u * u}; w = 2 + y}
+
+where the additional punctuation using the `{', `}' and `;'  characters
+makes the intended grouping clear, regardless of indentation.
+
+
+
+
+
+                                      58
+
+
+
+
+Introduction to Gofer                              13.2 The layout rule
+
+
+The layout rule used in Gofer is the same as that of Haskell,  and  can
+be described as follows:
+
+  o  An opening brace `{' is inserted in front of the  first  token  at
+     the beginning of a file or following one of the keywords  "where",
+     "let" or "of", unless that token is itself an opening brace.
+
+  o  A `;' token is inserted  in  front  of  the  first  token  in  any
+     subsequent line with exactly the same indentation as the token  in
+     front of which the opening brace was inserted.
+
+  o  The layout rule ends and a `}' token is inserted in front  of  the
+     first token in a subsequent line  whose  indentation  is  strictly
+     less than that of the token in front of which  the  opening  brace
+     was inserted.
+
+  o  A closing brace `}' will also be inserted at any  point  where  an
+     otherwise unexpected token is encountered.  This part of the rule
+     makes it possible to use expressions such as:
+
+                       let a = fact 12 in a+a
+
+     without needing to use the layout characters explicitly as in:
+
+                      let {a = fact 12} in a+a.
+
+  o  Lines containing only whitespace (blanks and tabs) and comments do
+     not affect the use of the layout rule.
+
+  o  For the purposes of determining the indentation of each line in  a
+     file, tab stops are assumed to be placed every 8 characters,  with
+     the leftmost tab stop in column 9.  Each tab character inserts one
+     or more spaces as necessary to move to the next tab stop.
+
+  o  The indentation of the end of file token is zero.
+
+The following (rather contrived) program, is based on an example in the
+Haskell report [5], and provides an extended example of the use of  the
+layout rule.  A file containing the following definitions:
+
+    data Stack a = Empty
+                 | MkStack a (Stack a)
+
+    push    :: a -> Stack a -> Stack a
+    push x s = MkStack x s
+
+    size  :: Stack a -> Int
+    size s = length (stkToList s) where
+               stkToList Empty         = []
+               stkToList (MkStack x s) = x:xs where xs = stkToList s
+
+    pop :: Stack a -> (a, Stack a)
+    pop (MkStack x s) = (x, case s of r -> i r where i x = x)
+
+    top :: Stack a -> a
+    top (MkStack x s) = x
+
+
+                                      59
+
+
+
+
+Introduction to Gofer                              13.2 The layout rule
+
+
+will be treated by Gofer as if it has been written:
+
+    {data Stack a = Empty
+                  | MkStack a (Stack a)
+
+    ;push    :: a -> Stack a -> Stack a
+    ;push x s = MkStack x s
+
+    ;size  :: Stack a -> Int
+    ;size s = length (stkToList s) where
+               {stkToList Empty = []
+               ;stkToList (MkStack x s) = x:xs where {xs = stkToList s
+
+    }};pop :: Stack a -> (a, Stack a)
+    ;pop (MkStack x s) = (x, case s of {r -> i r where {i x = x}})
+
+    ;top :: Stack a -> a
+    ;top (MkStack x s) = x
+    }
+
+Note that some of the more sophisticated forms of expression cannot  be
+written on a single line (and hence entered  directly  into  the  Gofer
+system) without explicit use of the layout characters `{', `}' and `;':
+
+    ? len [1..10] where len [] = 0;  len (x:xs) = 1 + len xs
+    10
+    (81 reductions, 108 cells)
+
+    ? f True where f x = case x of True->n where {n=not x}; False->True
+    False
+    (4 reductions, 11 cells)
+
+    ?
+
+One situation in which the layout  rule  can  cause  problems  is  with
+top-level definitions.  For example, the two lines:
+
+   f x  = 1 + x
+    g y = 1 - y
+
+will be treated as a single line "f x = 1 + x g y = 1 - y", which  will
+cause a syntax  error.   This  kind  of  problem  becomes  rather  more
+difficult to spot if the two definitions are not on  subsequent  lines,
+particularly if they are separated by several lines of  comments.   For
+this reason, it is usually a good  idea  to  ensure  that  all  of  the
+top-level definitions in a file start in the  same  column  (the  first
+column is usually the most convenient).  COBOL and Fortran  programmers
+are not likely to find this problem too distressing :-)
+
+
+
+
+
+
+
+
+
+
+                                      60
+
+

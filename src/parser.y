@@ -19,6 +19,16 @@
 #ifndef lint
 #define lint
 #endif
+
+#include "prelude.h"
+#include "storage.h"
+#include "connect.h"
+#include "command.h"
+#include "errors.h"
+#include "input.h"
+#include "parser.h"
+#include <ctype.h>
+
 #define defTycon(n,l,lhs,rhs,w)	 tyconDefn(intOf(l),lhs,rhs,w); sp-=n
 #define sigdecl(l,vs,t)		 ap(SIGDECL,triple(l,vs,t))
 #define grded(gs)		 ap(GUARDED,gs)
@@ -26,8 +36,19 @@
 #define yyerror(s)		 /* errors handled elsewhere */
 #define YYSTYPE			 Cell
 
+/*RPM*/
+#define opap(lArg,op,rArg) (ap2(op,lArg,rArg))
+#define opapd(lArg,op,rArg) (newSyntax && isDot(op) ? ap(lArg,rArg) :\
+		    opap(lArg,op,rArg))
+static Void local typeSyntaxChk(String context, Cell token);
+static Cell local ct1Const(int line, Cell type, Cell conid);
+static Cell local ct1Clause(int line, Cell type, Cell conids);
+static Bool local tEquals(int line, Cell t1, Cell t2);
+static Bool local isArrow(Cell x);
+/*RPM*/
+
 static Cell   local gcShadow     Args((Int,Cell));
-static Void   local syntaxError  Args((String));
+Void   syntaxError  Args((String));
 static String local unexpected   Args((Void));
 static Cell   local checkPrec    Args((Cell));
 static Void   local fixDefn      Args((Syntax,Cell,Cell,List));
@@ -37,7 +58,9 @@ static Cell   local checkClass   Args((Cell));
 static List   local checkContext Args((List));
 static Pair   local checkDo	 Args((List));
 static Cell   local checkTyLhs	 Args((Cell));
-static Cell   local tidyInfix    Args((Cell));
+static Cell   local oTidyInfix    Args((Cell));
+static Cell   local nTidyInfix    Args((Cell));
+static Cell   local (*tidyInfix[2]) Args((Cell)) = {oTidyInfix, nTidyInfix};
 
 /* For the purposes of reasonably portable garbage collection, it is
  * necessary to simulate the YACC stack on the Gofer stack to keep
@@ -65,7 +88,7 @@ static Cell   local tidyInfix    Args((Cell));
 %}
 
 %token EVALEX    SCRIPT
-%token '='       COCO       INFIXL     INFIXR     INFIX      FUNARROW
+%token '='       INFIXL     INFIXR     INFIX      FUNARROW 
 %token '-'       ','        '@'        '('        ')'        '|'
 %token ';'       UPTO       '['        ']'        CASEXP     OF
 %token IF        THEN       ELSE       WHERE      TYPE       DATA
@@ -74,11 +97,11 @@ static Cell   local tidyInfix    Args((Cell));
 %token CONOP     CONID
 %token TCLASS    IMPLIES    TINSTANCE 
 %token DO	 TRUNST
-
 %token PRIMITIVE
 				    /* Haskell keywords, for compatibility */
 %token DEFAULT	 DERIVING   HIDING     IMPORT	  INTERFACE  MODULE
 %token RENAMING  TO
+%token CTYPE
 
 %%
 /*- Top level script/module structure -------------------------------------*/
@@ -100,7 +123,7 @@ start	  : EVALEX exp			{inputExpr = $2;	    sp-=1;}
 /*-------------------------------------------------------------------------*/
 
 topModule : begin topDecls close	{$$ = gc2($2);}
-	  | modules			{$$ = $1;}
+/*	  | modules			{$$ = $1;}*/
 	  ;
 begin	  : error			{yyerrok; goOffside(startColumn);}
 	  ;
@@ -110,72 +133,40 @@ topDecls  : topDecls ';' topDecl	{$$ = gc2($1);}
 	  | decl			{$$ = gc1(cons($1,NIL));}
 	  | error			{syntaxError("definition");}
 	  ;
-modules	  : modules module		{$$ = gc2(appendOnto($2,$1));}
-	  | module			{$$ = $1;}
-	  ;
-module	  : MODULE modid expspec WHERE '{' topDecls close
-					{$$ = gc7($6);}
-	  | MODULE error		{syntaxError("module definition");}
-	  ;
-topDecl	  : IMPORT modid impspec rename	{sp-=4;}
-	  | IMPORT error		{syntaxError("import declaration");}
-	  ;
-modid	  : CONID			{$$ = $1;}
-	  | STRINGLIT			{$$ = $1;}
-	  ;
-expspec	  : /* empty */			{$$ = gc0(NIL);}
-	  | '(' exports ')'		{$$ = gc3(NIL);}
-	  ;
-exports	  : exports ',' export		{$$ = gc3(NIL);}
-	  | export			{$$ = $1;}
-	  ;
-export	  : entity			{$$ = $1;}
-	  | modid UPTO			{$$ = gc2(NIL);}
-	  ;
-impspec	  : /* empty */			{$$ = gc0(NIL);}
-	  | HIDING '(' imports ')'	{$$ = gc4(NIL);}
-	  | '(' imports0 ')'		{$$ = gc3(NIL);}
-	  ;
-imports0  : /* empty */			{$$ = gc0(NIL);}
-	  | imports			{$$ = $1;}
-	  ;
-imports	  : imports ',' entity		{$$ = gc3(NIL);}
-	  | entity			{$$ = $1;}
-	  ;
-rename	  : /* empty */			{$$ = gc0(NIL);}
-	  | RENAMING '(' renamings ')'	{$$ = gc4(NIL);}
-	  ;
-renamings : renamings ',' renaming	{$$ = gc3(NIL);}
-	  | renaming			{$$ = $1;}
-	  ;
-renaming  : var   TO var		{$$ = gc3(NIL);}
-	  | conid TO conid		{$$ = gc3(NIL);}
-	  ;
-entity	  : var				{$$ = $1;}
-	  | CONID			{$$ = $1;}
-	  | CONID '(' UPTO ')'		{$$ = gc4(NIL);}
-	  | CONID '(' conids ')'	{$$ = gc4(NIL);}
-	  | CONID '(' vars0 ')'		{$$ = gc4(NIL);}
-	  ;
-conids	  : conids ',' conid		{$$ = gc3(NIL);}
-	  | conid			{$$ = $1;}
-	  ;
-vars0	  : /* empty */			{$$ = gc0(NIL);}
-	  | vars			{$$ = $1;}
-	  ;
-
 /*- Type declarations: ----------------------------------------------------*/
+/*Arunachala Siva Arunachala Ramana*/
+ctDecls	: ctDecls ';' ctDecl  {$$ = gc3(appendOnto($1, $3));}
+	| ctDecl  {$$ = $1;}
+	;
+ctDecl	: conids ':' type  {$$ = gc3(ct1Clause(intOf($2), $3, $1));}
+	;
+conids	: conids ',' conid  {$$ = gc3(cons($3, $1));}
+	| conid  {$$ = gc1(singleton($1));}
+	;
 
-topDecl	  : TYPE tyLhs '=' type invars	{defTycon(5,$3,$2,$4,$5);}
+pvarop	: VAROP 	{$$ = gc1($1);}/*RPM*/
+	|		{$$ = gc0(NIL);}
+	;
+
+topDecl	: CTYPE type {typeLhs = $2;} WHERE '{' ctDecls close
+	  {defTycon(6,$1, checkTyLhs($2), $6, DATATYPE); typeLhs = NIL;}
+	| CTYPE context IMPLIES typeLhs {typeLhs = $4;} WHERE '{' ctDecls close
+	  {defTycon(8,$1, $4, ap(QUAL,pair ($2,$8)), DATATYPE); typeLhs = NIL;}
+	;
+
+topDecl	  : TYPE typeLhs '=' type invars	{defTycon(5,$3,$2,$4,$5);}
 	  | DATA type '=' constrs deriving	    /* deriving is IGNORED */
 					{defTycon(5,$3,checkTyLhs($2),
 							rev($4),DATATYPE);}
-	  | DATA context IMPLIES tyLhs '=' constrs deriving
+	  | DATA context IMPLIES typeLhs '=' constrs deriving
 					{defTycon(7,$5,$4,
 						  ap(QUAL,pair($2,rev($6))),
 						  DATATYPE);}
-	  ;
-tyLhs	  : tyLhs VARID			{$$ = gc2(ap($1,$2));}
+	;
+
+typeLhs	  : typeLhs pvarop VARID	{typeSyntaxChk("type Lhs", $2);
+					 $$ = gc3(ap($1,$3));
+					}
 	  | CONID			{$$ = $1;}
 	  | error			{syntaxError("type defn lhs");}
 	  ;
@@ -185,7 +176,7 @@ invars	  : IN rsvars			{$$ = gc2($2);}
 rsvars	  : rsvars ',' rsvar		{$$ = gc3(cons($3,$1));}
 	  | rsvar			{$$ = gc1(cons($1,NIL));}
 	  ;
-rsvar	  : var COCO sigType		{$$ = gc3(sigdecl($2,singleton($1),
+rsvar	  : var ':' sigType		{$$ = gc3(sigdecl($2,singleton($1),
 							     $3));}
 	  | var				{$$ = $1;}
 	  ;
@@ -226,7 +217,10 @@ type	  : ctype			{$$ = $1;}
 	  | ctype FUNARROW type		{$$ = gc3(ap(ap(ARROW,$1),$3));}
 	  | error			{syntaxError("type expression");}
 	  ;
-ctype	  : ctype atype			{$$ = gc2(ap($1,$2));}
+ctype	  : ctype pvarop atype		{typeSyntaxChk("type expression", $2);
+					 $$ = gc3(ap($1,$3));
+					}
+
 	  | atype			{$$ = $1;}
 	  ;
 atype	  : VARID			{$$ = $1;}
@@ -243,6 +237,7 @@ atype	  : VARID			{$$ = $1;}
 tupCommas : tupCommas ','		{$$ = gc2(mkTuple(tupleOf($1)+1));}
 	  | ','				{$$ = gc1(mkTuple(2));}
 	  ;
+
 typeTuple : typeTuple ',' type		{$$ = gc3(cons($3,$1));}
 	  | type ',' type		{$$ = gc3(cons($3,cons($1,NIL)));}
 	  ;
@@ -272,7 +267,7 @@ conop	  : CONOP			{$$ = $1;}
 
 /*- Processing definitions of primitives ----------------------------------*/
 
-topDecl	  : PRIMITIVE prims COCO sigType{primDefn($1,$2,$4); sp-=4;}
+topDecl	  : PRIMITIVE prims ':' sigType{primDefn($1,$2,$4); sp-=4;}
 	  ;
 prims	  : prims ',' prim		{$$ = gc3(cons($3,$1));}
 	  | prim			{$$ = gc1(cons($1,NIL));}
@@ -305,7 +300,7 @@ csigdecl  : decl			{$$ = gc1($1);}
 
 /*- Value declarations: ---------------------------------------------------*/
 
-decl	  : vars COCO sigType		{$$ = gc3(sigdecl($2,$1,$3));}
+decl	  : vars ':' sigType		{$$ = gc3(sigdecl($2,$1,$3));}
 	  | opExp rhs			{$$ = gc2(pair($1,$2));}
 	  ;
 decls	  : decls ';' decl		{$$ = gc3(cons($3,$1));}
@@ -348,18 +343,18 @@ conid	  : CONID			{$$ = $1;}
 
 /*- Expressions: ----------------------------------------------------------*/
 
-exp	  : opExp COCO sigType		{$$ = gc3(ap(ESIGN,pair($1,$3)));}
+exp	  : opExp ':' sigType		{$$ = gc3(ap(ESIGN,pair($1,$3)));}
 	  | opExp			{$$ = $1;}
 	  | error			{syntaxError("expression");}
 	  ; 
 opExp	  : pfxExp			{$$ = $1;}
-	  | pfxExp op pfxExp		{$$ = gc3(ap(ap($2,$1),$3));}
-	  | opExp0			{$$ = gc1(tidyInfix($1));}
+	  | pfxExp op pfxExp		{$$ = gc3(opapd($1,$2,$3));}
+					  /* opap -> opapd SPORT */
+	  | opExp0			{$$ = gc1((*tidyInfix[newSyntax])($1));}
 	  ;
-opExp0	  : opExp0 op pfxExp		{$$ = gc3(ap(ap($2,$1),$3));}
-	  | pfxExp op pfxExp op pfxExp	{$$ = gc5(ap(ap($4,
-							ap(ap($2,singleton($1)),
-                                                           $3)),$5));}
+opExp0	  : opExp0 op pfxExp		{$$ = gc3(opap($1,$2,$3));}
+ 	  | pfxExp op pfxExp op pfxExp	{$$ =
+ 		  gc5(opap(opap(singleton($1), $2, $3),$4,$5));}
 	  ;
 pfxExp	  : '-' appExp			{if (isInt($2))
 					     $$ = gc2(mkInt(-intOf($2)));
@@ -377,7 +372,16 @@ pfxExp	  : '-' appExp			{if (isInt($2))
 pats	  : pats atomic			{$$ = gc2(cons($2,$1));}
 	  | atomic			{$$ = gc1(cons($1,NIL));}
 	  ;
-appExp	  : appExp atomic		{$$ = gc2(ap($1,$2));}
+appExp	  : appExp atomic	
+	      {
+		if (newSyntax)
+		{
+		  ERROR(row) "Juxtaposition has no meaning. Use ."
+		  EEND;
+		}
+		else
+		  $$ = gc2(ap($1,$2));
+	      }
 	  | TRUNST atomic		{$$ = gc2(ap(RUNST,$2));}
 	  | atomic			{$$ = $1;}
 	  ;
@@ -511,7 +515,7 @@ Cell e; {
     return e;
 }
 
-static Void local syntaxError(s)       /* report on syntax error           */
+Void syntaxError(s)       /* report on syntax error           */
 String s; {
     ERROR(row) "Syntax error in %s (unexpected %s)", s, unexpected()
     EEND;
@@ -542,7 +546,7 @@ static String local unexpected() {	/* find name for unexpected token  */
 	case ELSE      : keyword("else");
 	case WHERE     : keyword("where");
 	case TYPE      : keyword("type");
-	case DATA      : keyword("data");
+	case CTYPE     : keyword("ctype");
 	case LET       : keyword("let");
 	case IN        : keyword("in");
 #undef keyword
@@ -560,15 +564,19 @@ static String local unexpected() {	/* find name for unexpected token  */
 
 	case FUNARROW  : return "`->'";
 	case '='       : return "`='";
-	case COCO      : return "`::'";
+	case ':'      :
+	   sprintf(buffer,"`%s'", typeStr[newSyntax]);
+	   return buffer;
 	case '-'       : return "`-'";
 	case ','       : return "comma";
 	case '@'       : return "`@'";
 	case '('       : return "`('";
 	case ')'       : return "`)'";
 	case '|'       : return "`|'";
-	case ';'       : return "`;'";
-	case UPTO      : return "`..'";
+	case ';'       : return "separator";
+	case UPTO      :
+	   sprintf(buffer,"`%s'", uptoStr[newSyntax]);
+	   return buffer;
 	case '['       : return "`['";
 	case ']'       : return "`]'";
 	case FROM      : return "`<-'";
@@ -584,7 +592,7 @@ static String local unexpected() {	/* find name for unexpected token  */
 	case NUMLIT    : return "numeric literal";
 	case CHARLIT   : return "character literal";
 	case STRINGLIT : return "string literal";
-	case IMPLIES   : return "`=>";
+	case IMPLIES   : return "`=>'";
 	default	       : return "token";
     }
 }
@@ -747,7 +755,7 @@ Cell c; {				/* T a1 ... a			   */
  * value APPLIC is used to indicate that the syntax value is unknown.
  */
 
-static Cell local tidyInfix(e)         /* convert InfixExpr to Expr        */
+static Cell local oTidyInfix(e)         /* convert InfixExpr to Expr        */
 Cell e; {                              /* :: InfixExpr                     */
     Cell   s   = NIL;                  /* :: TidyStack                     */
     Syntax sye = APPLIC;               /* Syntax of op in e (init unknown) */
@@ -809,5 +817,141 @@ Cell e; {                              /* :: InfixExpr                     */
 
     return e;
 }
-
 /*-------------------------------------------------------------------------*/
+#ifdef __GNUC__
+inline 
+#endif
+static Void local sc(e) /*short circuit dot applications */
+Cell e;
+{
+  Cell temp;
+  temp = fun(e);
+  if (isDot(fun(temp)))
+     fun(e) = arg(temp);
+}
+
+static Cell local nTidyInfix(e)         /* convert InfixExpr to Expr        */
+Cell e; {                              /* :: InfixExpr                     */
+    Cell   s   = NIL;                  /* :: TidyStack                     */
+    Syntax sye = APPLIC;               /* Syntax of op in e (init unknown) */
+    Syntax sys = APPLIC;               /* Syntax of op in s (init unknown) */
+    Cell   temp;
+
+    while (nonNull(tl(e))) {
+        if (isNull(s)) {
+            s           = e;
+            e           = arg(fun(s));
+            arg(fun(s)) = NIL;
+            sys         = sye;
+            sye         = APPLIC;
+        }
+        else {
+            if (sye==APPLIC) {         /* calculate sye (if unknown)       */
+                sye = syntaxOf(textOf(fun(fun(e))));
+                if (sye==APPLIC) sye=DEF_OPSYNTAX;
+            }
+            if (sys==APPLIC) {         /* calculate sys (if unknown)       */
+                sys = syntaxOf(textOf(fun(fun(s))));
+                if (sys==APPLIC) sys=DEF_OPSYNTAX;
+            }
+
+            if (precOf(sye)==precOf(sys) &&                      /* amb    */
+                   (assocOf(sye)!=assocOf(sys) || assocOf(sye)==NON_ASS)) {
+                ERROR(row) "Ambiguous use of operator \"%s\" with \"%s\"",
+                           textToStr(textOf(fun(fun(e)))),
+                           textToStr(textOf(fun(fun(s))))
+                EEND;
+            }
+            else if (precOf(sye)>precOf(sys) ||                  /* shift  */
+                       (precOf(sye)==precOf(sys) && assocOf(sye)==LEFT_ASS)) {
+                temp        = arg(fun(e));
+                arg(fun(e)) = s;
+                s           = e;
+                e           = temp;
+                sys         = sye;
+                sye         = APPLIC;
+            }
+            else {                                               /* reduce */
+                temp        = arg(fun(s));
+                arg(fun(s)) = arg(e);
+                arg(e)      = s;
+                s           = temp;
+		sc(arg(e)); /*RPM*/
+                sys         = APPLIC;
+                /* sye unchanged */
+            }
+        }
+    }
+
+    e = hd(e);
+    while (nonNull(s)) {
+        temp        = arg(fun(s));
+        arg(fun(s)) = e;
+        e           = s;
+        s           = temp;
+	sc(e); /*RPM*/
+    }
+
+    return e;
+}
+
+/*RPM*/
+/*Arunachala Siva Arunachala Ramana*/
+#define lType(x) (snd(fst(x)))
+#define rType(x) (snd(x))
+static Bool local isArrow(Cell x)
+{
+  return isPair(x) && isPair(fst(x)) && fst(fst(x)) == ARROW;
+}
+static Bool local tEquals(int line, Cell t1, Cell t2)
+/*Assumes Conid ('.' Varid)*  format*/
+{
+  if (whatIs(t1) == AP && whatIs(t2) == AP)
+    return isVar(arg(t1)) && isVar(arg(t2)) &&
+                 textOf(arg(t1)) == textOf(arg(t2)) &&
+		 tEquals(line, fun(t1), fun(t2));
+  else
+    return isCon(t1) && isCon(t2) && textOf(t1) == textOf(t2);
+}
+static Cell local ct1Clause(int line, Cell type, Cell conids)
+{
+  push(NIL);
+  for(; nonNull(conids); conids=tl(conids))
+    top() = cons(ct1Const(line, type, hd(conids)), top());
+
+  return pop();
+}
+static Cell local dupStruct(Cell l)
+{
+  return isAp(l) ? ap(dupStruct(fst(l)), dupStruct(snd(l))) : l;
+}
+
+static Cell local ct1Const(int line, Cell type, Cell conid)
+{
+  push(conid);
+  for (; isArrow(type); type = rType(type))
+    top() = ap(top(), dupStruct(lType(type)));
+
+  if (!tEquals(line, typeLhs, type))
+  {
+    ERROR(line) "ctype target " ETHEN
+    ERREXPR(type);
+    ERRTEXT " must match header\n" EEND;
+  }
+  return pop();
+}
+
+static Void local typeSyntaxChk(String context, Cell token)
+{
+  if (newSyntax && !isDot(token))
+  {
+    ERROR(row) "Syntax Error in %s (application expected)", context EEND;
+  }
+  else if (!newSyntax && !isNull(token))
+  {
+     ERROR(row) "Syntax error in %s (unexpected %s)", context,
+     textToStr(textOf(token))
+     EEND;
+  }
+}
+

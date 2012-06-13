@@ -439,7 +439,7 @@ Syntax sy;
 Cell   e; {
     if (args>2) {
 	putOverInfix(args-1,t,sy,maySkipDict(fun(e)));
-	putChr(' ');
+	putChr(apChar[newSyntax]);
 	put(FUN_PREC,arg(e));
     }
     else
@@ -467,7 +467,7 @@ static Void local putSimpleAp(e)       /* print application e0 e1 ... en   */
 Cell e; {
     if (isAp(e)) {
 	putSimpleAp(maySkipDict(fun(e)));
-	putChr(' ');
+	putChr(apChar[newSyntax]);
 	put(FUN_PREC,arg(e));
     }
     else
@@ -946,7 +946,7 @@ static Void local putPred(pi)		/* Output predicate		   */
 Cell pi; {
     if (isAp(pi)) {
 	putPred(fun(pi));
-	putChr(' ');
+	putChr(apChar[newSyntax]);
 	putType(arg(pi),ALWAYS);
     }
     else if (isClass(pi))
@@ -1073,7 +1073,7 @@ Cell t; {
 #endif
 	{
 	    putApType(fun(t));
-	    putChr(' ');
+	    putChr(apChar[newSyntax]);
 	    putType(arg(t),ALWAYS);
 	}
     }
@@ -1172,3 +1172,24 @@ Cell sig; {
 }
 
 /*-------------------------------------------------------------------------*/
+Void printTypeStr(FILE *fp) /*RPM*/
+{
+  fprintf(fp, " %s ", typeStr[newSyntax]);
+}
+
+#if 0
+Void printList(FILE *fp, List xs)
+{
+   outputStream = fp;
+   putDepth     = 0;
+   putChr('[');
+    if (nonNull(xs)) {
+	put(NEVER,hd(xs));
+	while (nonNull(xs=tl(xs))) {
+	    putChr(',');
+	    put(NEVER,hd(xs));
+	}
+    }
+    putChr(']');
+}
+#endif

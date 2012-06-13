@@ -1,0 +1,462 @@
+
+
+Introduction to Gofer                                 7. BUILT-IN TYPES
+
+
+7. BUILT-IN TYPES
+
+An important part of Gofer is the type system which is used  to  detect
+errors  in  expressions  and  function  definitions.    Starting   with
+primitive expressions such as numeric constants, Gofer assigns  a  type
+to each expression that describes the kind of value represented by  the
+expression.
+
+In  general  we write  object :: type  to indicate  that  a  particular
+expression has the indicated type.  For example:
+
+    42   :: Int         indicating that  42  is an  integer (Int is the
+                        name for the type of integer values).
+
+    fact :: Int -> Int  indicating  that  "fact"  is a  function  which
+                        takes  an  integer  argument  and  returns   an
+                        integer value (its factorial).
+
+The most important property of the type system is that it  is  possible
+to determine the type of an expression without having to  evaluate  it.
+For example, the information given above  is  sufficient  to  determine
+that fact 42 :: Int without needing to calculate 42! first.
+
+Gofer has a wide range of built-in types, described  in  the  following
+sections.  In addition, Gofer also includes facilities for defining new
+types as well as types acting as  abbreviations  for  complicated  type
+expressions as described in section 11.
+
+
+7.1  Functions
+--------------
+If t1 and t2 are types then t1 -> t2 is the type of a  function  which,
+given an argument of type t1 produces a result of type t2.  A  function
+of type t1 -> t2 is said to have argument type t1 and result type t2.
+
+In mathematics, the result of applying a function f to an argument x is
+traditionally written as f(x).  In many situations,  these  parentheses
+are unnecessary and may be omitted when using Gofer.
+
+e.g. if f :: t1 -> t2 and x :: t1 then f x is the result of applying
+     f to x and has type t2.
+
+
+If t1, t2, ..., tn are type expressions then:
+
+                   t1 -> t2 -> ... -> tn
+
+can be used as an abbreviation for the type:
+
+               t1 -> (t2 -> ( ... -> tn) ...)
+
+In a similar way, an expression of the form f x1 x2 ... xn is simply an
+abbreviation for the expression ( ... ((f x1) x2) ... xn).
+
+These two conventions allow us to deal with functions taking more  than
+one argument rather elegantly.  For example, the type of  the  addition
+
+
+                                      12
+
+
+
+
+Introduction to Gofer                                    7.1  Functions
+
+
+function (+) is:
+                       Int -> Int -> Int
+
+In other words, "(+)" is a function which takes an integer argument and
+returns a value of type (Int -> Int).  For  example,  "(+)  5"  is  the
+function which takes an integer value n and returns the  value  of  the
+integer n plus 5.  Hence "(+) 5 4", which is equivalent  to  "5  +  4",
+evaluates to the integer 9 as expected.
+
+
+7.2  Booleans
+-------------
+Represented by the type "Bool", there are two boolean values written as
+"True" and "False".   The  standard  prelude  includes  several  useful
+functions for manipulating boolean values:
+
+    (&&), (||) :: Bool -> Bool -> Bool
+
+        The value of the expression b && d is True if and only if  both
+        b and d are True.  If b is False then d is not evaluated.
+
+        The value of the expression b || d is True if either of b or  d
+        is True.  If b is True then d is not evaluated.
+
+    not  :: Bool -> Bool
+
+        The value of the expression not b is the opposite boolean value
+        to that of b; not True = False, not False = True.
+
+Gofer includes a special form of `conditional expression' which enables
+an expression to select between two alternatives according to the value
+of a boolean expression:
+
+                     if b then t else f 
+
+is an expression which is equivalent to t if b evaluates to True, or to
+f if b evaluates to False.  Note that an expression  of  this  form  is
+only acceptable if b is an expression of type Bool and if the types  of
+t and f are the same, in which case the whole expression also has  that
+type.
+
+
+7.3  Integers
+-------------
+Represented by the type "Int", the integer type includes both  positive
+and negative integers such as -273, 0  and  383.   Like  many  computer
+systems, the range of integer values that can be used is restricted and
+calculations using large positive  or  negative  numbers  may  lead  to
+(undetected) overflow.
+
+A wide range of operators and functions are  defined  in  the  standard
+prelude for use with integers:
+
+    (+)     addition.
+    (*)     multiplication.
+    (-)     subtraction.
+
+
+                                      13
+
+
+
+
+Introduction to Gofer                                     7.3  Integers
+
+
+    (^)     raise to power.
+    negate  unary negation.  An expression of the form "-x" is treated
+            as the expression "negate x".
+    (/)     integer division.
+    div        "        "
+    rem     remainder, related to integer division by the law:
+                     (x `div` y)*y + (x `rem` y) == x
+    mod     modulo, like remainder except that the modulo has the same
+            sign as the divisor.
+    odd     returns True if argument is odd, False otherwise.
+    even    returns True if argument is even, False otherwise.
+    gcd     returns the greatest common divisor of its two arguments.
+    lcm     returns the least common multiple of its two arguments.
+    abs     returns the absolute value of its argument.
+    signum  returns -1, 0 or 1 indicating that its argument is negative,
+            zero or positive respectively.
+
+The  less  familiar  operators  are  illustrated   by   the   following
+identities:
+
+     3^4 == 81,          7 `div` 3 == 2,      even 23 == False
+     7 `rem` 3 == 1,    -7 `rem` 3 == -1,     7 `rem` -3 == 1
+     7 `mod` 3 == 1,    -7 `mod` 3 == 2,      7 `mod` -3 == -2
+     gcd 32 12 == 4,    abs (-2) == 2,        signum 12 == 1
+
+
+7.4  Floating point numbers
+---------------------------
+Represented by the type "Float", elements of this type can be  used  to
+represent fractional values  as  well  as  very  large  or  very  small
+quantities.  Such values are however usually only accurate to  a  fixed
+number of digits and rounding errors may  occur  in  some  calculations
+making significant use of floating point quantities.  A  numeric  value
+in an input expression will only be treated as a floating point  number
+if it either includes a decimal point such as 3.14159, or if the number
+is too large to be stored as a value of type Int.  Scientific  notation
+may also be used to enter floating point quantities; for example  1.0e3
+is equivalent to 1000.0, whilst 5.0e-2 is equivalent to 0.05.
+
+[N.B. floating point numbers are not included in all implementations of
+Gofer].
+
+
+7.5  Characters
+---------------
+Represented by  the  type  "Char",  elements  of  this  type  represent
+individual characters such as those entered at a  keyboard.   Character
+values  are  written  as  single  characters  enclosed  by   apostrophe
+characters: e.g. 'a',  '0',  'Z'.   Some  special  characters  must  be
+entered using an `escape code'; each of these begins with  a  backslash
+character '\', followed  by  one  or  more  characters  to  select  the
+required character.  Some of the most useful escape codes are:
+
+     '\\'             backslash
+     '\''             apostrophe
+     '\"'             double quote
+
+
+                                      14
+
+
+
+
+Introduction to Gofer                                   7.5  Characters
+
+
+     '\n'             newline
+     '\b' or '\BS'    backspace
+     '\DEL'           delete
+     '\t' or '\HT'    tab
+     '\a' or '\BEL'   alarm (bell)
+     '\f' or '\FF'    formfeed
+
+Additional escape characters include:
+
+     '\^c'            control character, where c is replaced by
+                      one of the characters:
+                         "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
+                      For example, '\^A' represents control-A
+
+     '\number'        representing the character with ASCII value
+                      specified by the given decimal 'number'.
+
+     '\onumber'       representing the character with ASCII value
+                      specified by the given octal 'number'.
+
+     '\xnumber'       representing the character with ASCII value
+                      specified by the given 'hexadecimal' number.
+
+     '\name'          named ASCII control character, where
+                      `name' is replaced by one of the standard
+                      ascii names e.g. `\DC3`.
+
+In contrast with  some  common  languages  (such  as  C,  for  example)
+character values are quite distinct from integers; however the standard
+prelude does include functions:
+
+                   ord :: Char -> Int
+                   chr :: Int -> Char
+
+which enable you to map a character to its corresponding  ASCII  value,
+or from an ASCII value to the corresponding character:
+
+    ? ord 'a'
+    97
+    (2 reductions, 6 cells)
+    ? chr 65
+    'A'
+    (2 reductions, 7 cells)
+    ?         
+
+
+7.6  Lists
+----------
+If a is a type then [a] is the type whose elements are lists of  values
+of type a.  There are several ways of writing list expressions:
+
+  o   The simplest list of any type is the empty list, written [].
+
+  o   Non-empty lists  can be constructed either by  explicitly listing
+      the members of the list (for example: [1,3,10]) or  by  adding  a
+      single element onto the front  of  another  list  using  the  (:)
+
+
+                                      15
+
+
+
+
+Introduction to Gofer                                        7.6  Lists
+
+
+      operator (pronounced "cons").  These notations are equivalent:
+
+       [1,3,10]  =  1 : [3,10]  =  1 : 3 : [10]  =  1 : 3 : 10 : []
+
+      (the (:) operator groups to the right so 1 :  3  :  10  :  []  is
+      equivalent to (1:(3:(10:[]))) -- a list whose first element is 1,
+      second element is 3 and last element is 10).
+
+The  standard  prelude  includes  a  wide  range   of   functions   for
+calculations involving lists.  For example:
+
+  o  length xs  returns the number of elements in the list xs.
+  o  xs ++ ys   returns the list of elements in xs followed by the
+                elements in ys
+  o  concat xss returns the list of elements in each of the lists in
+                xss
+  o  map f xs   returns the list of values obtained by applying the
+                function f to each of the values in the list xs in turn.
+
+Here are some examples using these functions:
+
+    ? length [1,3,10]
+    3
+    (15 reductions, 28 cells)
+
+    ? [1,3,10] ++ [2,6,5,7]
+    [1, 3, 10, 2, 6, 5, 7]
+    (19 reductions, 77 cells)
+
+    ? concat [[1], [2,3], [], [4,5,6]]
+    [1, 2, 3, 4, 5, 6]
+    (29 reductions, 93 cells)
+
+    ? map ord ['H', 'e', 'l', 'l', 'o']
+    [72, 101, 108, 108, 111]
+    (22 reductions, 73 cells)
+
+    ?
+
+Note that all of the elements in a list must be of the  same  type,  so
+that an expression such as ['a', 2, False] is not permitted.
+
+[ASIDE: At this point  it  might  be  useful  to  mention  an  informal
+convention that is used by a  number  of  functional  programmers  when
+choosing names for variables  representing  elements  of  lists,  lists
+themselves, lists of lists and  so  on.   If  for  example,  a  typical
+element of a list is called x, then it is often useful to use the  name
+xs for a list of such values, suggesting that a list contains a  number
+of "x"s.  Similarly, a list of lists might be  called  xss.   Once  you
+have understood this convention it  is  much  easier  to  remember  the
+relationship between the variables in the  expression  (x:xs)  than  it
+would be if different names had been used such as (a:b).]
+
+
+
+
+
+
+                                      16
+
+
+
+
+Introduction to Gofer                                      7.7  Strings
+
+
+7.7  Strings
+------------
+A string is treated as a list of characters  and  the  type  String  is
+simply an abbreviation for the type [Char].   Strings  are  written  as
+sequences of characters enclosed between  speech  marks.   All  of  the
+escape codes that can be used for characters may  also  be  used  in  a
+string:
+
+    ? "hello, world"
+    hello, world
+    (0 reductions, 13 cells)
+
+    ? "hello\nworld"
+    hello
+    world
+    (0 reductions, 12 cells)
+    ?
+
+In addition, strings may contain the escape sequence "\&" which can  be
+used to separate otherwise  ambiguous  pairs  of  characters  within  a
+string:
+
+    e.g.  "\123h"   represents the string ['\123', 'h']
+          "\12\&3h" represents the string ['\12', '3', 'h']
+
+A string expression may be spread over a number of lines using a gap --
+a non-empty sequence of space, tab and new line characters enclosed  by
+backslash characters:
+
+    ? "hell\   \o"
+    hello
+    (0 reductions, 6 cells)
+    ? 
+
+Notice that strings are printed  differently from other  values,  which
+gives the programmer complete control over the  format  of  the  output
+produced by a program.  The only values that Gofer can in fact  display
+on the terminal are strings.  If the type of an expression entered into
+Gofer is equivalent to String then the expression is  printed  directly
+by evaluating and printing each character  in  the  list  in  sequence.
+Otherwise, the expression to  be  evaluated,  e,  is  replaced  by  the
+expression show' e where show' is a built-in function (defined as  part
+of the standard prelude)  which  converts  any  value  to  a  printable
+representation.  The  only way of printing a  string value  in the same
+way as any other value is by explicitly using the show' function:
+
+    ? show' "hello"
+    "hello"
+    (7 reductions, 24 cells)
+    ?
+
+The careful reader may have been puzzled by  the  fact  the  number  of
+reductions used in the first three examples above was zero.  This is in
+fact quite correct since these expressions are constants and no further
+evaluation can be carried out.  For constant expressions of  any  other
+type there will always be at least one reduction needed  to  print  the
+
+
+                                      17
+
+
+
+
+Introduction to Gofer                                      7.7  Strings
+
+
+value since the constant  must  first  be  translated  to  a  printable
+representation using the show' function.
+
+Because strings are represented as lists  of  characters,  all  of  the
+standard prelude functions for manipulating lists can also be used with
+strings:
+
+    ? length "Hello"
+    5
+    (22 reductions, 36 cells)
+
+    ? "Hello, " ++ "world"
+    Hello, world
+    (8 reductions, 37 cells)
+
+    ? concat ["super","cali","fragi","listic"]
+    supercalifragilistic
+    (29 reductions, 101 cells)
+
+    ? map ord "Hello"
+    [72, 101, 108, 108, 111]
+    (22 reductions, 69 cells)
+
+    ? 
+
+
+7.8  Tuples and the unit type
+-----------------------------
+If t1, t2, ..., tn are types and n>=2, then there is a type of n-tuples
+written (t1, t2, ..., tn) whose elements are also written in  the  form
+(x1, x2, ..., xn) where the expressions x1, x2, ..., xn have types  t1,
+t2, ..., tn respectively.
+
+    e.g.  (1, [2], 3)   :: (Int, [Int], Int)
+          ('a', False)  :: (Char, Bool)
+          ((1,2),(3,4)) :: ((Int, Int), (Int, Int))
+
+Note that, unlike lists, the elements in a  tuple  may  have  different
+types, although the number of elements in the tuple is fixed.
+
+The unit type is written () and has a  single  element  which  is  also
+written as ().  The unit type is of particular interest in  theoretical
+treatments of the type system of Gofer, although you  may  occasionally
+find a use for it in practical programs.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      18
+
+

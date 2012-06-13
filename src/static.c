@@ -126,7 +126,6 @@ Cell rhs;				/* right hand side of definition   */
 Cell what; {				/* SYNONYM/DATATYPE/etc...	   */
     Cell  t   = getHead(lhs);
     Tycon new = findTycon(textOf(t));
-
     if (isNull(new)) {
 	if (nonNull(findClass(textOf(t)))) {
 	    ERROR(line) "\"%s\" used as both class and type constructor",

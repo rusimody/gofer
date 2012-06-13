@@ -1,0 +1,264 @@
+
+
+Introduction to Gofer     6. FUNCTION NAMES - IDENTIFIERS AND OPERATORS
+
+
+6. FUNCTION NAMES - IDENTIFIERS AND OPERATORS
+
+As the examples of the previous section show, there are  two  kinds  of
+name that can be used for a function; identifiers  such  as  "sum"  and
+operator symbols such as "+" and "*".  Choosing the appropriate kind of
+name for a particular function  can  often  help  to  make  expressions
+involving that function easier to read.  If for  example  the  addition
+function was represented by the name "plus" rather  than  the  operator
+symbol "+" then the sum of the integers from 1 to 5 would  have  to  be
+written as:
+
+                 plus (plus (plus (plus 1 2) 3) 4) 5
+
+In this particular case, another way of writing the same sum is:
+
+                 plus 1 (plus 2 (plus 3 (plus 4 5)))
+
+Not only does the use of the identifier "plus" make  these  expressions
+larger and more difficult to read than the equivalent expressions using
+"+"; it  also  makes  it  very  much  harder  to  see  that  these  two
+expressions do actually have the same value.
+
+Gofer distinguishes between the two types of name according to the  way
+that they are written:
+
+  o  An  identifier  begins with a  letter  of the  alphabet optionally
+     followed by a sequence of characters, each of which  is  either  a
+     letter,  a  digit,  an  apostrophe  (')  or   an   underbar   (_).
+     Identifiers representing functions or variables must begin with  a
+     lower case letter (identifiers beginning with an upper case letter
+     are  used  to  denote  a  special  kind  of  function   called   a
+     `constructor function' described in section 11.1).  The  following
+     identifiers are examples of Gofer variable and function names:
+
+       sum    f    f''    integerSum    african_queen    do'until'zero
+
+     The following identifiers are reserved words in Gofer  and  cannot
+     be used as the name of a function or variable:
+
+         case      of         where      let        in         if
+         then      else       data       type       infix      infixl
+         infixr    primitive  class      instance
+
+  o  An  operator symbol  is written using one or more of the following
+     symbol characters:
+
+         :  !  #  $  %  &  *  +  .  /  <  =  >  ?  @  \  ^  |  -
+
+     In addition, the tilde character (~) is also  permitted,  although
+     only in the first position of an  operator  name.   [N.B.  Haskell
+     also makes the  same  restriction  for  the  minus/dash  character
+     (-)].   Operator  names  beginning  with  a  colon  are  used  for
+     constructor functions in the same  way  as  identifiers  beginning
+     with a capital  letter  as  mentioned  above.   In  addition,  the
+     following operator symbols have special uses in Gofer:
+
+
+
+                                      8
+
+
+
+
+Introduction to Gofer     6. FUNCTION NAMES - IDENTIFIERS AND OPERATORS
+
+
+         ::    =    ..    @    \    |    <-    ->    ~    =>
+
+     All other operator  symbols can be used as variables  or  function
+     names, including each of the following examples:
+
+         +    ++    &&    ||     <=    ==    /=    //  .
+         ==>  $     @@     -*-   \/    /\    ...   ?
+
+     [Note that each of the symbols in the first line is  used  in  the
+     standard prelude.  If you are interested in using Gofer to develop
+     programs for use with a Haskell compiler, you might also  want  to
+     avoid using the operator symbols := ! :+ and :% which are used  to
+     support features in Haskell not currently provided  by  the  Gofer
+     standard prelude.]
+
+Gofer provides two simple mechanisms which make it possible to  use  an
+identifier  as  an  operator  symbol,  or  an  operator  symbol  as  an
+identifier:
+
+  o  Any  identifier  will be treated as an  operator  symbol  if it is
+     enclosed in backquotes (`) -- for example, the  expressions  using
+     the "plus" function above are a little easier to read  using  this
+     technique:
+
+               (((1 `plus` 2) `plus` 3) `plus` 4) `plus` 5
+
+     In general, an expression of the form "x `op` y" is equivalent  to
+     the corresponding expression "op x y", whilst an  expression  such
+     as "f x y z" can also be written as "(x `f` y) z".
+
+     [NOTE: For those using Gofer on a  PC,  you  may  find  that  your
+     keyboard does not have a backquote key!  In this case  you  should
+     still be able to enter a backquote by holding down the key  marked
+     ALT, pressing the keys '9' and then '6' on the numeric keypad  and
+     then releasing the ALT key.]
+
+  o  Any  operator symbol  can be treated as an identifier by enclosing
+     it in parentheses.  For example, the addition function denoted  by
+     the operator symbol "+" is often written as "(+)".  Any expression
+     of the form "x + y" can also be written in the form "(+) x y".
+
+There are two more technical problems which have to be dealt with  when
+working with operator symbols:
+
+  o  Precedence: Given operator symbols (+) and (*), should "2 * 3 + 4"
+     be treated as either "(2 * 3) + 4" or "2 * (3 + 4)"?
+
+     This problem is solved by assigning  each  operator  a  precedence
+     value (an integer in the range 0 to 9).  In a  situation  such  as
+     the  above,  we  simply  compare  the  precedence  values  of  the
+     operators involved,  and  carry  out  the  calculation  associated
+     with  the  highest  precedence  operator  first.    The   standard
+     precedence values for (+) and (*) are 6 and 7 respectively so that
+     the expression above will actually be treated as "(2 * 3) + 4".
+
+  o  Grouping: The above rule  is only useful when the operator symbols
+
+
+                                      9
+
+
+
+
+Introduction to Gofer     6. FUNCTION NAMES - IDENTIFIERS AND OPERATORS
+
+
+     involved have  distinct  precedences.   For  example,  should  the
+     expression "1 - 2 - 3" be treated as either "(1 - 2) - 3" giving a
+     result of -4, or as "1 - (2 - 3)" giving a result of 2?
+
+     This problem is  solved  by  giving  each  operator  a  `grouping'
+     (sometimes called its associativity).  An operator symbol  (-)  is
+     said to:
+
+       o  group to the left  if "x - y - z" is treated as "(x - y) - z"
+
+       o  group to the right if "x - y - z" is treated as "x - (y - z)"
+
+     A third possibility is that an expression of the form "x - y -  z"
+     is to be treated as ambiguous and will  be  flagged  as  a  syntax
+     error.   In  this  case  we  say  that   the   operator   (-)   is
+     non-associative.
+
+     The standard approach in Gofer is to treat (-) as grouping to  the
+     left so that "1 - 2 - 3" will actually be treated as "(1-2)-3".
+
+By  default,  every  operator   symbol   in   Gofer   is   treated   as
+non-associative with precedence 9.  These values can be  changed  by  a
+declaration of one of the following forms:
+
+    infixl digit ops      to declare operators which group to the left
+    infixr digit ops      to declare operators which group to the right
+    infix  digit ops      to declare non-associative operators
+
+In each of these declarations ops represents a  list  of  one  or  more
+operator symbols separated by commas and digit is an integer between  0
+and 9 which gives the precedence value for each of the listed  operator
+symbols.  The precedence digit may be omitted in which case a value  of
+9 is assumed.  There are a number of restrictions on the use  of  these
+declarations:
+
+  o  Operator  declarations  can  only  appear  in  files  of  function
+     definitions which are loaded into Gofer; they  cannot  be  entered
+     directly whilst using the Gofer interpreter.
+
+  o  At most one operator declaration is permitted for  any  particular
+     operator symbol (even if repeated  declarations  all  specify  the
+     same precedence and grouping as the original declaration).
+
+  o  Any file containing a declaration for an operator  precedence  and
+     grouping must also contain  a  (top-level)  declaration  for  that
+     operator.
+
+In theory, it is possible to use an operator declaration at  any  point
+in a file of definitions.  In practice, it is sensible to  ensure  that
+each operator is declared before  the  symbol  is  used.   One  way  to
+guarantee this is to place all operator declarations at  the  beginning
+of the file [this condition is enforced in Haskell].  Note  that  until
+an operator declaration for a particular  symbol  is  encountered,  any
+occurrence of that symbol will be treated as a non-associative operator
+with precedence 9.
+
+
+
+                                      10
+
+
+
+
+Introduction to Gofer     6. FUNCTION NAMES - IDENTIFIERS AND OPERATORS
+
+
+The following operator declarations are taken from the standard prelude:
+
+    -- Operator precedence table
+
+    infixl 9 !!
+    infixr 9 .
+    infixr 8 ^
+    infixl 7 *
+    infix  7 /, `div`, `rem`, `mod`
+    infixl 6 +, -
+    infix  5 \\
+    infixr 5 ++, :
+    infix  4 ==, /=, <, <=, >=, >
+    infix  4 `elem`, `notElem`
+    infixr 3 &&
+    infixr 2 ||
+
+and their use is illustrated by the following examples:
+
+ Expression:     Equivalent to:   Reasons:
+ -----------     --------------   --------
+ 1 + 2 - 3       (1 + 2) - 3      (+) and (-) have the same  precedence
+                                  and group to the left.
+ x : ys ++ zs    x : (ys ++ zs)   (:) and (++) have the same precedence
+                                  and group to the right
+ x == y || z     (x == y) || z    (==) has higher precedence than (||).
+ 3 * 4 + 5       (3 * 4) + 5      (*) has higher precedence than (+).
+ y `elem` z:zs   y `elem` (z:zs)  (:) has higher precedence than elem.
+ 12 / 6 / 3      syntax error     ambiguous  use  of  (/);  could  mean
+                                  either (12/6)/3 or 12/(6/3).
+
+Note that function application always binds more tightly than any infix
+operator symbol.  For example, the expression "f x + g y" is equivalent
+to "(f x) + (g y)".  Another example which often causes problems is the
+expression  "f x + 1",  which is treated as "(f x)  +  1"  and  not  as
+"f (x+1)" as is sometimes expected.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      11
+
+

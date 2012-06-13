@@ -1,0 +1,66 @@
+
+
+Introduction to Gofer                                   1. INTRODUCTION
+
+
+1. INTRODUCTION
+
+Gofer is a functional  programming  environment  (in  other  words,  an
+interpreter) that I have implemented for my own personal use as part of
+my research  into  `qualified  types'.   Nevertheless,  the  system  is
+sufficiently complete for me to believe that Gofer may be  of  interest
+and use to others interested in the field of functional programming.
+
+These notes give a brief introduction to the Gofer system  and  include
+some examples of Gofer  programs.   They  are  not  the  notes  that  I
+originally intended to write, being somewhat longer  and  perhaps  more
+tutorial in nature.  Nevertheless,  you  will  not  be  able  to  learn
+functional programming from this document alone.  A  number  of  useful
+references are given in the reading list at the end of  this  document.
+In particular, the book by Bird and Wadler [1] is particularly good  as
+a general introduction to the use, techniques and theory of  functional
+programming.  Although their notation is  a  little  different from the
+language used by Gofer, it is  a  relatively  straightforward  task  to
+translate between the two, and some suggestions for this are given in a
+appendix D.  More importantly, the underlying  semantics  of  Gofer  do
+correspond to those expected by the authors of [1].
+
+Whereas the work involved in investigating and implementing  the  ideas
+on which Gofer is based were motivated largely by  my  own  program  of
+work, the writing of these notes has rather more to do  with  the  hope
+that Gofer will be  useful  to  others.   I  would  therefore  be  very
+grateful for any feedback on any aspect of the these notes (or  of  the
+Gofer system itself).  Please let me know if you discover  any  errors,
+or if you find particular  sections  of  these  notes  rather  hard  to
+follow.  Suggestions for  improvements  or  extensions  are  more  than
+welcome.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      1
+
+

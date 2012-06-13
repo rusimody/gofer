@@ -1,0 +1,132 @@
+
+
+Introduction to Gofer                            APPENDIX E: PRIMITIVES
+
+
+APPENDIX E: PRIMITIVES
+
+[WARNING: The features described in this appendix  are  typically  only
+needed when alternative versions of the standard prelude  are  created.
+These features should only be used by expert users; misuse may lead  to
+failure and runtime errors in the Gofer interpreter.  It is not usually
+a good idea to use primitive functions directly in your programs.]
+
+A number of primitive functions are builtin to the  Gofer  interpreter,
+and may be bound to function symbols using a declaration of the form:
+
+    primitive name1 code1, name2 code2, ...., namen coden :: type
+
+where each name is an identifier (or an  operator  symbol  enclosed  by
+parentheses) and each code is a string literal  taken  from  the  table
+below.  The type specified to the right of the  ::  symbol  must  be  a
+valid type for the functions being defined -- WARNING: GOFER  DOES  NOT
+ATTEMPT TO CHECK FOR SUITABILITY OF THE DECLARED TYPE.   The  following
+definition, taken from the standard prelude,  illustrates  the  use  of
+this feature to bind  a  function  named  primPrint  to  the  primitive
+function with code name string "primPrint" and type Int -> a ->  String
+-> String:
+
+    primitive primPrint "primPrint"  :: Int -> a -> String -> String
+
+The primitive functions currently available are:
+
+category     code name string    type
+--------     ----------------    ----
+
+integer      primPlusInt         Int -> Int -> Int 
+arithmetic   primMinusInt        Int -> Int -> Int
+             primMulInt          Int -> Int -> Int
+             primDivInt          Int -> Int -> Int
+             primModInt          Int -> Int -> Int
+             primRemInt          Int -> Int -> Int
+             primNegInt          Int -> Int -> Int
+
+
+floating     primPlusFloat       Float -> Float -> Float
+point        primMinusFloat      Float -> Float -> Float
+arithmetic   primMulFloat        Float -> Float -> Float
+             primDivFloat        Float -> Float -> Float
+             primNegFloat        Float -> Float -> Float
+
+
+coercion     primIntToChar       Int -> Char  -- chr in the standard prelude
+functions    primCharToInt       Char -> Int  -- ord in the standard prelude
+             primIntToFloat      Int -> Float -- implements fromInteger
+
+equality     primEqInt           Int -> Int -> Bool
+and <=       primLeInt           Int -> Int -> Bool
+primitives   primEqFloat         Float -> Float -> Bool
+             primLeFloat         Float -> Float -> Bool
+
+
+
+
+                                      119
+
+
+
+
+Introduction to Gofer                            APPENDIX E: PRIMITIVES
+
+
+generic      primGenericEq       a -> a -> Bool
+ordering     primGenericNe       a -> a -> Bool
+primitives   primGenericGt       a -> a -> Bool
+             primGenericLe       a -> a -> Bool
+             primGenericGe       a -> a -> Bool
+             primGenericLt       a -> a -> Bool
+
+             These functions implement the standard generic  (i.e.  non
+             overloaded) ordering primitives.  They are  not  currently
+             used in the standard prelude.  A simplified prelude may be
+             created by binding the  standard  operator  symbols  (==),
+             (/=),  (>),  (<=),  (>=)  and  (<)  to   these   functions
+             respectively.
+
+output       primPrint           Int -> a -> String -> String
+
+             This function is used to implement the show'  function  in
+             the standard prelude and is not usually used directly.
+
+             primPrint d e s produces a textual representation  of  the
+             value of the expression e as a  string,  followed  by  the
+             string s.  The integer parameter d is used as an indicator
+             of the current precedence level.  The  primPrint  function
+             is the  standard  method  of  printing  the  value  of  an
+             expression whose type is not equivalent to the type String
+             used by the top-level of the Gofer interpreter.
+
+sequencing   primStrict          (a -> b) -> a -> b
+
+             The primStrict function (bound to the identifier  "strict"
+             in the standard prelude)  forces  the  evaluation  of  its
+             second argument before the function supplied as the  first
+             argument is  applied  to  it.   See  section  9.4  for  an
+             illustration.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      120
+
+

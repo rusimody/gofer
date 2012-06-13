@@ -58,6 +58,7 @@ PROTO_PRIM(primBounds);
 PROTO_PRIM(primElems);
 #endif
 
+PROTO_PRIM(primApply); /*RPM*/
 PROTO_PRIM(primPlusInt);
 PROTO_PRIM(primMinusInt);
 PROTO_PRIM(primMulInt);
@@ -245,6 +246,7 @@ struct primitive primitives[] = {
   {"primSprint",	2, NoGofcPrim(primSPrint)},
   {"primNsprint",	2, NoGofcPrim(primNSPrint)},
 
+  {"primApply",	2, GofcPrim(primApply)}, /*RPM*/
   {"primPlusInt",	2, GofcPrim(primPlusInt)},
   {"primMinusInt",	2, GofcPrim(primMinusInt)},
   {"primMulInt",	2, GofcPrim(primMulInt)},
@@ -652,6 +654,9 @@ primFun(primElems) {			/* elems primitive		   */
 /* --------------------------------------------------------------------------
  * Integer arithmetic primitives:
  * ------------------------------------------------------------------------*/
+primFun(primApply) { /*RPM*/
+	updapRoot(primArg(2), primArg(1));
+}
 
 primFun(primPlusInt) {		       /* Integer addition primitive	   */
     Int x;
@@ -1096,6 +1101,8 @@ static Cell consOpen,	consSpace,  consComma,	consClose;
 static Cell consObrace, consCbrace, consOsq,	consCsq;
 static Cell consBack,	consMinus,  consQuote,  consDQuote;
 
+static Cell consApChar[2], consDot; /*RPM*/
+
 static Name nameLPrint, nameNLPrint;	/* list printing primitives	   */
 static Name nameSPrint, nameNSPrint;	/* string printing primitives	   */
 
@@ -1266,7 +1273,8 @@ Cell	 ss; {				/* rest of output		   */
 
     if (used<whnfArgs) {		/* Add remaining args to output	   */
 	do
-	    output = print(pr,FUN_PREC,pushed(used),ap(consSpace,output));
+	    output = print(pr,FUN_PREC,pushed(used),ap(consApChar[newSyntax],
+		  output));
 	while (++used<whnfArgs);
 
 	if (d>=FUN_PREC) {		/* Determine if parens are needed  */

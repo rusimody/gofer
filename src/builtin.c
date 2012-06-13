@@ -75,6 +75,8 @@ Int what; {
 	case INSTALL : for (i=0; i<NUM_CHARS; ++i)
 			   consCharArray[i] = ap(nameCons,mkChar(i));
 
+		       consApChar[FALSE] = consCharArray[apChar[FALSE]];
+		       consApChar[TRUE] = consCharArray[apChar[TRUE]];
 		       consOpen       = consCharArray['('];
 		       consSpace      = consCharArray[' '];
 		       consComma      = consCharArray[','];
@@ -87,6 +89,8 @@ Int what; {
 		       consMinus      = consCharArray['-'];
 		       consQuote      = consCharArray['\''];
 		       consDQuote     = consCharArray['\"'];
+		       /*RPM*/
+		       consDot = consCharArray['.'];
 
 #define pFun(n,s,t)    addPrim(0,n=newName(findText(s)),t,NIL)
 		       pFun(nameFatbar,	   "_FATBAR", "primFatbar");

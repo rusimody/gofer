@@ -268,7 +268,7 @@ String argv[]; {
     scriptFile	  = 0;
     numScripts	  = 0;
     namesUpto	  = 1;
-    scriptName[0] = strCopy(fromEnv("GOFER",STD_PRELUDE));
+    scriptName[0] = strCopy(fromEnv("PUGOFER",STD_PRELUDE));
 
     for (i=1; i<argc; ++i)		/* process command line arguments  */
 	if (strcmp(argv[i],"+")==0 && i+1<argc)

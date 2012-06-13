@@ -119,6 +119,7 @@ extern Bool  kindExpert;		/* TRUE => display kind errors in  */
 extern Bool  overSingleton;		/* TRUE => overload singleton list */
 					/*	   notation, [x]	   */
 
+extern Bool newSyntax;    /*(RPM) TRUE => new syntax */
 /* --------------------------------------------------------------------------
  * Function prototypes etc...
  * ------------------------------------------------------------------------*/
@@ -131,6 +132,7 @@ extern Void   everybody        Args((Int));
 #define EXIT	4		/* Take action immediately before exit()   */
 #define BREAK   5		/* Take action after program break	   */
 #define PRELUDE 6		/* Init. once prelude Tycons/Classes known */
+#define CHANGE_SYNTAX 7	/*RPM*/
 
 typedef long   Target;
 extern  Void   setGoal          Args((String, Target));

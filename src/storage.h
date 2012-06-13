@@ -575,3 +575,5 @@ extern Module	   moduleThisName  Args((Name));
 extern Void	   dropModulesFrom Args((Module));
 
 /*-------------------------------------------------------------------------*/
+
+#include "pug.h" /*RPM*/

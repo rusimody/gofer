@@ -341,7 +341,7 @@ Int getTerminalWidth() {		/* determine width of terminal	   */
     ioctl(fileno(stdout),TIOCGWINSZ,&terminalSize);
     return (terminalSize.ws_col==0)? 80 : terminalSize.ws_col;
 #else
-    return 80;
+    return 80
 #endif
 }
 #endif

@@ -1,0 +1,528 @@
+
+
+Introduction to Gofer                   12. DIALOGUES: INPUT AND OUTPUT
+
+
+12. DIALOGUES: INPUT AND OUTPUT
+
+The Gofer system implements a subset of  the  facilities  for  programs
+involving I/O described in the Haskell report [5].  In particular, this
+makes it possible for Gofer programs to be run  interactively,  and  to
+make limited use of  text  files  for  both  reading  and  writing.   A
+significant factor in the design of the Haskell I/O facilities is  that
+it allows  the  use  of  such  programs  without  loss  of  referential
+transparency.
+
+12.1 Basic description
+----------------------
+Programs using the I/O facilities in Gofer are modelled by functions of
+type Dialogue, defined by the type synonym:
+
+    type Dialogue    =  [Response] -> [Request]
+
+In other words, a Gofer program produces a list of output values,  each
+of which may be thought of as a request for some  particular  input  or
+output action, and obtains the corresponding list of  operating  system
+responses as its input.  Note that the input list of responses will  be
+evaluated lazily; i.e. we can ensure that we do not attempt  to  obtain
+the response to a given request until that request has been completed.
+
+The current range of requests supported by Gofer is  described  by  the
+following datatype definition, taken from the standard prelude:
+
+    data Request  =  -- file system requests:
+                    ReadFile      String         
+                  | WriteFile     String String
+                  | AppendFile    String String
+                     -- channel system requests:
+                  | ReadChan      String 
+                  | AppendChan    String String
+                     -- environment requests:
+                  | Echo          Bool
+ 
+Each response is an element  of  the  type  defined  by  the  following
+datatype definition, using an auxiliary datatype IOError to describe  a
+variety of error conditions that may occur:
+
+    data Response = Success
+                  | Str String 
+                  | Failure IOError
+ 
+    data IOError  = WriteError   String
+                  | ReadError    String
+                  | SearchError  String
+                  | FormatError  String
+                  | OtherError   String
+
+The following list describes the kind of  I/O  behaviour  specified  by
+each form of Request and indicates the possible  Response  values  that
+may be obtained in each case:
+
+  o  ReadFile  string:  Read  contents  of  file  named  by   "string".
+
+
+                                      49
+
+
+
+
+Introduction to Gofer                            12.1 Basic description
+
+
+     Possible responses to this request are:
+
+       o  Str contents  if the request is successful,  where "contents"
+          is a string (evaluated lazily) containing the contents of the
+          file specified by the ReadFile request.
+
+       o  Failure (SearchError name) occurs if file  "name"  cannot  be
+          accessed.
+
+       o  Failure (ReadError name) occurs if some  other  error  occurs
+          whilst opening the file "name".
+
+  o  WriteFile name string:  Write  the  given  "string"  to  the  file
+     "name".  If the file does not already exist, it is created  before
+     attempting to write the value to file.  If the file already exists
+     then it will be truncated to zero length before the write  begins.
+     No response is obtained until the string argument has  been  fully
+     evaluated and its contents written to  file.   Possible  responses
+     are:
+
+       o  Success if the write to file was completed successfully.
+
+       o  Failure (WriteError msg) if  an  error  was  detected  whilst
+          trying to perform the output.  If the problem occurred whilst
+          attempting to open the specified file,  then  "msg"  contains
+          the   filename,   otherwise   it   contains    a    printable
+          representation of the evaluation error which occurred.
+
+  o  AppendFile name string: Similar to the  WriteFile  request  except
+     that the value of the given "string" is  appended  onto  the  file
+     "name" if that file already exists.  The  responses  that  may  be
+     obtained from this request are the same as those for WriteFile.
+
+  o  ReadChan name:  Read  from  the  input  stream  "name".  Note that
+     it is an error to attempt to read from the same channel more  than
+     once in the same program.  Possible responses are:
+
+       o  Str contents if the request is successful,  where  "contents"
+          is  a  string  (evaluated  lazily)  containing  the  list  of
+          characters entered on the input stream.
+
+       o  Failure (SearchError name) if the  named  channel  cannot  be
+          found.  The only input channel known to Gofer is the standard
+          input channel "stdin".  For convenience, the standard prelude
+          defines the variable stdin bound to this string.
+
+       o  Failure (ReadError name) if a ReadChan request for the  named
+          channel has already been given by a previous request.
+
+  o  AppendChan name string:  Output "string" on  channel  "name".   No
+     response is obtained until the string has been fully evaluated and
+     written to the named channel.  Possible responses are:
+
+       o  Success if the append to channel was completed successfully.
+
+       o  Failure (SearchError name) if the  named  channel  cannot  be
+
+
+                                      50
+
+
+
+
+Introduction to Gofer                            12.1 Basic description
+
+
+          found.  The only output channels known to Gofer are "stdout",
+          "stderr" and "stdecho" (which is actually just  another  name
+          for  "stdout"  in  Gofer).   For  convenience,  the  standard
+          prelude defines variables stdout, stderr and stdecho bound to
+          the corresponding string values.
+
+       o  Failure (WriteError msg)  if  an  error  is  detected  whilst
+          trying to perform the output.  The string  "msg"  contains  a
+          printable  representation  of  the  evaluation  error   which
+          occurred.
+
+  o  Echo status: Set the echo status on  the  standard  input  channel
+     stdin to the given boolean value.  If the  echo  status  is  True,
+     then user input will be echoed onto the screen as it is  typed and
+     the usual line editing facilities  (such a  backspace  or  delete)
+     provided by the host system can be used to edit the input lines as
+     they are entered.  If the echo status is  False,  then  individual
+     characters may be read from the standard input channel without any
+     echo or line editing features.
+
+     Note that at most one Echo request can be used in a  program,  and
+     must precede any ReadChan request for stdin.  If  not  set  by  an
+     explicit Echo request, the echo status defaults to True.  Possible
+     responses are:
+
+       o  Success if the request was completed successfully.
+
+       o  Failure  (OtherError  msg)  if  the  request  could  not   be
+          completed either because a readChannel request for stdin  has
+          already been processed, or because a  previous  Echo  request
+          has already been given.  The  corresponding  values of  "msg"
+          are   "stdin already in use"   and    "repeated Echo request"
+          respectively.
+
+A simple example of a program using these facilities to output a short
+message on the standard output stream is:
+
+    helloWorld      :: Dialogue
+    helloWorld resps = [AppendChan stdout "hello, world"]
+ 
+Any expression entered into Gofer of type "Dialogue" will be treated as
+a Gofer program using I/O and will be executed accordingly:
+
+    ? helloWorld
+    hello, world
+    (1 reduction, 28 cells)
+    ?
+
+Notice that without the explicit type declaration, the type that  would
+be  inferred  for  helloWorld   would   be  a -> [Request],  and  hence
+helloWorld would not be executed as a Dialogue program.  This point can
+be illustrated using lambda expressions:
+
+    ? \resps -> [AppendChan stdout "hello, world"]
+    v128
+    (1 reduction, 7 cells)
+
+
+                                      51
+
+
+
+
+Introduction to Gofer                            12.1 Basic description
+
+
+    ? (\resps -> [AppendChan stdout "hello, world"]) :: Dialogue
+    hello, world
+ 
+    (1 reduction, 28 cells)
+    ? 
+
+In many cases the  structure  of  an  expression  is  enough  to  fully
+determine its type  as  Dialogue  (or  equivalently  as  [Response]  ->
+[Request]), in which case no explicit types are required to ensure that
+the expression is treated as a Gofer program using I/O:
+
+    ? \~[Success] -> [AppendChan stdout "hello, world"]
+    hello, world
+    (1 reduction, 29 cells)
+    ?
+
+Note the use of the  irrefutable  pattern  ~[Success]  for  the  lambda
+expression in the last  example;  without  this,  the  usual  rules  of
+pattern matching as described in section 9 would force Gofer to try  to
+match the pattern [Success] against the list of responses,  before  the
+corresponding request had been produced:
+
+    ? \ [Success] -> [AppendChan stdout "hello, world"]
+
+    Aborting Dialogue:
+          {error "Attempt to read response before request complete"}
+    (50 reductions, 229 cells)
+    ?
+
+The next example takes a single string as a parameter and displays  the
+contents of the corresponding file:
+
+    showFile               :: String -> Dialogue 
+    showFile name ~(read:_) = [ReadFile name, AppendChan stdout result] 
+     where result = case read of Str contents -> contents 
+                                 Failure _    -> "Can't open " ++ name 
+
+With a few modifications, we can  implement  a  similar  program  which
+prompts for, and reads, a filename from the  standard  input  and  then
+reads and displays the contents of that file as before.   This  program
+is based on a similar example in the Haskell report [5]:
+
+    main ~(Success : ~(Str userInput : ~(r3 : _)))  
+      = [ AppendChan stdout "Please type a filename: ", 
+          ReadChan stdin, 
+          ReadFile name, 
+          AppendChan stdout (case r3 of Str contents -> contents
+                                        Failure _    -> "Can't open "
+                                                        ++ name)
+        ] where (name : _) = lines userInput
+
+
+
+
+
+
+
+
+                                      52
+
+
+
+
+Introduction to Gofer                       12.2 Continuation style I/O
+
+
+12.2 Continuation style I/O
+---------------------------
+As an alternative to the `stream-based' approach to programs using  the
+I/O facilities in Gofer, the  standard  prelude  defines  a  family  of
+functions which enables such programs to be written in a `continuation'
+style.  The basic idea is to define a function  corresponding  to  each
+different kind of request, whose parameters include the values required
+to make the request together with two continuations.  The continuations
+are functions describing "what to do next", one of which is used if the
+request is successful, the other if the request fails.
+
+As an example, the ReadFile request  is  represented  by  the  function
+"readFile" whose definition is equivalent to:
+
+    readFile name fail succ ~(r:rs) = ReadFile name : rest rs
+     where rest = case r of Str s           -> succ s
+                            Failure ioerror -> fail ioerror
+
+The first thing to happen  when  a  dialogue  expression  of  the  form
+"readFile name fail  succ"  is  evaluated  is  that  the  corresponding
+request "ReadFile name" is added to the list of I/O  requests.   A  new
+dialogue value "rest" is chosen,  depending  on  the  response  to  the
+ReadFile request, and the program continues by  passing  the  remaining
+part of the response list to "rest".  The functions "succ"  and  "fail"
+(called the success and failure  continuations  respectively)  describe
+the way in which the new dialogue "rest" is obtained.
+
+The following example (edited a little to fit within the margins of this
+document) shows how the readFile function described above can be used to
+print the contents of a file called "test" on the display:
+
+    ? readFile "test" (\ioerror resps -> [])
+                      (\s resps->[AppendChan stdout s])
+    This is a test message
+
+    (4 reductions, 52 cells)
+    ?
+
+The success continuation "(\s resps->[AppendChan stdout s])" used  here
+receives the contents of the file "test" in the the parameter  "s"  and
+uses an AppendChan request to output that string on  the  display.   As
+this example shows, the stream based approach of the  previous  section
+can be combined with the continuation based style of  I/O  without  any
+difficulty.  The failure continuation "(\ioerror resps -> [])"  ignores
+the error condition "ioerror" which caused  the  request  to  fail  and
+gives a dialogue which terminates immediately without any action.   For
+example, assuming that the file "Test" cannot be found:
+
+    ? readFile "Test" (\ioerror resps -> [])
+                      (\s resps->[AppendChan stdout s])
+
+    (4 reductions, 24 cells)
+    ?
+
+In practice, it is  usually  a  good  idea  to  produce  some  kind  of
+diagnostic message when an error occurs:
+
+
+                                      53
+
+
+
+
+Introduction to Gofer                       12.2 Continuation style I/O
+
+
+    ? readFile "Test"
+         (\ioerror resps -> [AppendChan stdout (show' ioerror)])
+         (\s resps       -> [AppendChan stdout s])
+    SearchError "Test"
+    (11 reductions, 59 cells)
+    ?
+
+In each of the  examples  above,  the  failure  continuation  has  type
+"FailCont" as defined by the following type  synonym  in  the  standard
+prelude:
+
+   type FailCont  =  IOError -> Dialogue
+
+Similarly, the success continuation, which takes a string  representing
+an input string and produces a new Dialogue has type "StrCont":
+
+    type StrCont  =  String -> Dialogue
+
+A third kind of continuation is needed for those requests which  return
+a  response  of  the  form  "Success"  if  successful   (e.g.    output
+requests).  In this case the continuation is simply another dialogue:
+
+    type SuccCont =  Dialogue
+
+The following list  gives  the  type  of  each  of  the  six  functions
+corresponding to the six different kinds of I/O  request  described  in
+the previous section.  Full definitions for each of these functions are
+given in appendix B:
+
+    readFile   :: String -> FailCont -> StrCont -> Dialogue
+    writeFile  :: String -> String -> FailCont -> SuccCont -> Dialogue
+    appendFile :: String -> String -> FailCont -> SuccCont -> Dialogue
+    readChan   :: String -> FailCont -> StrCont  -> Dialogue
+    appendChan :: String -> String -> FailCont -> SuccCont -> Dialogue
+    echo       :: Bool -> FailCont -> SuccCont -> Dialogue
+
+As an illustration of the use of these functions, we show how  each  of
+the example programs from the previous section can be  rewritten  using
+the  continuation  based  style  of  I/O,  starting  with  the  program
+"helloWorld":
+
+    helloWorld :: Dialogue
+    helloWorld  = appendChan stdout "hello, world" abort done
+
+In this case, the explicit type declaration is  not  actually  required
+since the type of the expression is completely determined by  the  type
+of "appendChan".  The failure continuation "abort" is equivalent to the
+function "(\ioerror resps -> [])" described above  and  terminates  the
+program if an error occurs without any further action.   In  a  similar
+way, "done"  is  the  trivial  dialogue  which  terminates  immediately
+without any action.   Both of these values are defined in the  standard
+prelude:
+
+   done         :: Dialogue
+   done resps    = []
+
+
+
+                                      54
+
+
+
+
+Introduction to Gofer                       12.2 Continuation style I/O
+
+
+   abort        :: FailCont
+   abort ioerror = done
+ 
+Using the same approach, the "showFile" and "main"  programs  from  the
+previous section are written as:
+
+    showFile :: String -> Dialogue
+    showFile name
+     = readFile name (\ioerror -> appendChan stdout
+                                     ("Can't open " ++ name) abort done)
+                     (\contents-> appendChan stdout contents abort done)
+ 
+    main :: Dialogue
+    main  = appendChan stdout "Please type a filename: " abort
+            (readChan stdin abort
+            (\userInput -> let (name : _) = lines userInput in
+             readFile name
+              (\ioerror  -> appendChan stdout ("Can't open " ++ name)
+                                abort done)
+              (\contents -> appendChan stdout contents abort done)))
+
+
+12.3 Interactive programs
+-------------------------
+One of the principal motivations for including facilities  for  I/O  in
+Gofer programs was to provide a way of using  interactive  programs  as
+described in [1].  An interactive program is represented by a  function
+of type String -> String mapping an input string of characters  entered
+at the keyboard into an output string to be displayed on the screen.
+
+There are two functions defined in the standard prelude  which  can  be
+used to `execute' functions of this kind as interactive programs:
+
+  o  "interact f" executes f::String->String as an interactive  program
+     with echo on.  This  means  that  characters  are  read  from  the
+     keyboard a line at a time.  The usual editing characters  such  as
+     backspace can be used to correct mistakes which are noticed before
+     the return key is pressed at the end  of  each  line.   The  input
+     stream can be terminated by typing an end of file character at the
+     beginning of a line:
+
+         ? interact (map toUpper)
+         This text was entered using the interact function
+         THIS TEXT WAS ENTERED USING THE INTERACT FUNCTION
+         ^Z
+         (874 reductions, 1037 cells)
+         ?
+
+  o  "run f" behaves like "interact f" except that echo is turned  off.
+     In this case, the only way of terminating the input stream without
+     reaching the end of the string produced  by  "f"  is  to  use  the
+     interrupt key:
+
+         ? run (map toUpper)     
+         ALTHOUGH THIS IS ENTERED IN LOWER CASE, IT STILL
+         APPEARS IN UPPER CASE !
+
+
+                                      55
+
+
+
+
+Introduction to Gofer                         12.3 Interactive programs
+
+
+         {Interrupted!}
+ 
+         (1227 reductions, 1463 cells)
+         ?
+
+[ASIDE: of these two functions, only "interact" is also included in the
+standard prelude for Haskell, although "run" may also  be  added  to  a
+Haskell system using the definition below.]
+
+The definitions of "interact" and "run"  provide  further  examples  of
+Gofer programs using simple I/O facilities:
+
+    interact        :: (String -> String) -> Dialogue
+    interact f       = readChan stdin abort
+                            (\s -> appendChan stdout (f s) abort done)
+ 
+    run             :: (String -> String) -> Dialogue
+    run f            = echo False abort (interact f)
+ 
+[EXERCISE for the interested reader:  construct alternative definitions
+for these functions using the stream based approach from section 12.1.]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      56
+
+

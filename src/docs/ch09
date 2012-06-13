@@ -1,0 +1,1056 @@
+
+
+Introduction to Gofer                  9. MORE ABOUT VALUE DECLARATIONS
+
+
+9. MORE ABOUT VALUE DECLARATIONS
+
+9.1  Simple pattern matching
+----------------------------
+Although the Gofer standard prelude includes many useful functions, you
+will usually need to define a collection of new functions for  specific
+problems and calculations.  The declaration of a function  "f"  usually
+takes the form of a number of equations of the form:
+
+            f <pat1> <pat2> ... <patn>  =   <rhs>
+
+(or an equivalent expression, if "f"  is  written  as  by  an  operator
+symbol).   Each  of  the  expressions  <pat1>,  <pat2>,   ...,   <patn>
+represents an argument to the function "f" and is called  a  `pattern'.
+The number of such arguments is called the arity of  "f".   If  "f"  is
+defined by more than one equation then they must  be  entered  together
+and each one must give the same arity for "f".
+
+When a function is defined by more than one equation, it  will  usually
+be necessary to evaluate one or more of the arguments to  the  function
+to  determine  which  equation  applies.   This   process   is   called
+`pattern-matching'.  In all of the previous examples we have used  only
+the simplest kind of pattern -- a variable.  As  an  example,  consider
+the factorial function defined in section 5:
+
+    fact n = product [1..n]
+
+If we then wish to evaluate the expression "fact 6" we first match  the
+expression "6" against the pattern "n" and then evaluate the expression
+obtained from "product [1..n]" by replacing the variable "n"  with  the
+expression "6".  The process of matching the arguments  of  a  function
+against the patterns in its definition and obtaining another expression
+to be evaluated is called a `reduction'.  Using Gofer, it  is  easy  to
+verify that the evaluation of "fact 6" takes one  more  reduction  than
+that of "product [1..6]":
+
+    ? fact 6
+    720
+    (57 reductions, 85 cells)
+    ? product [1..6]
+    720
+    (56 reductions, 85 cells)
+    ? 
+
+Many kinds of constants such as the boolean values True and  False  can
+also be used in  patterns,  as  in  the  following  definition  of  the
+function "not" taken from the standard prelude:
+
+    not True  = False
+    not False = True
+
+In order to determine the value of an expression of the form  "not  b",
+we must first evaluate the expression "b".  If  the  result  is  "True"
+then we use the first equation  and  the  value  of  "not  b"  will  be
+"False".  If the value of "b" is "False", then the second  equation  is
+used and the value of "not b" will be "True".
+
+
+                                      21
+
+
+
+
+Introduction to Gofer                      9.1  Simple pattern matching
+
+
+Other constants, including integers, characters and strings may also be
+used in patterns.  For example, if we define a function "hello" by:
+
+    hello "Mark"  =  "Howdy"
+    hello name    =  "Hello " ++ name ++ ", nice to meet you!"
+
+then:
+
+    ? hello "Mark"
+    Howdy
+    (1 reduction, 12 cells)
+    ? hello "Fred"
+    Hello Fred, nice to meet you!
+    (13 reductions, 66 cells)
+    ?
+
+Note that the  order  in  which  the  equations  are  written  is  very
+important because Gofer always uses the first applicable equation.   If
+instead we had defined the function with the equations:
+
+    hello name    =  "Hello " ++ name ++ ", nice to meet you!"
+    hello "Mark"  =  "Howdy"
+
+then the results obtained using this function would have been a  little
+different:
+
+    ? hello "Mark"
+    Hello Mark, nice to meet you!
+    (13 reductions, 66 cells)
+    ? hello "Fred"
+    Hello Fred, nice to meet you!
+    (13 reductions, 66 cells)
+    ?
+
+There are a number of other useful kinds of pattern, some of which  are
+illustrated by the following examples:
+
+  o  Wildcard:       _        matches  any value  at all;  it is like a
+                              variable pattern, except that there is no
+                              way of referring to the matched value.
+
+  o  Tuples:         (x,y)    matches a  pair  whose  first  and second
+                              elements are called x and y respectively.
+
+  o  Lists:          [x]      matches a list with precisely one element
+                              called x.
+                     [_,2,_]  matches  a   list  with   precisely three
+                              elements,  the  second  of  which  is the
+                              integer 2.
+                     []       matches the empty list.
+                     (x:xs)   matches a non-empty  list with head x and
+                              tail xs.
+
+  o  As patterns:    p@(x,y)  matches a  pair  whose  first and  second
+                              components  are  called  x  and  y.   The
+                              complete pair can  also  be  referred  to
+
+
+                                      22
+
+
+
+
+Introduction to Gofer                      9.1  Simple pattern matching
+
+
+                              directly as p.
+
+  o  (n+k) patterns: (m+1)    matches an integer value  greater than or
+                              equal to 1.  The value referred to by the
+                              variable m is one  less  than  the  value
+                              matched.
+
+A further kind of pattern (called an irrefutable pattern) is introduced
+in section 9.11.
+
+Note that no variable name can be used more than once on the left  hand
+side of each equation in a function definition.  The following example:
+
+    areTheyTheSame x x = True 
+    areTheyTheSame _ _ = False 
+
+will not be accepted by the Gofer system, but should instead be defined
+using the notation of guards introduced in the next section:
+
+    areTheyTheSame x y
+            | x==y      = True
+            | otherwise = False
+
+
+9.2  Guarded equations
+----------------------
+Each of the equations in a function  definition  may  contain  `guards'
+which require  certain conditions  on  the  values  of  the  function's
+arguments to be met.  As an example, here is a function which uses  the
+standard prelude function even :: Int -> Bool to determine whether  its
+argument is an even integer or not, and returns the  string  "even"  or
+"odd" as appropriate:
+
+    oddity n | even n    = "even"
+             | otherwise = "odd"
+
+In general, an equation using guards takes the form:
+
+    f x1 x2 ... xn | condition1  =  e1
+                   | condition2  =  e2
+                   .
+                   . 
+                   | conditionm  =  em
+
+This equation is used by evaluating each  of  the  conditions  in  turn
+until one of them evaluates to "True", in which case the value  of  the
+function is given by the corresponding expression e on the  right  hand
+side of the `=' sign.  In Gofer, the variable "otherwise" is defined to
+be equal to "True", so that writing "otherwise" as the condition  in  a
+guard means that the corresponding expression will always be used if no
+previous guard has been satisfied.
+
+[ASIDE: in the notation of [1], the above examples would be written as:
+
+    oddity n        =  "even",   if even n
+                    =  "odd",    otherwise
+
+
+                                      23
+
+
+
+
+Introduction to Gofer                            9.2  Guarded equations
+
+
+    f x1 x2 ... xn  = e1,     if condition1
+                    = e2,     if condition2
+                      .
+                      .
+                    = em,     if conditionm
+
+Translation between the two notations is relatively straightforward.]
+
+
+9.3  Local definitions
+----------------------
+Function definitions may include local definitions for variables  which
+can be used both in guards and on the right hand side of  an  equation.
+Consider the following function which calculates the number of distinct
+real roots for a quadratic equation of the form a*x*x + b*x + c = 0:
+
+    numberOfRoots a b c | discr>0   =  2
+                        | discr==0  =  1
+                        | discr<0   =  0
+                          where discr = b*b - 4*a*c
+
+[ASIDE: The operator (==) is used to test whether two values are  equal
+or not.  You should take care not to confuse this with the  single  `='
+sign used in function definitions].
+
+Local definitions can also be introduced at an arbitrary  point  in  an
+expression using an expression of the form:
+
+                  let <decls> in <expr>
+
+For example:
+
+    ? let x = 1 + 4 in x*x + 3*x + 1
+    41
+    (8 reductions, 15 cells)
+    ? let p x = x*x + 3*x + 1  in  p (1 + 4)
+    41
+    (7 reductions, 15 cells)
+    ?
+
+
+9.4  Recursion with integers
+----------------------------
+Recursion  is  a  particularly  important  and  powerful  technique  in
+functional programming which is useful for defining functions involving
+a wide range of datatypes.  In this section, we describe one particular
+application of recursion to give  an  alternative  definition  for  the
+factorial function from section 5.
+
+Suppose that we wish to calculate the factorial of a given  integer  n.
+We can split the problem up into two special cases:
+
+  o  If n is zero then the value of n! is 1.
+
+  o  Otherwise, n!  = 1 * 2 * ... * (n-1) * n = (n-1)! * n  and  so  we
+     can calculate the value of n! by calculating the value  of  (n-1)!
+
+
+                                      24
+
+
+
+
+Introduction to Gofer                      9.4  Recursion with integers
+
+
+     and then multiplying it by n.
+
+This process can be expressed directly in  Gofer  using  a  conditional
+expression:
+
+    fact1 n  =  if n==0 then 1 else n * fact1 (n-1)
+
+This definition may seem rather circular; in  order  to  calculate  the
+value of n!, we must first calculate (n-1)!, and unless n  is  1,  this
+requires the calculation of (n-2)! etc...  However, if  we  start  with
+some positive value for the variable n, then we will  eventually  reach
+the case where the value of 0! is required -- and this does not require
+any further calculation.  The following diagram illustrates how  6!  is
+evaluated using "fact1":
+
+    fact1 6  ==>  6 * fact1 5
+             ==>  6 * (5 * fact1 4)
+             ==>  6 * (5 * (4 * fact1 3))
+             ==>  6 * (5 * (4 * (3 * fact1 2)))
+             ==>  6 * (5 * (4 * (3 * (2 * fact1 1))))
+             ==>  6 * (5 * (4 * (3 * (2 * (1 * fact1 0)))))
+             ==>  6 * (5 * (4 * (3 * (2 * (1 * 1)))))
+             ==>  6 * (5 * (4 * (3 * (2 * 1))))
+             ==>  6 * (5 * (4 * (3 * 2)))
+             ==>  6 * (5 * (4 * 6))
+             ==>  6 * (5 * 24)
+             ==>  6 * 120
+             ==>  720
+
+Incidentally, there are several other ways  of  writing  the  recursive
+definition of "fact1" above in Gofer.  For example, using guards:
+
+    fact2 n
+      | n==0        =  1
+      | otherwise   =  n * fact2 (n-1)
+
+or using pattern matching with an integer constant:
+
+    fact3 0         =  1
+    fact3 n         =  n * fact3 (n-1)
+
+Which of these you use is largely a matter of personal taste.
+
+Yet another style of definition uses the (n+k)  patterns  mentioned  in
+section 9.1:
+
+    fact4 0         =  1
+    fact4 (n+1)     =  (n+1) * fact4 n
+
+which is equivalent to:
+
+    fact5 n | n==0  =  1
+            | n>=1  =  n * fact5 (n-1)
+
+[COMMENT: Although each of the above definitions gives the same  result
+as the original "fact" function  for  each  non-negative  integer,  the
+
+
+                                      25
+
+
+
+
+Introduction to Gofer                      9.4  Recursion with integers
+
+
+functions can still be distinguished by the values obtained  when  they
+are applied to negative integers:
+
+  o  "fact (-1)" evaluates to the integer 1.
+  o  "fact1 (-1)" causes Gofer to enter an infinite loop, which is only
+     eventually terminated when Gofer runs out of `stack space'.
+  o  "fact4 (-1)" causes an evaluation error and prints the
+      message {fact4 (-1)} on the screen.
+
+To most people, this suggests that the definition of "fact4" is perhaps
+preferable to that of either "fact" or "fact1" as it neither gives  the
+wrong answer  without  allowing  this  to  be  detected  nor  causes  a
+potentially non-terminating computation.]
+
+
+9.5  Recursion with lists
+-------------------------
+The same kind of  technique  that  can  be  used  to  define  recursive
+functions with integers can also be used to define recursive  functions
+on lists.  As an example, suppose that we wish to define a function  to
+calculate the length of  a  list.   As  the  standard  prelude  already
+includes such a function called "length", we  will  call  the  function
+developed here "len" to avoid any conflict.  Now suppose that  we  wish
+to find the length of a given list.  There are two cases to consider:
+
+  o  If the list is empty then it has length 0
+
+  o  Otherwise, it is non-empty and can be written in the  form  (x:xs)
+     for some element x and some list xs.  Thus the  original  list  is
+     one element longer than xs, and so has length 1 + len xs.
+
+Writing these two cases out leads directly to the following definition:
+
+    len []      =  0
+    len (x:xs)  =  1 + len xs
+
+The following diagram illustrates the way that  this  function  can  be
+used to determine the length of the list [1,2,3,4] (remember that  this
+is just an abbreviation for 1 : 2 : 3 : 4 : []):
+
+    len [1,2,3,4]  ==>  1 + len [2,3,4]
+                   ==>  1 + (1 + len [3,4])
+                   ==>  1 + (1 + (1 + len [4]))
+                   ==>  1 + (1 + (1 + (1 + len [])))
+                   ==>  1 + (1 + (1 + (1 + 0)))
+                   ==>  1 + (1 + (1 + 1))
+                   ==>  1 + (1 + 2)
+                   ==>  1 + 3
+                   ==>  4
+
+As  further  examples,  you  might  like  to  look  at  the   following
+definitions which use similar ideas to define the functions product and
+map introduced in earlier sections:
+
+    product []     = 1
+    product (x:xs) = x * product xs
+
+
+                                      26
+
+
+
+
+Introduction to Gofer                         9.5  Recursion with lists
+
+
+    map f []      =  []
+    map f (x:xs)  =  f x : map f xs
+
+
+9.6  Lazy evaluation
+--------------------
+Gofer evaluates expressions using a technique  sometimes  described  as
+`lazy evaluation' which means that:
+
+  o  No expression is evaluated until its value is needed.
+
+  o  No  shared  expression  is  evaluated  more  than  once;  if   the
+     expression is ever evaluated then the result is shared between all
+     those places in which it is used.
+
+The first of these ideas is illustrated by the following function:
+
+    ignoreArgument x = "I didn't need to evaluate x"
+
+Since the result of the function "ignoreArgument" doesn't depend on the
+value of its argument "x", that argument will not be evaluated:
+
+    ? ignoreArgument (1/0)
+    I didn't need to evaluate x
+    (1 reduction, 31 cells)
+    ?
+
+In some situations, it is useful to be able to force Gofer to  evaluate
+the argument to a function before the function is applied.  This can be
+achieved using the function "strict" defined in the  standard  prelude;
+An expression of the form "strict f x" is evaluated by first evaluating
+the argument "x" and then applying the function "f" to the result:
+
+    ? strict ignoreArgument (1/0)
+    {primDivInt 1 0}
+    (4 reductions, 29 cells)
+    ?
+
+The second  basic  idea  behind  lazy  evaluation  is  that  no  shared
+expression should be  evaluated  more  than  once.   For  example,  the
+following two expressions can be used to calculate 3*3*3*3:
+
+    ? square * square where square = 3 * 3
+    81
+    (3 reductions, 9 cells)
+    ? (3 * 3) * (3 * 3)
+    81
+    (4 reductions, 11 cells)
+    ?
+
+Notice that the first expression requires one less reduction  than  the
+second.  Excluding the single reduction step  needed  to  convert  each
+integer into a string, the sequences of reductions that will be used in
+each case are as follows:
+
+
+
+
+                                      27
+
+
+
+
+Introduction to Gofer                              9.6  Lazy evaluation
+
+
+    square * square where square = 3 * 3
+       -- calculate the value of square by reducing 3 * 3 ==> 9
+       -- and replace each occurrence of square with this result
+       ==> 9 * 9
+       ==> 81
+
+    (3 * 3) * (3 * 3)   -- evaluate first (3 * 3)
+       ==> 9 * (3 * 3)  -- evaluate second (3 * 3)
+       ==> 9 * 9
+       ==>
+
+Lazy evaluation is a very powerful feature of programming in a language
+like Gofer, and means that only the minimum amount  of  calculation  is
+used to determine the result of an expression.  The  following  example
+is often used to illustrate this point.
+
+Consider the task  of  finding  the  smallest  element  of  a  list  of
+integers.  The standard prelude includes a function "minimum" which can
+be used for this very purpose:
+
+    ? minimum [100,99..1]
+    1
+    (809 reductions, 1322 cells)
+    ?
+
+(The expression [100,99..1] denotes the list of integers from 1 to  100
+arranged in decreasing order, as described in section 10.1).
+
+A rather different approach involves sorting the elements of  the  list
+into increasing  order  (using  the  function  "sort"  defined  in  the
+standard prelude) and  then  take  the  element  at  the  head  of  the
+resulting list  (using  the  standard  function  "head").   Of  course,
+sorting the list in its entirety is  likely  to  require  significantly
+more work than the previous approach:
+
+    ? sort [100,99..1]
+    [1, 2, 3, 4, 5, 6, 7, 8, ... etc ..., 99, 100]
+    (10712 reductions, 21519 cells)
+    ?
+
+However, thanks to lazy-evaluation, calculating just the first  element
+of the sorted list actually requires less work in this particular  case
+than the first solution using "minimum":
+
+    ? head (sort [100,99..1])
+    1
+    (713 reductions, 1227 cells)
+    ?
+
+Incidentally, it is  probably worth  pointing  out  that  this  example
+depends rather heavily on the particular algorithm  used  to  "sort"  a
+list of elements.  The results are rather different if we  compare  the
+same two approaches used to calculate the maximum value in the list:
+
+    ? maximum [100,99..1]
+    100
+
+
+                                      28
+
+
+
+
+Introduction to Gofer                              9.6  Lazy evaluation
+
+
+    (812 reductions, 1225 cells)
+    ? last (sort [100,99..1])
+    100
+    (10612 reductions, 20732 cells)
+    ?
+
+This difference is caused by the fact that each  element  in  the  list
+produced by "sort" is  only  known  once  the  values  of  all  of  the
+preceding elements are also known.  Thus  the  complete  list  must  be
+sorted in order to obtain the last element.
+
+
+9.7  Infinite data structures
+-----------------------------
+One particular benefit of lazy evaluation is that it makes it  possible
+for functions  in  Gofer  to  manipulate  `infinite'  data  structures.
+Obviously we cannot hope either to   construct  or  store  an  infinite
+object in its entirety -- the advantage of lazy evaluation is  that  it
+allows us to construct infinite objects piece  by  piece  as  necessary
+(and to reuse the storage space used by parts of the object  when  they
+are no longer required).
+
+As a simple example, consider the following function which can be  used
+to produce infinite lists of integer values:
+
+    countFrom n = n : countFrom (n+1)
+
+If we evaluate the expression "countFrom 1", Gofer just prints the list
+of integer values beginning with 1 until it is interrupted.  Once  each
+element in the list has been printed, the storage  used  to  hold  that
+element can be reused to hold later elements in the  list.   Evaluating
+this expression is equivalent to using an `infinite' loop to print  the
+list of integers in an imperative programming language:
+
+    ? countFrom 1
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,^C{Interrupted!}
+    (53 reductions, 160 cells)
+    ?
+
+For practical applications, we are usually only interested in  using  a
+finite portion of an infinite data  structure  (just  as  loops  in  an
+imperative programming language are usually terminated  after  finitely
+many iterations).  For example, using  "countFrom"  together  with  the
+function "take" defined in the standard  prelude,  we  can  repeat  the
+calculation from section 4 to find the sum of the integers 1 to 10:
+
+    ? sum (take 10 (countFrom 1))
+    55
+    (62 reductions, 119 cells)
+    ?
+
+[ASIDE: The expression "take n xs" evaluates to a list  containing  the
+first n elements of the list xs (or to xs itself if the  list  contains
+fewer than n elements).  Thus "countFrom 1" generates the infinite list
+of integers, "take 10" ensures that only the  first  ten  elements  are
+calculated, and "sum" calculates the sum of those integers as before.]
+
+
+                                      29
+
+
+
+
+Introduction to Gofer                     9.7  Infinite data structures
+
+
+A particular advantage of using infinite data  structures  is  that  it
+enables us to describe an object without being tied to  one  particular
+application of that object.  Consider the following definition for  the
+infinite list of powers of two [1, 2, 4, 8, ...]:
+
+    powersOfTwo = 1 : map double powersOfTwo 
+                  where double n = 2*n
+
+This list be used in a variety of ways; using the operator (!!) defined
+in the standard prelude [xs!!n evaluates to the nth element of the list
+xs], we can define a function to find the nth power of 2 for any  given
+integer n:
+
+    twoToThe n = powersOfTwo !! n 
+
+Alternatively, we can use the list "powersOfTwo" to define  a  function
+mapping lists of  bits  (represented  by  integers  0  and  1)  to  the
+corresponding decimal number: simply reverse the order of  the  digits,
+multiply each by the corresponding power of two and calculate the  sum.
+Using functions from the standard  prelude,  this  translates  directly
+into the definition:
+
+    binToDec ds = sum (zipWith (*) (reverse ds) powersOfTwo)
+
+For example:
+
+    ? twoToThe 12
+    4096
+    (15 reductions, 21 cells)
+    ? binToDec [1,0,1,1,0]
+    22
+    (40 reductions, 85 cells)
+    ?
+
+9.8  Polymorphism
+-----------------
+Given the definition of "product" in section 9.5, it  is  easy  to  see
+that product takes a single argument which is a list  of  integers  and
+returns a single integer value -- the product of the  elements  of  the
+list.  In other words, "product" has type [Int] -> Int.  On  the  other
+hand, it is not immediately clear what the type of the  function  "map"
+should be.  Clearly the first argument of "map" must be a function  and
+both the second argument and the result are lists, so that the type  of
+"map" must be of the form:
+
+             (a -> b)   ->      [c]      ->     [d]
+             \______/          \___/           \___/
+           type of 1st      type of 2nd      type of result
+           argument "f"     argument "xs"    "map f xs"
+
+But what can be said about the types a, b, c and  d?   One  possibility
+would be to choose a = b = c = d = Int which would  be  acceptable  for
+expressions such as  "map  fact  [1,2,3,4]",  but  this  would  not  be
+suitable in an expression such as  "map  chr  [65,75,32]"  because  the
+"chr" function does not have type Int -> Int.
+
+
+
+                                      30
+
+
+
+
+Introduction to Gofer                                 9.8  Polymorphism
+
+
+Notice however that the argument type of "f" must be the  same  as  the
+type of elements in the second argument (i.e.  a  =  c)  since  "f"  is
+applied to each element in that list.  Similarly, the  result  type  of
+"f" must be the same as the type of elements in the result list (i.e. b
+= d) since each element in  this  list  is  obtained  as  a  result  of
+applying the function "f" to some value.  It is therefore reasonable to
+treat the "map" function as having any type of the form:
+
+                  (a -> b)  ->  [a]  ->  [b]
+
+The letters  "a"  and  "b"  used  in  this  type  expression  represent
+arbitrary types and are called type variables.  An  object  whose  type
+includes one or more type variables can be thought of  as  having  many
+different types and is often described as having a  `polymorphic  type'
+(literally: its type has `many shapes').
+
+The ability to define and use polymorphic functions in Gofer turns  out
+to be very useful.  Here are the types of some of the other polymorphic
+functions which have been used in previous  examples  which  illustrate
+this point:
+
+    length :: [a] -> Int
+    (++)   :: [a] -> [a] -> [a]
+    concat :: [[a]] -> [a]
+
+Thus we can use precisely the same "length" function to determine  both
+the length of a list of integers as well as finding  the  length  of  a
+string:
+
+    ? length [1..10]
+    10
+    (98 reductions, 138 cells)
+    ? length "Hello"
+    5
+    (22 reductions, 36 cells)
+    ? 
+
+
+9.9  Higher-order functions
+---------------------------
+In Gofer, function values are treated in much the same way as any other
+kind of value; in particular, they can be used both  as  arguments  to,
+and results of other functions.
+
+Functions which manipulate  other  functions  in  this  way  are  often
+described as `higher-order functions'.  Consider the following example,
+taken from the standard prelude:
+
+    (.)       :: (b -> c) -> (a -> b) -> (a -> c)
+    (f . g) x  = f (g x)
+
+As indicated by the type declaration, we think of the (.) operator as a
+function taking two function arguments and returning  another  function
+value as its result.  If f and  g  are  functions  of  the  appropriate
+types, then (f . g) is a function called the composition of f  with  g.
+Applying (f . g) to a value is equivalent to applying g to that  value,
+
+
+                                      31
+
+
+
+
+Introduction to Gofer                       9.9  Higher-order functions
+
+
+and then applying f to the result [As described, far  more  eloquently,
+by the second line of the declaration above!].
+
+Many problems can often be described very elegantly as a composition of
+other functions.  Consider the problem of calculating the total  number
+of characters used in a list of strings.  A simple  recursive  function
+provides one solution:
+
+    countChars []     = 0
+    countChars (w:ws) = length w + countChars ws 
+
+    ? countChars ["super","cali","fragi","listic"]
+    20
+    (96 reductions, 152 cells)
+    ?
+
+An alternative approach is to notice that we can  calculate  the  total
+number of characters by  first  combining  all  of  the  words  in  the
+argument list into a single word (using concat) and  then  finding  the
+length of that word:
+
+    ? (length . concat) ["super","cali","fragi","listic"]
+    20
+    (113 reductions, 211 cells)
+    ?
+
+Another solution is to first find the length of each word in  the  list
+(using the "map" function to apply "length"  to  each  word)  and  then
+calculate the sum of these individual lengths:
+
+    ? (sum . map length) ["super","cali","fragi","listic"]
+    20
+    (105 reductions, 172 cells)
+    ?
+
+
+9.10 Variable declarations
+--------------------------
+A variable declaration  is  a  special  form  of  function  definition,
+almost always consisting of a single equation of the form:
+
+                           var = rhs
+
+(i.e. a function declaration of arity 0).  Whereas the  values  defined
+by function declarations of arity>0 are guaranteed to be functions, the
+values defined by variable declarations may or may not be functions:
+
+    odd = not . even   -- if an integer is not even then it must be odd
+    val = sum [1..100]
+
+Note that variables defined like this at the top level  of  a  file  of
+definitions will be evaluated using lazy evaluation.  The first time we
+refer  to  the  variable  "val"  defined  above  (either  directly   or
+indirectly), Gofer evaluates the sum of the integers from 1 to 100  and
+overwrites the definition of "val" with this number.  This  calculation
+can then be avoided for each subsequent use of "val" (unless  the  file
+
+
+                                      32
+
+
+
+
+Introduction to Gofer                        9.10 Variable declarations
+
+
+containing the definition of "val" is reloaded).
+
+    ? val
+    5050
+    (809 reductions, 1120 cells)
+
+    ? val
+    5050
+    (1 reduction, 7 cells)
+
+    ?
+
+Because of this behaviour,  we  should  probably  try  to  avoid  using
+variable declarations where the resulting value will require a  lot  of
+storage space.  If we load a file of definitions including the line:
+
+    longList = [1..10000]
+
+and  then  evaluate  the  expression  "length   longList"   (eventually
+obtaining the expected result of 10000), then Gofer will  evaluate  the
+definition of "longList" and replace  it  with  the  complete  list  of
+integers from  1  upto  10000.   Unlike  other  memory  used  during  a
+calculation, it will not be possible to  reuse  this  space  for  other
+calculations without reloading the file defining "longList", or loading
+other files instead.
+
+
+9.11 Pattern bindings and irrefutable patterns
+----------------------------------------------
+Another useful way of defining variables uses `pattern bindings'  which
+are equations of the form:
+
+                        pat = rhs
+
+where the expression on the left hand side is a pattern as described in
+section 9.1.  As a simple example of  pattern  bindings,  here  is  one
+possible definition for the function "head"  which  returns  the  first
+element in a list of values:
+
+    head xs  =  x  where  (x:ys) = xs
+
+[The definition  "head (x:_) = x"  used  in  the  standard  prelude  is
+slightly more efficient, but otherwise equivalent.]
+
+[ASIDE: Note that pattern bindings are treated quite  differently  from
+function bindings (of which the variable declarations described in  the
+last section are a special case).  There are two situations in which an
+ambiguity may occur; i.e. if the left hand side of  an  equation  is  a
+simple variable or an (n+k) pattern of the kind  described  in  section
+9.1.  In both cases, these are treated as function bindings, the former
+being a variable declaration whilst the latter will  be  treated  as  a
+definition for the operator symbol (+).]
+
+Pattern bindings are often useful for defining functions which we might
+think of as `returning more  than  one  value'  --  although  they  are
+actually packaged up in a single value such as a tuple.  As an example,
+
+
+                                      33
+
+
+
+
+Introduction to Gofer    9.11 Pattern bindings and irrefutable patterns
+
+
+consider the function "span" defined in the standard prelude.
+
+    span :: (a -> Bool) -> [a] -> ([a],[a])
+
+If xs is a list of values and p is a predicate, then span p xs  returns
+the pair of lists (ys,zs) such that ys++zs == xs, all of  the  elements
+in ys satisfy the predicate p and the first  element  of  zs  does  not
+satisfy p.  A suitable definition, using a pattern  binding  to  obtain
+the two lists resulting  from  the  recursive  call  to  "span"  is  as
+follows:
+
+    span p []               = ([],[])
+    span p xs@(x:xs')
+                | p x       = let (ys,zs) = span p xs' in (x:ys,zs)
+                | otherwise = ([],xs)
+
+
+For consistency with the lazy evaluation strategy used  in  Gofer,  the
+right hand side of a pattern binding is not evaluated until  the  value
+of one of the  variables  bound  by  that  pattern  is  required.   The
+definition:
+
+    (0:xs) = [1,2,3]
+
+will not cause any errors when it is loaded into Gofer, but will  cause
+an error if we attempt to evaluate the variable xs:
+
+    ? xs
+    {v120 [1, 2, 3]}
+    (11 reductions, 46 cells)
+    ?
+
+The variable name "v120" appearing in this expression is the name of  a
+function called a `conformality check' which is  defined  automatically
+by Gofer to ensure that the value on the right hand side of the pattern
+binding conforms with the pattern on the left.
+
+Compare this  with  the  behaviour  of  pattern  matching  in  function
+definitions such as:
+
+    ? example [1] where example (0:xs) = "Hello"
+    {v126 [1]}
+    (4 reductions, 22 cells)
+    ?
+
+where  the  equivalent  of  the  conformality  check  is  carried   out
+immediately even if none of the values of the variables in the  pattern
+are actually required.  The reason for  this  difference  is  that  the
+arguments supplied to a function must be evaluated to  determine  which
+equation in the definition of the function should be used.   The  error
+produced by the example above was caused by the fact that the  argument
+[1] does not match the pattern used in the equation defining  "example"
+(represented by an internal Gofer function called "v126").
+
+A different kind of behaviour can be obtained using a  pattern  of  the
+form ~pat, known as an irrefutable (or lazy) pattern.  This pattern can
+
+
+                                      34
+
+
+
+
+Introduction to Gofer    9.11 Pattern bindings and irrefutable patterns
+
+
+initially be matched against any value, delaying the  check  that  this
+value does indeed match pat until the value of  one  of  the  variables
+appearing in it is required.  The basic idea (together with the  method
+used to implement irrefutable patterns in Gofer) is illustrated by  the
+identity:
+
+    f ~pat = rhs     is equivalent to     f v = rhs where pat=v
+
+The following examples, based  very  closely  on  those  given  in  the
+Haskell report [5], illustrate the use of  irrefutable  patterns.   The
+variable "undefined" used in these examples is included in the standard
+prelude  and  causes  a  run-time  error  each  time  it  is  evaluated
+(technically speaking, it represents the bottom element of the relevant
+semantic domain, and is the only value having all possible types):
+
+   (\ (x,y) -> 0) undefined = {undefined}
+   (\~(x,y) -> 0) undefined = 0
+
+   (\ [x] -> 0) [] = {v113 []}
+   (\~[x] -> 0) [] = 0
+
+   (\~[x, (a,b)] -> x) [(0,1),undefined] = {undefined}
+   (\~[x,~(a,b)] -> x) [(0,1),undefined] = (0,1)
+
+   (\ (x:xs) -> x:x:xs) undefined = {undefined}
+   (\~(x:xs) -> x:x:xs) undefined = {undefined}:{undefined}:{undefined}
+
+Irrefutable patterns are not used very frequently,  although  they  are
+particularly convenient in some situations (see  section  12  for  some
+examples).  Be careful not to use irrefutable patterns where  they  are
+not appropriate.  An attempt to define a map function "map'" using:
+
+    map' f ~(x:xs) = f x : map' f xs
+    map' f []      = []
+
+turns out to be equivalent to the definition:
+
+    map' f ys  =  f x : map f xs where (x:xs) = ys
+
+and will not behave as you might have intended:
+
+    ? map' ord "abc"
+    [97, 98, 99, {v124 []}, {v124 []}, {v^C{Interrupted!}
+    (35 reductions, 159 cells)
+    ?
+
+
+9.12 Type declarations
+-----------------------
+The type system used in Gofer is sufficiently powerful to enable  Gofer
+to determine the type of any function without the need to  declare  the
+types of its arguments and the return  value  as  in  some  programming
+languages.  Despite this, Gofer allows the use of type declarations  of
+the form:
+
+                var1, ..., varn :: type
+
+
+                                      35
+
+
+
+
+Introduction to Gofer                            9.12 Type declarations
+
+
+which enable the programmer  to  declare  the  intended  types  of  the
+variables var1,  ...,  varn  defined  in  either  function  or  pattern
+bindings.   There  are  a  number  of  benefits   of   including   type
+declarations of this kind in a program:
+
+  o  Documentation: The  type  of  a  function  often  provides  useful
+     information about the way in which a function is  to  be  used  --
+     including the number and order of its arguments.
+
+  o  Restriction: In some situations, the type of a  function  inferred
+     by Gofer is  more  general  than  is  required.   As  an  example,
+     consider the following function, intended to act as  the  identity
+     on integer values:
+
+         idInt x  =  x
+
+     Without an explicit type declaration, Gofer treats  "idInt"  as  a
+     polymorphic function of type a -> a and the expression "idInt 'A'"
+     does not cause a type error.  This problem can be  solved by using
+     an explicit type declaration  to restrict the type of "idInt" to a
+     particular instance of the polymorphic type a -> a:
+
+         idInt :: Int -> Int
+
+     Note that a declaration such as:
+
+         idInt :: Int -> a
+
+     is not a valid type for the function "idInt"  (the  value  of  the
+     expression "idInt 42" is an  integer  and  cannot  be  treated  as
+     having an arbitrary type, depending  on  the  value  of  the  type
+     variable "a"), and hence will not be accepted by Gofer.
+
+  o  Consistency check: As illustrated above, declared types are always
+     checked against the definition of a value to make sure  that  they
+     are compatible.   Thus  Gofer  can  be  used  to  check  that  the
+     programmer's intentions (as described by  the  types  assigned  to
+     variables  in  type  declarations)   are   consistent   with   the
+     definitions of those values.
+
+  o  Overloading: Explicit type declarations can be  used  to  solve  a
+     number  of  problems  associated  with  overloaded  functions  and
+     values.  See section 14 for further details.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                      36
+
+

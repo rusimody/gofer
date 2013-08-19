@@ -19,7 +19,7 @@ typedef Int	     Text;			 /* text string 	   */
 typedef Unsigned     Syntax;			 /* syntax (assoc,preced)  */
 typedef Int	     Addr;			 /* address of code	   */
 typedef Int	     Cell;			 /* general cell value	   */
-typedef Cell far     *Heap;			 /* storage of heap	   */
+typedef Cell *Heap;			 /* storage of heap	   */
 typedef Cell	     Pair;			 /* pair cell		   */
 typedef Int	     StackPtr;			 /* stack pointer	   */
 typedef Cell	     Offset;			 /* offset/generic variable*/
@@ -432,9 +432,9 @@ struct Idx {
 #define NODICT	     ((Dict)(-1))
 
 extern struct Class    tabClass[];
-extern struct Inst far *tabInst;
-extern struct Idx  far *tabIndex;
-extern Cell	   far *tabDict;
+extern struct Inst  *tabInst;
+extern struct Idx   *tabIndex;
+extern Cell	    *tabDict;
 
 #define idx(ix)        tabIndex[ix]
 #define dict(at)       tabDict[at]

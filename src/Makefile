@@ -24,7 +24,7 @@ COBJECTS	= gofc.o cbuiltin.o cmachine.o $(OBJECTS)
 # as you use to build the file runtime.o (as specified by the CC macro
 # below).
 
-CC		= gcc
+CC		= i686-w64-mingw32-gcc-4.6
 #CFLAGS		= -DUSE_READLINE=1
 CFLAGS		=
 LDFLAGS    	= -lm

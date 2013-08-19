@@ -35,7 +35,7 @@
 #define MINIX68K 0	/* For Minix68k with gcc			UN */
 #define AMIGA    0	/* For Amiga using gcc 2.2.2			UN */
 #define HPUX     0      /* For HPUX using gcc				   */
-#define LINUX    1      /* For Linux using gcc				UN */
+#define LINUX    0      /* For Linux using gcc				UN */
 #define RISCOS   0	/* For Acorn DesktopC and RISCOS2 or 3		   */
 #define ALPHA	 0	/* For DEC Alpha with OSF/1 (32 bit ints, no gofc) */
 #define SVR4	 0	/* For SVR4 using GCC2.2			   */
@@ -85,7 +85,8 @@
 			 SGI4 | NETBSD)
 #define SMALL_GOFER	(TURBOC | BCC)
 #define REGULAR_GOFER	(RISCOS | DJGPP | ZTC | ATARI)
-#define LARGE_GOFER	(UNIX   | WATCOM)
+// #define LARGE_GOFER	(UNIX   | WATCOM)
+#define LARGE_GOFER 1
 #define JMPBUF_ARRAY	(UNIX   | DJGPP | RISCOS | ZTC | ATARI)
 #define DOS_IO		(TURBOC | BCC | DJGPP | ZTC | WATCOM | ATARI)
 #define TERMIO_IO	(LINUX  | HPUX | OS2 | SVR4 | SGI4)
@@ -225,6 +226,7 @@ extern  int  kbhit	Args((void));
 extern   int access	Args((char *, int));
 extern   int namecmp    Args((char *, char *));
 #endif
+#include <signal.h>
 
 #ifndef USE_READLINE
 #define USE_READLINE  0
@@ -260,6 +262,7 @@ extern   int namecmp    Args((char *, char *));
 #if (UNIX | DJGPP | RISCOS | ZTC | WATCOM | ATARI)
 #define ctrlbrk(bh)	   signal(SIGINT,bh)
 #endif
+#define ctrlbrk(bh)	   signal(SIGINT,bh)
 
 /*---------------------------------------------------------------------------
  * General settings:

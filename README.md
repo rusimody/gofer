@@ -1,5 +1,10 @@
 gofer
 =====
-The original gofer 230a from Mark Jones.
-Identical except for this README.md.
-Original Readme is lowercase
+Dijkstra dot and other related additions
+
+Running
+=======
+You need to have the environment variable set:
+$ export PUGOFER=/path/to/pustd.pre
+
+Then run pugofer

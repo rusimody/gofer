@@ -44,6 +44,7 @@
 #define ATARI	 0	/* For Atari ST/STE/TT/Falcon w/ Lattice C 5.52 UN */
 #define SGI4	 0	/* For SiliconGraphics Indigo, IRIX v*4*.0.5	UN */
 #define NETBSD	 0	/* For NetBSD-current				   */
+#define WIN32	 1	/* rusi aug 2013 */
 
 /*---------------------------------------------------------------------------
  * To add a new machine/compiler, add a new macro line above, add the new
@@ -85,10 +86,9 @@
 			 SGI4 | NETBSD)
 #define SMALL_GOFER	(TURBOC | BCC)
 #define REGULAR_GOFER	(RISCOS | DJGPP | ZTC | ATARI)
-// #define LARGE_GOFER	(UNIX   | WATCOM)
-#define LARGE_GOFER 1
+#define LARGE_GOFER	(UNIX   | WATCOM | WIN32)
 #define JMPBUF_ARRAY	(UNIX   | DJGPP | RISCOS | ZTC | ATARI)
-#define DOS_IO		(TURBOC | BCC | DJGPP | ZTC | WATCOM | ATARI)
+#define DOS_IO		(TURBOC | BCC | WIN32 | DJGPP | ZTC | WATCOM | ATARI)
 #define TERMIO_IO	(LINUX  | HPUX | OS2 | SVR4 | SGI4)
 #define SGTTY_IO	(SUNOS  | NEXTSTEP | NEXTGCC | AMIGA | MINIX68K | \
 			 ALPHA  | ULTRIX | AIX | MIPS)
@@ -179,6 +179,11 @@ extern  int  kbhit	Args((void));
 #define sigResume	return 1
 #endif
 
+#if WIN32
+#define far
+#include <signal.h>
+#endif
+
 #if     SUNOS
 #include <malloc.h>
 #define far
@@ -203,7 +208,7 @@ extern  int  kbhit	Args((void));
 #define	farCalloc(n,s)	(Void *)valloc(((unsigned)n)*((unsigned)s))
 #endif
 
-#if     (HPUX | DJGPP | ZTC | LINUX | ALPHA | OS2 | SVR4 | AIX | SGI4 | NETBSD)
+#if     (HPUX | DJGPP | ZTC | LINUX | ALPHA | OS2 | SVR4 | AIX | SGI4 | NETBSD | WIN32)
 #include <stdlib.h>
 #include <string.h>
 #define  far
@@ -226,7 +231,6 @@ extern  int  kbhit	Args((void));
 extern   int access	Args((char *, int));
 extern   int namecmp    Args((char *, char *));
 #endif
-#include <signal.h>
 
 #ifndef USE_READLINE
 #define USE_READLINE  0
@@ -259,10 +263,9 @@ extern   int namecmp    Args((char *, char *));
 #define MainDone
 #endif
 
-#if (UNIX | DJGPP | RISCOS | ZTC | WATCOM | ATARI)
+#if (UNIX | DJGPP | RISCOS | ZTC | WATCOM | ATARI | WIN32)
 #define ctrlbrk(bh)	   signal(SIGINT,bh)
 #endif
-#define ctrlbrk(bh)	   signal(SIGINT,bh)
 
 /*---------------------------------------------------------------------------
  * General settings:

@@ -14,14 +14,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
-
+#include <sys/stat.h>
 #if (TURBOC | BCC)
 #include <dos.h>
 #include <conio.h>
 #include <io.h>
 #include <stdlib.h>
 #include <mem.h>
-#include <sys\stat.h>
+#include <sys/stat.h>
 #include <time.h>
 extern unsigned _stklen = 8000;		/* Allocate an 8k stack segment	   */
 #endif
@@ -628,3 +628,18 @@ Int what; {				/* initialisation etc..		   */
 #endif
 
 /*-------------------------------------------------------------------------*/
+
+static Bool terminalEchoReqd = TRUE;
+Void normalTerminal() {			/* restore terminal initial state  */
+    terminalEchoReqd = TRUE;
+}
+
+Int getTerminalWidth() 		/* determine width of terminal	   */
+  {return 80; }
+
+Int readTerminalChar() {		/* read character from terminal	   */
+    return getchar();
+}
+Void noechoTerminal() {			/* turn terminal echo on/off	   */
+    terminalEchoReqd = FALSE;
+}

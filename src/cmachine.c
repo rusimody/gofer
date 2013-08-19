@@ -62,7 +62,7 @@ typedef union {
     Label labVal;
 } MemCell;
 
-typedef MemCell far *Memory;
+typedef MemCell *Memory;
 static	Memory	    memory;
 #define intAt(m)    memory[m].intVal
 #if !BREAK_FLOATS

@@ -467,9 +467,9 @@ static Idx   idxHw;		       /* next unused index tree record    */
 static Dict  dictHw;		       /* next unused dictionary slot	   */
 
 struct Class	tabClass[NUM_CLASSES]; /* table of class records	   */
-struct Inst far *tabInst;	       /* (pointer to) table of instances  */
-struct Idx  far *tabIndex;	       /* (pointer to) table of indices    */
-Cell	    far *tabDict;	       /* (pointer to) table of dict slots */
+struct Inst  *tabInst;	       /* (pointer to) table of instances  */
+struct Idx   *tabIndex;	       /* (pointer to) table of indices    */
+Cell	     *tabDict;	       /* (pointer to) table of dict slots */
 
 Class newClass(t)		       /* add new class to class table	   */
 Text t; {
@@ -1359,11 +1359,11 @@ Int what; {
 
 		       dictHw	= 0;
 
-		       tabInst	= (struct Inst far *)
+		       tabInst	= (struct Inst *)
 				    farCalloc(NUM_INSTS,sizeof(struct Inst));
-		       tabIndex = (struct Idx far *)
+		       tabIndex = (struct Idx *)
 				    farCalloc(NUM_INDEXES,sizeof(struct Idx));
-		       tabDict	= (Cell far *)
+		       tabDict	= (Cell *)
 				    farCalloc(NUM_DICTS,sizeof(Cell));
 
 		       if (tabInst==0 || tabIndex==0 || tabDict==0) {

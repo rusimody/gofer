@@ -1,0 +1,9 @@
+* gofer
+This gofer is a fork of Mark Jones original with some additions and modifications, the most visible one being the 'Dijkstra dot' for function application.
+* Running
+You need to have the environment variable set:
+$ export PUGOFER=/path/to/pustd.pre
+
+Then run gofer
+* Building
+Choose the architecture in prelude.c, c compiler in Makefile and run make. There is no configure to run. windows seems to build with mingw for 32 bit but not 64.

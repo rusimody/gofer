@@ -39,5 +39,6 @@ Windows seems to build with mingw for 32 bit but not 64.
 Justifications for these changes are explained in [[http://www.the-magus.in/Publications/notation.pdf][Notes on Notation]]
 
 Also may be of interest:
+- [[http://www.the-magus.in/Publications/ewd.pdf][Thought Dialogue with EWD]]
 - [[http://www.the-magus.in/Publications/DotingOnTheDot.pdf][Doting on the Dot]]
 - [[http://www.the-magus.in/Publications/purgatory.pdf][Lunchtime at Purgatory]]

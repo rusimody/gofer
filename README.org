@@ -1,20 +1,21 @@
 * gofer
 This gofer is a fork of Mark Jones original with some additions and modifications, the most visible one being the /Dijkstra dot/ for function application. See [[https://www.cs.utexas.edu/users/EWD/ewd13xx/EWD1300.PDF][Notational Conventions]] – pg 8 onwards.
 
+I used to call it /pugofer/ since I was using it to teach when at Pune University in the early 90s.
+
 Mark Jones is gratefully acknowledged for this pioneering work.
 * Sample
-To see how source looks with these changed syntaxes, look at
-[[file:pustd.pre][pustd.pre]].
+To see how source looks with these changed syntaxes, look at the standard prelude: [[file:pustd.pre][pustd.pre]].
 
-The alternate prelude [[file:pusimple.pre][pusimple]] is particularly neat for those who feel the need to grok Hindley-Milner before getting into typeclasses. With that you'll get for example:
+The alternate prelude [[file:pusimple.pre][pusimple]] is particularly neat for those who feel the need to grok Hindley-Milner before getting into typeclasses. With that you'll get, for example:
 #+BEGIN_SRC haskell
-1? :t (+)
+? :t (+)
 (+) : Int -> Int -> Int
 ? :t (==)
 (==) : a -> a -> Bool
 #+END_SRC
 * Running
-You need to have the environment variable set:
+You need to have the environment variable for the prelude's path set:
 
 =$ PUGOFER=/path/to/pustd.pre gofer=
 * Syntax late-bound

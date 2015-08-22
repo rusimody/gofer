@@ -17,6 +17,17 @@ The alternate prelude [[file:pusimple.pre][pusimple]] is particularly neat for t
 You need to have the environment variable set:
 
 =$ PUGOFER=/path/to/pustd.pre gofer=
+* Syntax late-bound
+You can switch back to classic Haskell syntax with =:s -S=
+#+BEGIN_SRC haskell
+? map.(1+).[1,2,3]
+[2, 3, 4] : [Int]
+
+? :s -S
+? map (1+) [1,2,3]
+[2, 3, 4] :: [Int]
+
+#+END_SRC
 * Building
 - =cd src=
 - Choose the architecture at the top of [[file:src/prelude.h][prelude.h]]

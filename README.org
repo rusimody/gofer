@@ -2,9 +2,15 @@
 This gofer is a fork of Mark Jones original with some additions and modifications, the most visible one being the 'Dijkstra dot' for function application.
 * Sample
 To see how source looks with these changed syntaxes, look at
-[[file:pustd.pre][pustd.pre]] or [[file:pusimple.pre][pusimple]].
+[[file:pustd.pre][pustd.pre]].
 
-=pusimple.pre= is particularly neat for those who the need to grok Hindley-Milner before getting into typeclasses.
+The alternate prelude [[file:pusimple.pre][pusimple]] is particularly neat for those who feel the need to grok Hindley-Milner before getting into typeclasses. With that you'll get for example:
+#+BEGIN_SRC haskell
+? :t (+)
+(+) : Int -> Int -> Int
+? :t (==)
+(==) : a -> a -> Bool
+#+END_SRC
 * Running
 You need to have the environment variable set:
 

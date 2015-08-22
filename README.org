@@ -2,9 +2,9 @@
 This gofer is a fork of Mark Jones original with some additions and modifications, the most visible one being the 'Dijkstra dot' for function application.
 * Sample
 To see how source looks with these changed syntaxes, look at
-=pustd.pre= or =pusimple.pre= .
-=pusimple.pre= is particularly neat when one recognizes the need to grok Hindley-Milner before typeclasses
- 
+[[file:pustd.pre][pustd.pre]] or [[file:pusimple.pre][pusimple]].
+
+=pusimple.pre= is particularly neat for those who the need to grok Hindley-Milner before getting into typeclasses.
 * Running
 You need to have the environment variable set:
 

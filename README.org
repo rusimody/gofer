@@ -1,12 +1,14 @@
 * gofer
 This gofer is a fork of Mark Jones original with some additions and modifications, the most visible one being the 'Dijkstra dot' for function application.
+
+Mark Jones is gratefully acknowledged for this pioneering work.
 * Sample
 To see how source looks with these changed syntaxes, look at
 [[file:pustd.pre][pustd.pre]].
 
 The alternate prelude [[file:pusimple.pre][pusimple]] is particularly neat for those who feel the need to grok Hindley-Milner before getting into typeclasses. With that you'll get for example:
 #+BEGIN_SRC haskell
-? :t (+)
+1? :t (+)
 (+) : Int -> Int -> Int
 ? :t (==)
 (==) : a -> a -> Bool
@@ -16,9 +18,15 @@ You need to have the environment variable set:
 
 =$ PUGOFER=/path/to/pustd.pre gofer=
 * Building
-Choose the architecture in prelude.c, c compiler in Makefile and run make. There is no configure to run. windows seems to build with mingw for 32 bit but not 64.
+- =cd src=
+- Choose the architecture at the top of [[file:src/prelude.h][prelude.h]]
+- C compiler in [[file:src/Makefile][Makefile]] 
+- =$ make= 
+There is no configure to run.\\
+Windows seems to build with mingw for 32 bit but not 64.
 * Literature
-Justifications for these changes are [[http://www.the-magus.in/Publications/notation.pdf][Notes on Notation]]
+Justifications for these changes are explained in [[http://www.the-magus.in/Publications/notation.pdf][Notes on Notation]]
+
 Also may be of interest:
 - [[http://www.the-magus.in/Publications/DotingOnTheDot.pdf][Doting on the Dot]]
 - [[http://www.the-magus.in/Publications/purgatory.pdf][Lunchtime at Purgatory]]

@@ -1,5 +1,5 @@
 * gofer
-This gofer is a fork of Mark Jones original with some additions and modifications, the most visible one being the 'Dijkstra dot' for function application.
+This gofer is a fork of Mark Jones original with some additions and modifications, the most visible one being the /Dijkstra dot/ for function application. See [[https://www.cs.utexas.edu/users/EWD/ewd13xx/EWD1300.PDF][Notational Conventions]] – pg 8 onwards.
 
 Mark Jones is gratefully acknowledged for this pioneering work.
 * Sample

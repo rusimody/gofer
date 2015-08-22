@@ -3,15 +3,12 @@ This gofer is a fork of Mark Jones original with some additions and modification
 * Sample
 To see how source looks with these changed syntaxes, look at
 =pustd.pre= or =pusimple.pre= .
-'pusimple.pre' is particularly neat if recognizes the need to grok Hindley-Milner before typeclasses
+=pusimple.pre= is particularly neat when one recognizes the need to grok Hindley-Milner before typeclasses
  
 * Running
 You need to have the environment variable set:
-=$ export PUGOFER=/path/to/pustd.pre=
 
-Or
-
-Then run gofer
+=$ PUGOFER=/path/to/pustd.pre gofer=
 * Building
 Choose the architecture in prelude.c, c compiler in Makefile and run make. There is no configure to run. windows seems to build with mingw for 32 bit but not 64.
 * Literature

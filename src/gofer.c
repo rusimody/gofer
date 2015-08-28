@@ -812,7 +812,7 @@ static Void local bannerContents()
        "Gofer Version 2.30a",
        "Modifications for pugofer Rusi Mody",
        "Copyright (c) Mark P Jones 1991-1994",
-       "Copyright (c) Rusi Mody 1995-2012",
+       "Copyright (c) Rusi Mody 1995-2015",
        NULL
   };
 

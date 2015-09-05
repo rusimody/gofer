@@ -1,0 +1,4 @@
+To use pugofer with(in) emacs
+- you need pugofer.el in emacs load-path
+- you need to tweak paths in pugofer-init.el 
+- And add that to your init.el

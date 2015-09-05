@@ -24,7 +24,7 @@
 ;;; INFERIOR PUGOFER MODE STUFF
 ;;;============================================================================
 
-(defvar inferior-pugofer-mode-hook nil
+(defcustom inferior-pugofer-mode-hook nil
   "*Hook for customising inferior-pugofer mode.")
 (defvar inferior-pugofer-mode-map nil)
 
@@ -286,7 +286,7 @@ next one.")
 
 MULTIPLE PROCESS SUPPORT
 ===========================================================================
-Cmupugofer.el supports, in a fairly simple fashion, running multiple Pugofer
+pugofer.el supports, in a fairly simple fashion, running multiple Pugofer
 processes. To run multiple Pugofer processes, you start the first up with
 \\[run-pugofer]. It will be in a buffer named *pugofer*. Rename this buffer
 with \\[rename-buffer]. You may now start up a new process with another
@@ -333,11 +333,11 @@ for a minimal, simple implementation. Feel free to extend it.")
 
 ;;; Do the user's customisation...
 
-(defvar cmupugofer-load-hook nil
-  "This hook is run when cmupugofer is loaded in.
+(defvar pugofer-load-hook nil
+  "This hook is run when pugofer is loaded in.
 This is a good place to put keybindings.")
 	
-(run-hooks 'cmupugofer-load-hook)
+(run-hooks 'pugofer-load-hook)
 
 
 ;;; CHANGE LOG
@@ -366,9 +366,17 @@ This is a good place to put keybindings.")
 ;;; - pugofer-load-file and pugofer-compile-file no longer switch-to-pugofer.
 ;;;   Tale suggested this.
 
-(provide 'cmupugofer)
+;;; Around 1993 Rusi
+;;; munged together scheme.el and cmuscheme.el
+;;; Changed scheme to pugofer and did the minimum to get it 
+;;; to work for pugofer
 
-;;; cmupugofer.el ends here
+;;; 5 Sept 2015
+;;; Changed some defvars to defcustoms
+
+(provide 'pugofer)
+
+;;; original end cmuscheme.el ends here
 
 ;;; rpm
 

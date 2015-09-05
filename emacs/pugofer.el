@@ -132,7 +132,7 @@ Defaults to a regexp ignoring all inputs of 0, 1, or 2 letters.")
 		 (pugofer-args-to-list (substring string pos
 						 (length string)))))))))
 
-(defvar pugofer-program-name "pugofer"
+(defvar pugofer-program-name "gofer"
   "*Program invoked by the run-pugofer command")
 
 ;;;###autoload

@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# A simple shell script to invoke the Gofer interpreter and set the
+# path to the prelude file.  Ultimately, you might want to copy this
+# file into your own bin directory so that you can record your
+# favourite command line settings or use a different prelude file ...
+#
+# Mark Jones, last modified March 1993
+# Edited by Jonathan Bowen, Oxford University, August 1993
+
+# Location of gofer files - site specific
+ROOT=/usr/local/gofer
+
+# first, the location of your prelude file:
+GOFER=${GOFER-$ROOT/lib/standard.prelude}
+export GOFER
+
+# next, command line argument settings.  One example might be:
+# "-pGofer: -rit -s +k" but I just stick with the defaults
+# here:
+GOFERARGS=${GOFERARGS-""}
+
+# The next few lines try to guess a suitable setting for the EDITLINE
+# variable.  If your favourite editor is not dealt with here, or if
+# the version of sh that I'm using is incompatible with every other
+# shell out there, you may need to modify (or remove) this section:
+#
+EDIT=${VISUAL-${EDITOR-/usr/ucb/vi}}
+case `basename $EDIT` in
+    emacs | vi | elvis )  EDITLINE="$EDIT +%d %s"; export EDITLINE ;;
+    none               )  ;;
+    *                  )  EDITLINE=$EDIT; export EDITLINE ;;
+esac
+
+# Finally, start the interpreter running:
+# exec /usr/local/lib/Gofer/gofer $GOFERARGS $*
+exec $ROOT/bin/Gofer $GOFERARGS $*

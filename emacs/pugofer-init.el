@@ -14,12 +14,19 @@
 
 
 ;; These should go into pugofer.el
+;; For now you need to hand-change these paths
+
 (defun run-pugofer-std ()
   (interactive)
-  (setenv "PUGOFER" "/home/rusi/gofergithub/gofer/src/pustd.pre")
+  (setenv "PUGOFER" "/home/rusi/gofergithub/gofer/pustd.pre")
   (run-pugofer pugofer-program-name))
 
 (defun run-pugofer-simple ()
   (interactive)
-  (setenv "PUGOFER" "/home/rusi/gofergithub/gofer/src/pusimple.pre")
+  (setenv "PUGOFER" "/home/rusi/gofergithub/gofer/pusimple.pre")
+  (run-pugofer pugofer-program-name))
+
+(defun run-pugofer-cc ()
+  (interactive)
+  (setenv "PUGOFER" "/home/rusi/gofergithub/gofer/pucc28.pre")
   (run-pugofer pugofer-program-name))

@@ -1,0 +1,9 @@
+This directory contains minimal exe stuff for gofer on windows
+[Thanks Sikander Tamboli for the compile]
+
+gofer.exe of course on your path (or call with absolute path)
+
+In addition you need to set the environment variable PUGOFER
+to the path of the chosen prelude; eg
+set PUGOFER=Z:/path/to/pusimple.pre
+before calling gofer

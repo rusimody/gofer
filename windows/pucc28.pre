@@ -17,8 +17,8 @@ help = "press :? for a list of commands"
 
 -- Operator precedence table: -----------------------------------------------
 
-infixl 9 !!
-infixr 9 ;
+infixl 9 !!, ..
+infixr 9 ;, @@
 infixr 8 ^
 infixl 7 *
 infix  7 /, `div`, `quot`, `rem`, `mod`
@@ -336,6 +336,85 @@ sums, products	: Num.a => [a] -> [a]
 sums		= scanl.(+).(fromInteger.0)
 products	= scanl.(*).(fromInteger.1)
 
+-- Constructor classes: -----------------------------------------------------
+
+class Functor.f where
+    map		: (a -> b) -> f.a -> f.b
+
+class Functor.m => Monad.m where
+    result	: a -> m.a
+    join	: m.(m.a) -> m.a
+    (..)	: (a -> m.b) -> m.a -> m.b
+
+    join.x	= id..x
+    f..x	= join.(map.f.x)
+
+class Monad.m => Monad0.m where
+    zero	: m.a
+
+class Monad0.c => MonadPlus.c where
+    (++)	: c.a -> c.a -> c.a
+
+class (Functor.left, Functor.right) => Adjoint.left.right where
+    univ	: (a -> right.b) -> (left.a -> b)
+    unit	: a -> right.(left.a)
+    couniv	: (left.a -> b) -> (a -> right.b)
+    counit	: left.(right.a) -> a
+
+    unit	= couniv.id
+    counit	= univ.id
+    univ.g	= map.g ; counit
+    couniv.g	= unit ; map.g
+
+class (Functor.f, Functor.g) => NatTransf.f.g where
+    eta		: f.a -> g.a
+
+-- Monad based utilities: ---------------------------------------------------
+
+
+(@@)             : Monad.m => (a -> m.b) -> (c -> m.a) -> (c -> m.b)
+f @@ g            = g; map.f ; join
+
+concat		 : MonadPlus.c => [c.a] -> c.a
+concat		  = foldr.(++).zero
+
+filter		 : Monad0.m => (a -> Bool) -> m.a -> m.a
+filter.p.xs       = [ x | x<-xs, p.x ]
+
+mfoldl           : Monad.m => (a -> b -> m.a) -> a -> [b] -> m.a
+mfoldl.f.a.[]     = result.a
+mfoldl.f.a.(x::xs) = (\fax -> mfoldl.f.fax.xs) .. f.a.x
+
+mfoldr           : Monad.m => (a -> b -> m.b) -> b -> [a] -> m.b
+mfoldr.f.a.[]	= result.a
+mfoldr.f.a.(x::xs) = (\y -> f.x.y)..mfoldr.f.a.xs
+
+mapl             : Monad.m => (a -> m.b) -> ([a] -> m.[b])
+mapl.f.[]         = [ [] ]
+mapl.f.(x::xs)     = [ y::ys | y <- f.x, ys <- mapl.f.xs ]
+
+mapr             : Monad.m => (a -> m.b) -> ([a] -> m.[b])
+mapr.f.[]         = [ [] ]
+mapr.f.(x::xs)     = [ y::ys | ys <- mapr.f.xs, y <- f.x ]
+
+-- The monad of lists: ------------------------------------------------------
+
+instance Functor.[] where
+    map.f.[]     = []
+    map.f.(x::xs) = f.x :: map.f.xs
+
+instance Monad.[] where
+    result.x        = [x]
+    f..[] = []
+    f..(x::xs) = f.x ++ (f..xs)
+
+instance Monad0.[] where
+    zero         = []
+
+instance MonadPlus.[] where
+    []     ++ ys = ys
+    (x::xs) ++ ys = x :: (xs ++ ys)
+
 -- Standard list processing functions: --------------------------------------
 
 head             : [a] -> a
@@ -351,10 +430,6 @@ tail.(_::xs)	= xs
 init             : [a] -> [a]
 init.[x]	= []
 init.(x::xs)	= x :: init.xs
-
-(++)             : [a] -> [a] -> [a]    -- append lists.  Associative with
-[] ++ ys	= ys
-(x::xs) ++ ys	= x :: (xs ++ ys)
 
 genericLength    : Num.a => [b] -> a
 genericLength	= foldl'.(\n _ -> n + fromInteger.1).(fromInteger.0)
@@ -393,9 +468,6 @@ maximum, minimum : Ord.a => [a] -> a
 maximum           = foldl1.max          -- max element in non-empty list
 minimum           = foldl1.min          -- min element in non-empty list
 
-concat           : [[a]] -> [a]        -- concatenate list of lists
-concat	= foldr.(++).[]
-
 transpose        : [[a]] -> [[a]]      -- transpose list of lists
 transpose	= foldr.(\xs xss -> zipWith.(::).xs.(xss ++ repeat.[])).[]
 
@@ -418,21 +490,6 @@ null.(_::_)	= False
                              | x == y     = xs
                              | otherwise  = x :: xs `del` y
 
-
--- map f xs applies the function f to each element of the list xs returning
--- the corresponding list of results.  filter p xs returns the sublist of xs
--- containing those elements which satisfy the predicate p.
- 
-map              : (a -> b) -> [a] -> [b]
-map.f.[]	= []
-map.f.(x::xs)	= f.x :: map.f.xs
-
-filter           : (a -> Bool) -> [a] -> [a]
-filter._.[]	= []
-filter.p.(x::xs)
-   | p.x	= x :: xs'
-   | otherwise	= xs'
-                  where xs' = filter.p.xs
 
 -- Fold primitives:  The foldl and scanl functions, variants foldl1 and
 -- scanl1 for non-empty lists, and strict variants foldl' scanl' describe
@@ -775,7 +832,6 @@ data IOError  = WriteError.String
 	      | SearchError.String
 	      | FormatError.String
 	      | OtherError.String
-
 
 type Dialogue    =  [Response] -> [Request]
 -}

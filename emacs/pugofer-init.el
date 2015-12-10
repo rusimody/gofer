@@ -1,6 +1,7 @@
 ;; Setups for emacs for using pugofer mode
 ;; Assumes you have pugofer.el on the load-path
 
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/elisp"))
 (autoload 'pugofer-mode "pugofer.el" nil t)
 (autoload 'run-pugofer "pugofer.el" nil t)
 (autoload 'pugofer-project "pugofer.el" nil t)
@@ -18,15 +19,15 @@
 
 (defun run-pugofer-std ()
   (interactive)
-  (setenv "PUGOFER" "/home/rusi/gofergithub/gofer/pustd.pre")
+  (setenv "PUGOFER" (expand-file-name "~/gofer/pustd.pre"))
   (run-pugofer pugofer-program-name))
 
 (defun run-pugofer-simple ()
   (interactive)
-  (setenv "PUGOFER" "/home/rusi/gofergithub/gofer/pusimple.pre")
+  (setenv "PUGOFER" (expand-file-name "~/gofer/pusimple.pre"))
   (run-pugofer pugofer-program-name))
 
 (defun run-pugofer-cc ()
   (interactive)
-  (setenv "PUGOFER" "/home/rusi/gofergithub/gofer/pucc28.pre")
+  (setenv "PUGOFER" (expand-file-name "~/gofer/pucc28.pre"))
   (run-pugofer pugofer-program-name))

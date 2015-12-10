@@ -93,7 +93,7 @@ String s; {
 static Void local putInt(n)             /* print integer                   */
 Int n; {
     static char intBuf[16];
-    sprintf(intBuf,"%d",n);
+    sprintf(intBuf,"%ld",n);
     putStr(intBuf);
 }
 

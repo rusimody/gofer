@@ -51,7 +51,7 @@ Int n; {				/* current substituion		   */
 
 	newTvs = (Tyvar *)calloc(newMax,sizeof(Tyvar));
 	if (!newTvs) {
-	    ERROR(0) "Too many variables (%d) in type checker", newMax
+	    ERROR(0) "Too many variables (%ld) in type checker", newMax
 	    EEND;
 	}
 	for (i=0; i<numTyvars;++i) {		/* copy substitution	   */

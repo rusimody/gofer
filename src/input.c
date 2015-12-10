@@ -1048,8 +1048,8 @@ Int yylex() {	       /* Read next input token ...	   */
     }
 
     if (!(isascii(c0) && isprint(c0))) {
-	ERROR(row) "Unrecognised character '\\%d' in column %d",
-		   ((int)c0), column
+	ERROR(row) "Unrecognised character '\\%ld' in column %ld",
+		   ((Int)c0), column
 	EEND;
     }
 
@@ -1120,7 +1120,7 @@ Int yylex() {	       /* Read next input token ...	   */
 	return NUMLIT;
     }
 
-    ERROR(row) "Unrecognised character '\\%d' in column %d", ((int)c0), column
+    ERROR(row) "Unrecognised character '\\%ld' in column %ld", ((Int)c0), column
     EEND;
     return 0; /*NOTREACHED*/
 }

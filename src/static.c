@@ -1144,7 +1144,7 @@ Int  line;			       /* Check constructor applied with   */
 Cell c; 			       /* correct number of arguments	   */
 Int  args; {
     if (name(c).arity!=args) {
-	ERROR(line) "Constructor function \"%s\" needs %d args in pattern",
+	ERROR(line) "Constructor function \"%s\" needs %ld args in pattern",
 		    textToStr(name(c).text), name(c).arity
 	EEND;
     }

@@ -1,0 +1,26 @@
+* Docs related to word size
+- http://stackoverflow.com/questions/2331751/does-the-size-of-an-int-depend-on-the-compiler-and-or-processor 
+- http://stackoverflow.com/questions/7180196/size-of-integer-in-c
+- https://gcc.gnu.org/onlinedocs/gcc-4.7.4/gcc/i386-and-x86-64-Options.html
+- https://en.wikipedia.org/wiki/64-bit_computing#64-bit_data_models
+- http://www.unix.org/version2/whatsnew/lp64_wp.html
+- http://stackoverflow.com/questions/1505582/determining-32-vs-64-bit-in-c
+- http://nadeausoftware.com/articles/2012/02/c_c_tip_how_detect_processor_type_using_compiler_predefined_macros#x86andx8664
+- https://msdn.microsoft.com/en-us/library/29dh1w7z.aspx
+- http://sourceforge.net/p/predef/wiki/Architectures/
+* Hashing
+http://www.drdobbs.com/architecture-and-design/generating-perfect-hash-functions/184404506
+* Encoding
+http://blog.gatunka.com/2014/04/25/character-encodings-for-modern-programmers/
+* Collection Monadic
+http://www.randomhacks.net/2007/03/15/data-set-monad-haskell-macros/
+* Sets
+[[http://www.randomhacks.net/2007/03/15/data-set-monad-haskell-macros/][make Set into monad]]
+* TODOS
+** First line in main
+    CStackBase = &argc;                 /* Save stack base for use in gc   */
+is probably an issue
+** NUM_CHARS (prelude.h:299) should be 0x110000 (orig 256)
+But then all those million chars are cached!
+Defaultheap has been changed to accomodate.
+

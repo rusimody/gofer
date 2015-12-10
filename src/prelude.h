@@ -276,7 +276,7 @@ typedef unsigned Bool;
 #define TRUE     1
 #define FALSE    0
 typedef char    *String;
-typedef int      Int;
+typedef long     Int;
 typedef long     Long;
 typedef int      Char;
 typedef unsigned Unsigned;
@@ -296,7 +296,7 @@ typedef unsigned Unsigned;
 #define NUM_FIXUPS         100
 #define NUM_TUPLES         100
 #define NUM_OFFSETS        1024
-#define NUM_CHARS          256
+#define NUM_CHARS          0x20000
 
 /* Managing two different sized versions of Gofer has caused problems in
  * the past for people who tried to change one setting, but inadvertantly
@@ -327,8 +327,9 @@ typedef unsigned Unsigned;
 #define NUM_ADDRS          Pick(28000, 100000,     320000)
 #define MINIMUMHEAP	   Pick(7500,  7500,       7500)
 #define MAXIMUMHEAP	   Pick(32765, 0,          0)
-#define DEFAULTHEAP        Pick(28000, 100000,     100000)
-#define MAXPOSINT          Pick(32767, 2147483647, 2147483647)
+// #define DEFAULTHEAP        Pick(28000, 100000,     100000)
+#define DEFAULTHEAP        Pick(28000, 100000,        5000000)
+#define MAXPOSINT          Pick(32767, 2147483647, 0x7fffffffffffffff)
 
 #define minRecovery	   Pick(1000,  1000,       1000)
 #define bitsPerWord	   Pick(16,    32,         32)
@@ -353,7 +354,7 @@ extern int      system	   Args((const char *));
 extern double   atof	   Args((char *));
 #endif
 //extern char     *strchr    Args((char *,int));  /* test membership in str  */
-extern Void     exit       Args((Int));
+extern Void     exit       Args((int));
 extern Void     internal   Args((String));
 extern Void     fatal	   Args((String));
 

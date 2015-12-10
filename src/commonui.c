@@ -122,7 +122,7 @@ static Void local optionInfo() {	/* Print information about command */
 #ifdef TECH_TOGGLES
     printf("-h%d -p%s -x%d -r%s\n",heapSize,prompt,maxEvidLevel,repeatStr);
 #else
-    printf("-h%d -p%s -r%s\n",heapSize,prompt,repeatStr);
+    printf("-h%ld -p%s -r%s\n",heapSize,prompt,repeatStr);
 #endif
 }
 

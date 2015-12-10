@@ -68,13 +68,13 @@ static Bool listFiles = TRUE;		/* TRUE => list files after loading*/
  * Gofer entry point:
  * ------------------------------------------------------------------------*/
 
-Main main Args((Int, String []));	/* now every func has a prototype  */
+int main Args((int, String []));	/* now every func has a prototype  */
 
-Main main(argc,argv)
+int main(argc,argv)
 int  argc;
 char *argv[]; {
     CStackBase = &argc;                 /* Save stack base for use in gc   */
-
+    printf("Star: %c%c%c\n", 0xE2, 0x9C, 0xA1);
     /* The startup banner now includes my name.  Gofer is provided free of */
     /* charge.  I ask however that you show your appreciation for the many */
     /* hours of work involved by retaining my name in the banner.  Thanks! */
@@ -353,7 +353,7 @@ static Void local runEditor() {		/* run editor on file lastEdit at  */
 
     if (infProc) {
       if (lastEdit)
-	sprintf(editorCmd, "(pu-find-file \"%s\" %d)",lastEdit,lastLine);
+	sprintf(editorCmd, "(pu-find-file \"%s\" %ld)",lastEdit,lastLine);
       else
 	sprintf(editorCmd, "(pu-find-file)");
       
@@ -449,7 +449,7 @@ static Void local stopAnyPrinting() {  /* terminate printing of expression,*/
 	    printf("(%lu reduction%s, ",plural(numReductions));
 	    printf("%lu cell%s",plural(numCells));
 	    if (numberGcs>0)
-		printf(", %u garbage collection%s",plural(numberGcs));
+		printf(", %lu garbage collection%s",plural(numberGcs));
 	    printf(")\n");
 #undef plural
 	}
@@ -641,7 +641,7 @@ static Void local listNames() {		/* list names matching optional pat*/
 	termPos += l;
 	count++;
     }
-    printf("\n(%d names listed)\n", count);
+    printf("\n(%ld names listed)\n", count);
 }
 
 /* --------------------------------------------------------------------------
@@ -712,7 +712,7 @@ String argv[]; {
 			  break;
 	    case QUIT	: return;
 	    case COLLECT: garbageCollect();
-			  printf("Garbage collection recovered %d cells\n",
+			  printf("Garbage collection recovered %ld cells\n",
 				 cellsRecovered);
 			  break;
 	    case NOCMD	: break;
@@ -734,7 +734,7 @@ Int l; {
     if (scriptFile) {
 	fprintf(errorStream," \"%s\"", scriptFile);
 	setLastEdit(scriptFile,l);
-	if (l) fprintf(errorStream," (line %d)",l);
+	if (l) fprintf(errorStream," (line %ld)",l);
 	scriptFile = 0;
     }
     fprintf(errorStream,": ");

@@ -67,9 +67,9 @@ Text t; {
     if (0<=t && t<NUM_TEXT)			/* standard char string	   */
 	return text + t;
     if (t<0)
-	sprintf(newVar,"d%d",-t);		/* dictionary variable	   */
+	sprintf(newVar,"d%ld",-t);		/* dictionary variable	   */
     else
-	sprintf(newVar,"v%d",t-NUM_TEXT);	/* normal variable	   */
+	sprintf(newVar,"v%ld",t-NUM_TEXT);	/* normal variable	   */
     return newVar;
 }
 
@@ -1311,7 +1311,7 @@ Int what; {
 		       heapSnd = heapAlloc(heapSize);
 
 		       if (heapFst==(Heap)0 || heapSnd==(Heap)0) {
-			   ERROR(0) "Cannot allocate heap storage (%d cells)",
+			   ERROR(0) "Cannot allocate heap storage (%ld cells)",
 				    heapSize
 			   EEND;
 		       }

@@ -1233,7 +1233,7 @@ FILE *fp; {				/* storage			   */
 	for (dn=0; dn<num_sdicts; dn++)
 	    if (dictUse[dn]>=0)
 		if (isAp(dict(dn))) {
-		    sprintf(buffer,"%d",name(fun(dict(dn))).number);
+		    sprintf(buffer,"%ld",name(fun(dict(dn))).number);
 		    tableItem(fp,buffer);
 		}
 		else
@@ -1281,9 +1281,9 @@ Name n; {
     String s = 0;
 
     if (name(n).arity<10)		/* Print header			   */
-	fprintf(fp,"comb%d(%s)",name(n).arity,scNameOf(n));
+	fprintf(fp,"comb%ld(%s)",name(n).arity,scNameOf(n));
     else
-	fprintf(fp,"comb(%s,%d)",scNameOf(n),name(n).arity);
+	fprintf(fp,"comb(%s,%ld)",scNameOf(n),name(n).arity);
 
     fprintf(fp,"  /* ");		/* include supercombinator name	   */
     for (s=textToStr(name(n).text); *s; s++) {
@@ -1299,7 +1299,7 @@ Name n; {
 	List instrs = heapUse(cCode(name(n).arity,name(n).code));
 
 	if (pushes>0 && rspMax>name(n).arity)
-	    fprintf(fp,"  needStack(%d);\n",rspMax-name(n).arity);
+	    fprintf(fp,"  needStack(%ld);\n",rspMax-name(n).arity);
 
 	for (; nonNull(instrs); instrs=tl(instrs)) {
 	    Cell instr = hd(instrs);
@@ -1675,7 +1675,7 @@ static Void local outputCinst(fp,instr)	/* Output single C instruction	   */
 FILE *fp;
 Cell instr; {
     switch (whatIs(instr)) {
-	case INTCELL    : fprintf(fp,"pushInt(%d)",intOf(instr));
+	case INTCELL    : fprintf(fp,"pushInt(%ld)",intOf(instr));
 			  break;
 
 	case FLOATCELL  : fprintf(fp,"pushFloat(%s)",
@@ -1707,25 +1707,25 @@ Cell instr; {
 			  fputc(')',fp);
 			  break;
 
-	case C_UPDATE   : fprintf(fp,"update(%d,",offsetOf(fst(snd(instr))));
+	case C_UPDATE   : fprintf(fp,"update(%ld,",offsetOf(fst(snd(instr))));
 			  expr(fp,snd(snd(instr)));
 			  fputc(')',fp);
 			  break;
 
-	case C_UPDAP    : fprintf(fp,"updap(%d,",offsetOf(fst3(snd(instr))));
+	case C_UPDAP    : fprintf(fp,"updap(%ld,",offsetOf(fst3(snd(instr))));
 			  expr(fp,snd3(snd(instr)));
 			  fputc(',',fp);
 			  expr(fp,thd3(snd(instr)));
 			  fputc(')',fp);
 			  break;
 
-	case C_UPDAP2	: fprintf(fp,"updap2(%d)",offsetOf(snd(instr)));
+	case C_UPDAP2	: fprintf(fp,"updap2(%ld)",offsetOf(snd(instr)));
 			  break;
 
 	case C_ALLOC    : fprintf(fp,"alloc()");
 			  break;
 
-	case C_SLIDE    : fprintf(fp,"slide(%d,",intOf(fst(snd(instr))));
+	case C_SLIDE    : fprintf(fp,"slide(%ld,",intOf(fst(snd(instr))));
 			  expr(fp,snd(snd(instr)));
 			  fputc(')',fp);
 			  break;
@@ -1741,23 +1741,23 @@ Cell instr; {
 			  fputc(')',fp);
 			  break;
 
-	case C_SETSTK   : fprintf(fp,"setstk(%d)",intOf(snd(instr)));
+	case C_SETSTK   : fprintf(fp,"setstk(%ld)",intOf(snd(instr)));
 			  break;
 
-	case C_HEAP	: fprintf(fp,"heap(%d)",intOf(snd(instr)));
+	case C_HEAP	: fprintf(fp,"heap(%ld)",intOf(snd(instr)));
 			  break;
 
-	case C_INTEQ	: fprintf(fp,"inteq(%d) ",intOf(fst(snd(instr))));
+	case C_INTEQ	: fprintf(fp,"inteq(%ld) ",intOf(fst(snd(instr))));
 			  outputJump(fp,intOf(snd(snd(instr))));
 			  break;
 
 #if NPLUSK
-	case C_INTGE	: fprintf(fp,"intge(%d,%d) ",intOf(fst3(snd(instr))),
+	case C_INTGE	: fprintf(fp,"intge(%ld,%ld) ",intOf(fst3(snd(instr))),
 						     intOf(snd3(snd(instr))));
 			  outputJump(fp,intOf(thd3(snd(instr))));
 			  break;
 
-	case C_INTDV	: fprintf(fp,"intdv(%d,%d) ",intOf(fst3(snd(instr))),
+	case C_INTDV	: fprintf(fp,"intdv(%ld,%ld) ",intOf(fst3(snd(instr))),
 						     intOf(snd3(snd(instr))));
 			  outputJump(fp,intOf(thd3(snd(instr))));
 			  break;
@@ -1794,13 +1794,13 @@ Cell n; {
 	case POP      : fprintf(fp,"pop()");
 			break;
 
-	case OFFSET   : fprintf(fp,"offset(%d)",offsetOf(n));
+	case OFFSET   : fprintf(fp,"offset(%ld)",offsetOf(n));
 			break;
 
 	case CHARCELL : fprintf(fp,"mkChar(%d)",charOf(n));
 			break;
 
-	case INTCELL  : fprintf(fp,"mkSmall(%d)",intOf(n));
+	case INTCELL  : fprintf(fp,"mkSmall(%ld)",intOf(n));
 			break;
 
 	case AP	      : if (fst(n)==ROOTFST) {
@@ -1809,7 +1809,7 @@ Cell n; {
 			    fputc(')',fp);
 			}
 			else if (isSelect(fst(n))) {
-			    fprintf(fp,"dsel(%d,",selectOf(fst(n)));
+			    fprintf(fp,"dsel(%ld,",selectOf(fst(n)));
 			    expr(fp,arg(n));
 			    fputc(')',fp);
 			}
@@ -1823,15 +1823,15 @@ Cell n; {
 	case UNIT     : fprintf(fp,"mkCfun(0)");
 			break;
 
-	case TUPLE    : fprintf(fp,"mkCfun(%d)",tupleOf(n));
+	case TUPLE    : fprintf(fp,"mkCfun(%ld)",tupleOf(n));
 			break;
 
 	case NAME     : if (name(n).defn==CFUN)
-			    fprintf(fp,"mkCfun(%d)",name(n).number);
+			    fprintf(fp,"mkCfun(%ld)",name(n).number);
 			else if (name(n).primDef)
 			    fprintf(fp,"%s",primitives[name(n).number].ref);
 			else
-			    fprintf(fp,"sc[%d]",name(n).number);
+			    fprintf(fp,"sc[%ld]",name(n).number);
 			break;
 
 	default	      : internal("expr");
@@ -1844,7 +1844,7 @@ Int  lab; {
     if (lab<=26)
 	fputc('a'+lab-1, fp);
     else
-	fprintf(fp,"a%d",lab-26);
+	fprintf(fp,"a%ld",lab-26);
 }
 
 static Void local outputJump(fp,lab)	/* print jump to label, taking	   */
@@ -1892,7 +1892,7 @@ Name n; {				/* a particular supercombinator	   */
     if (validCIdent(s) && strlen(s)<96)
 	sprintf(buffer,"sc_%s",s);
     else
-	sprintf(buffer,"sc_%d",name(n).number);
+	sprintf(buffer,"sc_%ld",name(n).number);
 
     return buffer;
 }
@@ -2083,7 +2083,7 @@ Type   ty; {
 	fprintf(fp,"));\n");
         for (i=args, ts=argTypes; nonNull(ts); ts=tl(ts), --i)
 	    if (nonNull(hd(ts)))
-		fprintf(fp,"    %s o%d;\n",showExtType(hd(ts)),i);
+		fprintf(fp,"    %s o%ld;\n",showExtType(hd(ts)),i);
     }
     if (ty!=UNIT)
 	fprintf(fp,"    %s r;\n",showExtType(ty));
@@ -2096,8 +2096,8 @@ Type   ty; {
     }
     for (i=args, ts=argTypes; nonNull(ts); ts=tl(ts), --i)
 	if (nonNull(hd(ts))) {
-	    fprintf(fp,"    eval(offset(%d));\n",i);
-	    fprintf(fp,"    o%d = %s;\n",i,showExtRes(hd(ts)));
+	    fprintf(fp,"    eval(offset(%ld));\n",i);
+	    fprintf(fp,"    o%ld = %s;\n",i,showExtRes(hd(ts)));
 	}
 
     /* Step 4: Call function and return result				   */
@@ -2108,9 +2108,9 @@ Type   ty; {
     fprintf(fp,"%s(",exn);
     for (i=args, ts=argTypes; nonNull(ts); ts=tl(ts), --i) {
 	if (isNull(hd(ts)))
-	    fprintf(fp,"offset(%d)",i);
+	    fprintf(fp,"offset(%ld)",i);
 	else
-	    fprintf(fp,"o%d",i);
+	    fprintf(fp,"o%ld",i);
 	if (nonNull(tl(ts)))
 	    fprintf(fp,",");
     }

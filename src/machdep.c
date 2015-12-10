@@ -182,7 +182,7 @@ Void gcScanning() {			/* notify garbage collector scans  */
 Void gcRecovered(recovered)		/* notify garbage collection done  */
 Int recovered; {
     if (gcMessages) {
-	printf("%d}}",recovered);
+	printf("%ld}}",recovered);
 	fflush(stdout);
     }
 }

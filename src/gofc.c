@@ -47,7 +47,7 @@ static Void local initialise	Args((Int,String []));
  * Gofer entry point:
  * ------------------------------------------------------------------------*/
 
-Main main Args((Int, String []));	/* now every func has a prototype  */
+Main main Args((int, String []));	/* now every func has a prototype  */
 
 Main main(argc,argv)
 int  argc;
@@ -297,7 +297,7 @@ Int l; {
 
     if (scriptFile) {
 	fprintf(errorStream," \"%s\"", scriptFile);
-	if (l) fprintf(errorStream," (line %d)",l);
+	if (l) fprintf(errorStream," (line %ld)",l);
     }
     fprintf(errorStream,": ");
     fflush(errorStream);

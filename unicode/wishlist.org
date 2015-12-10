@@ -1,0 +1,40 @@
+| Old                | Suggested                  |
+|--------------------+----------------------------|
+| ~->~               | →, •                       |
+| elem <-            | ∈ ←                        |
+| :                  | ⤵                          |
+| ~=>~               | ⇒                          |
+| \                  | λ (or maybe the SMP ones?) |
+| :: ++              | ∷ (better : ) ⧺            |
+| ;                  | ∘                          |
+| * (kind)           | ✡                          |
+| x `foo` y          | x ⸢foo⸣ y                  |
+| (* ) x y (x*) (*y) | ⸤*⸥ x y  ⸤x*⸥ ⸤*y⸥         |
+| etc                |                            |
+
+1. Separated namespaces for type variables (and types??). ie Not 
+   #+BEGIN_SRC haskell 
+   id : a → a
+   #+END_SRC
+      But
+   #+BEGIN_SRC haskell 
+      id : α → α
+   #+END_SRC
+1. Four clear app operators '.' bind, 
+   low-prec application (Maybe ⋄ instead of dollar),
+
+2. Unary operators (eg. ¬) like infixl and infixr. 
+3. postfix unary
+   (Trivial eg =n!= Whole new family =x¯¹ x²=)
+4. Bracket operators (like Bananas)
+
+5. New append and cons:
+   #+BEGIN_SRC haskell
+   (x⤵xs) ⧺ ys = x⤵ (xs⧺ys)
+   #+END_SRC
+   instead of the old
+   #+BEGIN_SRC haskell
+   (x::xs ++ ys) = x :: (xs ++ ys)
+   #+END_SRC
+
+

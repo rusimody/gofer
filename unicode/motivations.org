@@ -1,0 +1,114 @@
+#+TITLE: Motivations for Ugofer
+#+OPTIONS: toc:nil
+#+AUTHOR:
+* Crowded Pigeonholes
+Experienced programmers are habituated to many-layers of heavy-duty 'coding-up' of semantics in/on to syntax. [Examples follow]
+Beginners need a gentler intro to it. Yeah coding is important but its not the most important thing. Some examples
+- The colon =:= in Haskell is 
+  1. cons
+  2. cons(tructor) prefix
+  3. typeof =::=
+  Why is =::= not cons-compose-cons but typeof??
+  Its a 'coding-up' choice. Three concepts of which two are related and the third not are coded up in a way which suggests otherwise.
+  In the super-impoverished world of ASCII there was no other choice --
+  The pigeonhole principle kicks in and with vengeance when /#concepts → #charset./  With the charset changing from ASCII to unicode thats not the case any more.
+- Is ~[]~ the empty list or list constructor? Related to and exacerbated by the following…
+- C programmers use the locution =*p= to herald pointer-indirection -- ~*p = 1~ -- or declaration -- ~int *p~. Including the charmingly confusing ~int *p = 0~
+  
+  Quite analogous to Haskellers who think it kosher to write:
+  #+BEGIN_SRC haskell
+  data Foo a = Foo a
+  #+END_SRC
+
+- In the same way '.' signifies module-lookup, function-composition, decimal-point, ordered-range.
+- =->= in lambda-terms, in function types and in case-expressions.
+- 
+  Haskell has the dubious distinction of being not just case-sensitive but loading up significant semantics onto start-case.  One of the non-trivial noob learning-humps is the need to get that not just are ~int~ and ~Int~ different, they are sufficiently different that mixing them up up gives the most unhelpful error messages. IOW the compiler gets confused.
+
+  Of course this is related to something that every programmer needs to get earlier the better. eg a C or python programmer not only cannot write
+  #+BEGIN_SRC Haskell
+  int  while = 4;
+  #+END_SRC
+  He even needs to understand that the diagnostic that is received is inherently going to be unhelpful.  As best as we know this is inevitable in any programming language -- syntactic category mixup causes unhelpful error messages.
+
+  Haskell's case-distinction just makes it that much harder because the misspelling of ~frobnicate~ to ~frobcate~ will elicit a helpful error message, whereas misspelling ~Int~ as ~int~ is much more unforgiving.
+
+  This is very unnatural and surprising since for anyone knowing any English 'i' and 'I' *are the same letter*
+
+  Its like a judge allowing that the semantics of a legal agreement were completely changed because Arial font was used instead of Times Roman
+- We can write this in Haskell
+  #+BEGIN_SRC Haskell
+  id :: a -> a
+  id = \a -> a
+  #+END_SRC
+
+  Now try explaining to a noob that 
+  - the 2 ~a~ s on each line are the same and the ~a~ s on different lines coincidentally correspond but are different
+  - the two ~->~ are corresponding but different
+
+  Contrast with what Damas-Milner:
+  #+BEGIN_SRC Haskell
+  id : α → α
+  id = λa•a
+  #+END_SRC
+
+  Now where's the confusion?
+  
+  And so we have the embarrassing situation that a 40-year old paper is more readable than current practice.
+  
+The experienced programmer would regard the above examples as at most minor points if he noticed them at all.  The noob's situation is quite different.
+
+Having (tried to!) teach FP some 25 years, I estimate beginners take 3 times the actual time required to get past the initial FP learning-hump due to factors such as the above *none of which are germane to programming in general or functional programming in particular*.
+
+Currently Haskell has these 
+* Symbol namespaces
+- Ordinary names – start lower-case
+- Constructor names – start Upper-case
+- Operator names – symbols like +- and combos
+- Constructor operators – start ':'
+
+** Suggested char classes
+- Ordinary names: No cASe distIncTIoN.
+  [Those who are surprized that Windows is more civilized than Unix may wish to also consider Scheme and SQL]
+- Type constructor names (include classes??) : /italic/ eg /int/ \\
+  And perhaps some ad-hocs like ℕ, ℤ, ℚ, ℝ \\
+  Reservations: Ad-hocery is minor. That someone may assume ℝ is representable is more dangerous!  However C programmers with their =float= seem to make that error more than Fortran programmers with their =Real= so what the heck!
+- Data constructor names : *bold* eg *leaf* x
+- Binary operators eg +∧∨<>≤≥
+- Unary prefix ¬,- (yeah we will need a different binary -)
+- How about a postfix unary category so  x² is possible instead of 'square x' \\
+  In particular superscripts including digits make postfix functions \\
+  Subscripts can just be (non-first-char) identifier chars
+- Constructor operator (for the time being starting ':')
+- Brackets (see collections below)
+
+Note 1 Ive used standard typography for /italic/ and *bold* above. The idea is to use the unicode chars not typography, viz.…\\
+Note 2 Unicode has a bold and italic (and much else) [[https://en.wikipedia.org/wiki/Mathematical_Alphanumeric_Symbols][math-block]]  \\
+Note 3 The math block above has literally dozens of subblocks. Loading significant semantic differences onto these would quickly give rise to a much greater mess than the current mess which semantically distinguishes =foo= and =Foo= ie Caution/restraint are a /good/ idea!
+* Modules
+These things are wrong with haskell modules
+- ½-assed — Compared to SML
+- Looks like Java (ok thats a joke) More seriously over-overloads the '.'
+- Intrusive — How does the typical Haskell files 1st 10 lines read?
+
+In summary for software engineering its fine. For teaching its a nuisance and I would prefer the namespacing of modules to be provided 'out-of-band' say with specially tailored preludes etc
+* Collections
+There is an increasingly widespread acceptance even in the mainstream (imperative/OO) worlds of the need for collection, of the preference for say STL or MFC templates for them rather than re-invent using OO methods etc.
+
+This effort and direction is stymied by the lack of convenient syntax.
+
+Analogy: Java's lists are more first-class than C's because of gc
+But python's are even more than Java's because of the literal syntax =[1,2,3]=
+
+In the same vein programmers of the next generation need to be fluent *starting syntax* with sets ={1,2,3}= bags (multisets) =⟆1,1,2,2,3⟅=
+and comprehension expressions involving the same.
+
+The important change the unicode has initiated is that in the ASCII era there was an acute worldwide shortage of brackets. So programmers and language designers got used to coding up large swathes of semantics onto the only 3 available '(){}[]' not to mention ugly choices like Pascal (and Ruby's) =begin/end=. To see the new liberated world that unicode has initiated one may start with Xah Lee's [[http://xahlee.info/comp/unicode_matching_brackets.html][nice page]]. Likewise...
+* Quotations
+- C captured the only 2 available in ASCII for strings and char
+- Elisp example of 16 '\'
+- Python recognizing the need for different strings introduced a dozen new ones.  Better than the elisp but ugly in its own right
+
+Why not use the facilities [[http://xahlee.info/comp/unicode_matching_brackets.html][of unicode]]? 
+* Aesthetics
+* Succinctness

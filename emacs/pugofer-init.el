@@ -5,13 +5,13 @@
 (autoload 'pugofer-mode "pugofer.el" nil t)
 (autoload 'run-pugofer "pugofer.el" nil t)
 (autoload 'pugofer-project "pugofer.el" nil t)
+(setq pugofer-program-name (expand-file-name "~/gofer/src/gofer"))
 (set-variable 'auto-mode-alist
       (append '(
 	      ("\\.gs$" . pugofer-mode)   ;; gofer source
 	      ("\\.lgs$" . pugofer-mode)   ;; literate gofer source
 	      ("\\.gp$" . pugofer-project) ;; gofer project files
 	      ) auto-mode-alist))
-
 
 
 ;; These should go into pugofer.el

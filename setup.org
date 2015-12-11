@@ -14,6 +14,11 @@ cd into gofer/src and run
 #+BEGIN_SRC shell
 $ make
 #+END_SRC
+Currently there are/maybe
+1. Warnings building gofer
+2. Errors building gofc (the compiler)
+The warnings are ok.
+The errors dont matter (unless we want gofc). To silence run make as =make gofer=
 * Check executable
 
 Above should make an executable called gofer. When you run it (at shell as:)
@@ -33,11 +38,11 @@ $ ./gofer
 should start.
 * Emacs Setup
 ** Directory setup
-Make a directory called elisp in ~/.emacs.d
+Make a directory called elisp in =~/.emacs.d=
 #+BEGIN_SRC shell
 $ cd ~/.emacs.d
 $ mkdir elisp
 #+END_SRC
 ** Copy contents
-Copy gofer/emacs/pugofer.el into ~/.emacs.d/elisp directory
-Copy gofer/emacs/pugofer-init.el at the end of ~/.emacs.d/init.el
+1. Copy =/path/to/gofer/emacs/pugofer.el= into =~/.emacs.d/elisp= directory
+2. Copy =/path/to/gofer/emacs/pugofer-init.el= at the end of =~/.emacs.d/init.el=

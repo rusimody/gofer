@@ -8,9 +8,12 @@ $ git clone https://github.com/rusimody/gofer.git
 #+END_SRC
 * Build
 
-Above should make a directory called gofer [Usually in your home but that depends on where you ran the git clone ]
+Above should make a directory called gofer\\
+Usually in your home but that depends on where you ran the git clone\\
+Following I'll use the expression =/path/to/gofer/...=
+Please replace =path/to= by the actual path. In most cases =~= should be sufficient
 
-cd into gofer/src and run
+cd into =/path/to/gofer/src= and run
 #+BEGIN_SRC shell
 $ make
 #+END_SRC
@@ -18,25 +21,37 @@ Currently there are/maybe
 1. Warnings building gofer
 2. Errors building gofc (the compiler)
 The warnings are ok.
-The errors dont matter (unless we want gofc). To silence run make as =make gofer=
+The errors dont matter (unless we want gofc). To silence the errors, run make as =make gofer= \\
+About warnings, sorry :-)
 * Check executable
 
 Above should make an executable called gofer. When you run it (at shell as:)
 #+BEGIN_SRC shell
 $ ./gofer
 #+END_SRC
-you should get an error that prelude not found
-
-Set the path thus at shell (make sure the path below is correct!)
+you should get an error that looks like this:
 #+BEGIN_SRC shell
-$ export PUGOFER=/home/<yourname>/gofer/pusimple.pre
+ERROR "pustd.pre": Unable to open file
+
+FATAL ERROR: Unable to load prelude
+#+END_SRC
+This is good.\\
+OTOH if you get something like
+#+BEGIN_SRC C
+command gofer not found
+#+END_SRC
+then something wrong happened at earlier stage.
+
+Assuming that you got the 'FATAL' error, set the path thus at shell (make sure the path below is correct!)
+#+BEGIN_SRC shell
+$ export PUGOFER=/path/to/gofer/pusimple.pre
 #+END_SRC
 Now gofer should run (at shell) ie
 #+BEGIN_SRC shell
 $ ./gofer
 #+END_SRC
 should start.
-
+* Non-emacs Use
 If you dont want to use emacs, this much should be sufficient:\\
 Just have gofer running in one window, an editor of your choice in another and whenever you want to add a changed file to gofer do (within gofer)
 #+BEGIN_SRC haskell

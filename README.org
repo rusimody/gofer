@@ -4,6 +4,8 @@ This gofer is a fork of Mark Jones original with some additions and modification
 I used to call it /pugofer/ since I was using it to teach when at Pune University in the early 90s.
 
 Mark Jones is gratefully acknowledged for this pioneering work.
+* Setup
+See [[file:INSTALL.org][installation/setup]]
 * Sample
 To see how source looks with these changed syntaxes, look at the standard prelude: [[file:pustd.pre][pustd.pre]].
 
@@ -14,10 +16,6 @@ The alternate prelude [[file:pusimple.pre][pusimple]] is particularly neat for t
 ? :t (==)
 (==) : a -> a -> Bool
 #+END_SRC
-* Running
-You need to have the environment variable for the prelude's path set:
-
-=$ PUGOFER=/path/to/pustd.pre gofer=
 * Syntax late-bound
 You can switch back to classic Haskell syntax with =:s -S=
 #+BEGIN_SRC haskell

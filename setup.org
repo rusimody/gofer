@@ -36,13 +36,10 @@ Now gofer should run (at shell) ie
 $ ./gofer
 #+END_SRC
 should start.
-* Emacs Setup
-** Directory setup
-Make a directory called elisp in =~/.emacs.d=
-#+BEGIN_SRC shell
-$ cd ~/.emacs.d
-$ mkdir elisp
+
+If you dont want to use emacs, this much should be sufficient:\\
+Just have gofer running in one window, an editor of your choice in another and whenever you want to add a changed file to gofer do (within gofer)
+#+BEGIN_SRC haskell
+:l filename.gs
 #+END_SRC
-** Copy contents
-1. Copy =/path/to/gofer/emacs/pugofer.el= into =~/.emacs.d/elisp= directory
-2. Copy =/path/to/gofer/emacs/pugofer-init.el= at the end of =~/.emacs.d/init.el=
+For emacs setup read the [[file:emacs/README.org][README]] in the emacs directory

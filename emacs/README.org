@@ -1,4 +1,10 @@
-To use pugofer with(in) emacs
-- you need pugofer.el in emacs load-path
-- you need to tweak paths in pugofer-init.el 
-- And add that to your init.el
+* Emacs Setup
+** Directory setup
+Make a directory called elisp in =~/.emacs.d=
+#+BEGIN_SRC shell
+$ cd ~/.emacs.d
+$ mkdir elisp
+#+END_SRC
+** Copy contents
+1. Copy =/path/to/gofer/emacs/pugofer.el= into =~/.emacs.d/elisp= directory
+2. Copy =/path/to/gofer/emacs/pugofer-init.el= at the end of =~/.emacs.d/init.el=

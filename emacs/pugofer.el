@@ -11,7 +11,23 @@
 
 (defun pugofer-mode-commands (map)
   (define-key map "\177" 'backward-delete-char-untabify)
-  (define-key map "\e\C-q" 'pugofer-indent-sexp))
+  (define-key map "\e\C-q" 'pugofer-indent-sexp)
+  ;; Xah Lee
+;  (define-key map [menu-bar] (make-sparse-keymap))
+
+  (let ((menuMap (make-sparse-keymap "Pugofer")))
+    (define-key map
+      [menu-bar pugofer]
+      (cons "Pugofer" menuMap))
+
+    (define-key menuMap "c"
+      '("Run Pugofer Standard" . run-pugofer-standard))
+    (define-key menuMap "b"
+      '("Run Pugofer Simple" . run-pugofer-simple))
+    (define-key menuMap "a"
+      '("Load File" . pugofer-load-file))
+    ))
+
 
 (defun pugofer-mode-variables ())  ;needs to be filled
 

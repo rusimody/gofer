@@ -94,7 +94,9 @@ to continue it."
   (interactive)
   (comint-mode)
   ;; Customise in inferior-pugofer-mode-hook
-  (setq comint-prompt-regexp "^[^?\n]*?+ *") ; OK for cpugofer, oaklisp, T,...
+  ; Old value crashes for infinite lists
+  ; (setq comint-prompt-regexp "^[^?\n]*?+ *")
+  (setq comint-prompt-regexp "^? ")
   (pugofer-mode-variables)
   (setq major-mode 'inferior-pugofer-mode)
   (setq mode-name "Inferior Pugofer")
@@ -132,7 +134,7 @@ Defaults to a regexp ignoring all inputs of 0, 1, or 2 letters.")
 		 (pugofer-args-to-list (substring string pos
 						 (length string)))))))))
 
-(defvar pugofer-program-name "gofer"
+(defcustom pugofer-program-name "gofer"
   "*Program invoked by the run-pugofer command")
 
 ;;;###autoload

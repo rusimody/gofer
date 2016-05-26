@@ -35,7 +35,7 @@ OPTFLAGS	= -O
 OPT1		=
 #OPT1		= -O1
 
-all		: gofer gofc runtime.o
+#all		: gofer gofc runtime.o
 
 gofer		: $(IOBJECTS)
 		  $(CC) $(CFLAGS) $(OPTFLAGS) $(IOBJECTS) -o gofer $(LDFLAGS)

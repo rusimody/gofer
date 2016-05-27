@@ -743,8 +743,8 @@ mc: if (!isPair(c))
 	goto mc;
     }
 
-    {   register place = placeInSet(c);
-	register mask  = maskInSet(c);
+    {   register int place = placeInSet(c);
+	register int mask  = maskInSet(c);
 	if (marks[place]&mask)
 	    return c;
 	else
@@ -775,8 +775,8 @@ mb: if (!isPair(t))
     }
     c = snd(c) = t;
 
-    {   register place = placeInSet(c);
-	register mask  = maskInSet(c);
+    {   register int place = placeInSet(c);
+	register int mask  = maskInSet(c);
 	if (marks[place]&mask)
 	    return;
 	else
@@ -827,8 +827,8 @@ Cell n; {				/* it was a cell ref, but don't    */
 					/* to modify the stored value of n */
     if (isGenPair(n)) {
 	if (fst(n)==INDIRECT) {		/* special case for indirections   */
-	    register place = placeInSet(n);
-	    register mask  = maskInSet(n);
+	    register int place = placeInSet(n);
+	    register int mask  = maskInSet(n);
 	    marks[place]  |= mask;
 	    markSnd(n);
 	}

@@ -17,12 +17,8 @@ cd into =/path/to/gofer/src= and run
 #+BEGIN_SRC shell
 $ make
 #+END_SRC
-Currently there are/maybe
-1. Warnings building gofer
-2. Errors building gofc (the compiler)
-The warnings are ok.
-The errors dont matter (unless we want gofc). To silence the errors, run make as =make gofer= \\
-About warnings, sorry :-)
+Currently there are/maybe warnings building gofer -- Ignore!
+
 * Check executable
 
 Above should make an executable called gofer. When you run it (at shell as:)

@@ -33,4 +33,7 @@ extern Void printPred    Args((FILE *,Cell));
 extern Void printKind	 Args((FILE *,Kind));
 extern Void printSig	 Args((FILE *,Cell));
 
+ /*RPM*/
+extern Void printTypeStr Args((FILE *fp));
+
 /*-------------------------------------------------------------------------*/

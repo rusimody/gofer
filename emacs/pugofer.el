@@ -11,7 +11,23 @@
 
 (defun pugofer-mode-commands (map)
   (define-key map "\177" 'backward-delete-char-untabify)
-  (define-key map "\e\C-q" 'pugofer-indent-sexp))
+  (define-key map "\e\C-q" 'pugofer-indent-sexp)
+  ;; Xah Lee
+;  (define-key map [menu-bar] (make-sparse-keymap))
+
+  (let ((menuMap (make-sparse-keymap "Pugofer")))
+    (define-key map
+      [menu-bar pugofer]
+      (cons "Pugofer" menuMap))
+
+    (define-key menuMap "c"
+      '("Run Pugofer Standard" . run-pugofer-standard))
+    (define-key menuMap "b"
+      '("Run Pugofer Simple" . run-pugofer-simple))
+    (define-key menuMap "a"
+      '("Load File" . pugofer-load-file))
+    ))
+
 
 (defun pugofer-mode-variables ())  ;needs to be filled
 
@@ -94,7 +110,9 @@ to continue it."
   (interactive)
   (comint-mode)
   ;; Customise in inferior-pugofer-mode-hook
-  (setq comint-prompt-regexp "^[^?\n]*?+ *") ; OK for cpugofer, oaklisp, T,...
+  ; Old value crashes for infinite lists
+  ; (setq comint-prompt-regexp "^[^?\n]*?+ *")
+  (setq comint-prompt-regexp "^? ")
   (pugofer-mode-variables)
   (setq major-mode 'inferior-pugofer-mode)
   (setq mode-name "Inferior Pugofer")
@@ -132,7 +150,7 @@ Defaults to a regexp ignoring all inputs of 0, 1, or 2 letters.")
 		 (pugofer-args-to-list (substring string pos
 						 (length string)))))))))
 
-(defvar pugofer-program-name "gofer"
+(defcustom pugofer-program-name "gofer"
   "*Program invoked by the run-pugofer command")
 
 ;;;###autoload

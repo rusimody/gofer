@@ -1,4 +1,8 @@
 * Emacs Setup
+** Files
+This directory contains two file in addition to this readme
+- [[file:pugofer.el]]
+- [[file:pugofer-init.el]]
 ** Directory setup
 Make a directory called elisp in =~/.emacs.d=
 #+BEGIN_SRC shell

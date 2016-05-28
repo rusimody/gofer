@@ -4,11 +4,11 @@ This directory contains two file in addition to this readme
 - [[file:pugofer.el]]
 - [[file:pugofer-init.el]]
 ** Directory setup
-Make a directory called elisp in =~/.emacs.d=
+Make a directory called setups in =~/.emacs.d=
 #+BEGIN_SRC shell
 $ cd ~/.emacs.d
-$ mkdir elisp
+$ mkdir setups
 #+END_SRC
 ** Copy contents
-1. Copy =/path/to/gofer/emacs/pugofer.el= into =~/.emacs.d/elisp= directory
-2. Copy =/path/to/gofer/emacs/pugofer-init.el= at the end of =~/.emacs.d/init.el=
+1. Copy =/path/to/gofer/emacs/pugofer.el= into =~/.emacs.d/setups= directory
+2. Copy =/path/to/gofer/emacs/pugofer-init.el= at the end of =~/.emacs.d/init.el= [Make the file if needed -- dont clobber!]

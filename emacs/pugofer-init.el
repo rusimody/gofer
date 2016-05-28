@@ -1,7 +1,7 @@
 ;; Setups for emacs for using pugofer mode
 ;; Assumes you have pugofer.el on the load-path
 
-(add-to-list 'load-path (expand-file-name "~/.emacs.d/elisp"))
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/setups"))
 (autoload 'pugofer-mode "pugofer.el" nil t)
 (autoload 'run-pugofer "pugofer.el" nil t)
 (autoload 'pugofer-project "pugofer.el" nil t)

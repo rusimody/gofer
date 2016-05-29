@@ -20,8 +20,10 @@
       [menu-bar pugofer]
       (cons "Pugofer" menuMap))
 
+    (define-key menuMap "d"
+      '("Run Pugofer Constructor" . run-pugofer-cc))
     (define-key menuMap "c"
-      '("Run Pugofer Standard" . run-pugofer-standard))
+      '("Run Pugofer Standard" . run-pugofer-std))
     (define-key menuMap "b"
       '("Run Pugofer Simple" . run-pugofer-simple))
     (define-key menuMap "a"
@@ -96,7 +98,7 @@ For information on running multiple processes in multiple buffers, see
 documentation for variable pugofer-buffer.
 
 Commands:
-Return after the end of the process' output sends the text from the 
+Return after the end of the process' output sends the text from the
     end of process to point.
 Return before the end of the process' output copies the sexp ending at point
     to the end of the process' output, and sends it.
@@ -167,8 +169,9 @@ of pugofer-program-name).  Runs the hooks from inferior-pugofer-mode-hook
 			 pugofer-program-name)))
   (if (not (comint-check-proc "*pugofer*"))
       (let ((cmdlist (pugofer-args-to-list cmd)))
-	(set-buffer (apply 'make-comint "pugofer" (car cmdlist)
-			   nil (cdr cmdlist)))
+	;(set-buffer (apply 'make-comint "pugofer" (car cmdlist)
+;			   nil (cdr cmdlist)))
+	(set-buffer (make-comint "pugofer" pugofer-program-name))
 	(inferior-pugofer-mode)))
   (setq pugofer-program-name cmd)
   (setq pugofer-buffer "*pugofer*")
@@ -269,10 +272,13 @@ next one.")
 
 (defun pugofer-load-file (file-name)
   "Load a Pugofer file into the inferior Pugofer process."
-  (interactive (comint-get-source "Load Pugofer file: "
-				  pugofer-prev-l/c-dir/file
-				  pugofer-source-modes t)) ; T because LOAD 
-                                                          ; needs an exact name
+  (interactive "bLoad Pugofer file: ")
+  (setq file-name (expand-file-name file-name))
+;  (interactive (comint-get-source "Load Pugofer file: "
+;				  pugofer-prev-l/c-dir/file
+;				  pugofer-source-modes t))
+					; T because LOAD 
+					; needs an exact name
   (pu-comint-check-source file-name) ; Check to see if buffer needs saved.
   (let* ((d (file-name-directory    file-name))
 	 (f (file-name-nondirectory file-name))

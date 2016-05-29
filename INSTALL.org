@@ -9,7 +9,8 @@ $ git clone https://github.com/rusimody/gofer.git
 * Build
 
 Above should make a directory called gofer\\
-Usually in your home but that depends on where you ran the git clone\\
+Usually in your home but that depends on where you ran the git clone.
+
 Following I'll use the expression =/path/to/gofer/...=
 Please replace =path/to= by the actual path. In most cases =~= should be sufficient
 

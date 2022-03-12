@@ -102,7 +102,7 @@ String argv[]; {
     scriptFile	  = 0;
     numScripts	  = 0;
     namesUpto	  = 1;
-    scriptName[0] = strCopy(fromEnv("PUGOFER",STD_PRELUDE));
+    scriptName[0] = strCopy(fromEnv("PUG",STD_PRELUDE));
     prompt	  = strCopy("?");
     repeatStr	  = strCopy("$$");
 
@@ -198,7 +198,7 @@ struct options toggle[] = {		/* List of command line toggles	   */
     {'E', "Fail silently if evidence not found",   &silentEvFail},
 #endif
     {'k', "Show kind errors in full",		   &kindExpert},
-    {'S', "PU syntax", &newSyntax}, /*RPM*/
+    {'S', "PUG syntax", &newSyntax}, /*RPM*/
     {0,   0,					   0}
 };
 

@@ -37,9 +37,9 @@ OPT1		=
 
 #all		: gofer gofc runtime.o
 
-gofer		: $(IOBJECTS)
-		  $(CC) $(CFLAGS) $(OPTFLAGS) $(IOBJECTS) -o gofer $(LDFLAGS)
-		  strip gofer
+pug		: $(IOBJECTS)
+		  $(CC) $(CFLAGS) $(OPTFLAGS) $(IOBJECTS) -o pug $(LDFLAGS)
+		  strip pug
 
 gofc		: $(COBJECTS)
 		  $(CC) $(CFLAGS) $(OPTFLAGS) $(COBJECTS) -o gofc $(LDFLAGS)

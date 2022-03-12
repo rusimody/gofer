@@ -1,0 +1,10 @@
+Prior to rename
+1. Add <unistd>  to prelude.h
+   For access undeclared
+   https://linux.die.net/man/2/access -- Done
+2. Add renameName declaration to pug.h -- Done
+* Rename
+1. gofer executable renamed to pug (Makefile) -- Done
+2. PUGOFER env variable renamed PUG
+3. pusimple.pre -> pup.pre, pustd.pre -> pug.pre, pucc28.pre -> cat.pre
+* Dates

@@ -8,3 +8,5 @@ extern String typeStr[], consStr[], bindStr[], uptoStr[];
 extern Text textDot;
 extern Text textBind[2], textCons[2];
 extern Cell varDot;
+
+extern Void renameName(Text oldTxt, Text newTxt);

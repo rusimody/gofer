@@ -267,6 +267,13 @@ extern   int namecmp    Args((char *, char *));
 #define ctrlbrk(bh)	   signal(SIGINT,bh)
 #endif
 
+/* 12 March 2022
+ * For warning undeclared function access
+ * Probably needs windows.h on WIN32 */
+
+#if UNIX
+#include <unistd.h>
+#endif
 /*---------------------------------------------------------------------------
  * General settings:
  *-------------------------------------------------------------------------*/

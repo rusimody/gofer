@@ -852,7 +852,7 @@ static Void local newprelude()
     numScripts = 0;
     namesUpto  =  1; // Not sure on this
     scriptName[0] = strCopy(s); // free of earlier neglected!
-    everybody(INSTALL);
+    everybody(INSTALL);       // BAD; everybody says this should happen only once
     everybody(CHANGE_SYNTAX);
     readScripts(0);
   }

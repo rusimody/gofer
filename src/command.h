@@ -34,4 +34,5 @@ extern Command readCommand Args((struct cmd *, Char, Char));
 #define COLLECT 16
 #define NOCMD   17
 
+#define LD_PRELUDE 18
 /*-------------------------------------------------------------------------*/

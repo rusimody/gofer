@@ -54,6 +54,7 @@ static Void   local describe	      Args((Text));
 static Void   local listNames	      Args((Void));
 static Void   local banner            Args((Void));
 
+static Void   local newprelude        Args((Void));
 /* --------------------------------------------------------------------------
  * Local data areas:
  * ------------------------------------------------------------------------*/
@@ -137,6 +138,9 @@ static struct cmd cmds[] = {
  {":edit", EDIT},    {":find",   FIND},   {":names",   NAMES},
  {":set",  SET},     {":quit",   QUIT},   {":cd",      CHGDIR},
  {":!",    SYSTEM},  {":info",	 INFO},	  {":gc",      COLLECT},
+
+ {":prelude", LD_PRELUDE},
+
  {"",      EVAL},
  {0,0}
 };
@@ -148,6 +152,9 @@ static Void local menu() {
     printf(":load               clear all files except prelude\n");
     printf(":also <filenames>   read additional script files\n");
     printf(":reload             repeat last load command\n");
+
+    printf(":prelude <filename> reset to prelude\n");
+
     printf(":project <filename> use project file\n");
     printf(":edit <filename>    edit file\n");
     printf(":edit               edit last file\n");
@@ -715,6 +722,8 @@ String argv[]; {
 			  printf("Garbage collection recovered %d cells\n",
 				 cellsRecovered);
 			  break;
+	    case LD_PRELUDE : newprelude();
+	                      break;
 	    case NOCMD	: break;
 	}
 #ifdef WANT_TIMER
@@ -831,4 +840,20 @@ static Void local infWhatFiles()
   for (i=0; i < numScripts; i++)
     printf(" \"%s\"", scriptName[i]);
   endIPCmd();
+}
+
+/* 21 June 2022 */
+
+static Void local newprelude()
+{
+  String s = readFilename();
+  if (s) {
+    // Copied from initialise; needs to be refactored out
+    numScripts = 0;
+    namesUpto  =  1; // Not sure on this
+    scriptName[0] = strCopy(s); // free of earlier neglected!
+    everybody(INSTALL);
+    everybody(CHANGE_SYNTAX);
+    readScripts(0);
+  }
 }

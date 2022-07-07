@@ -35,7 +35,7 @@
 #define MINIX68K 0	/* For Minix68k with gcc			UN */
 #define AMIGA    0	/* For Amiga using gcc 2.2.2			UN */
 #define HPUX     0      /* For HPUX using gcc				   */
-#define LINUX    1      /* For Linux using gcc				UN */
+#define LINUX    0      /* For Linux using gcc				UN */
 #define RISCOS   0	/* For Acorn DesktopC and RISCOS2 or 3		   */
 #define ALPHA	 0	/* For DEC Alpha with OSF/1 (32 bit ints, no gofc) */
 #define SVR4	 0	/* For SVR4 using GCC2.2			   */
@@ -43,7 +43,7 @@
 #define AIX	 0	/* For IBM AIX on RS/6000 using GCC		   */
 #define ATARI	 0	/* For Atari ST/STE/TT/Falcon w/ Lattice C 5.52 UN */
 #define SGI4	 0	/* For SiliconGraphics Indigo, IRIX v*4*.0.5	UN */
-#define NETBSD	 0	/* For NetBSD-current				   */
+#define NETBSD	 1	/* For NetBSD-current;  Use for MacOS		   */
 #define WIN32	 0	/* rusi aug 2013 */
 
 /*---------------------------------------------------------------------------

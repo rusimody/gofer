@@ -29,8 +29,9 @@ You can switch back to classic Haskell syntax with =:s -S=
 #+END_SRC
 * Building
 - =cd src=
-- Choose the architecture at the top of [[file:src/prelude.h][prelude.h]]
-- Choose C compiler -- =CC= -- in [[file:src/Makefile][Makefile]] 
+- Choose the architecture near line 25 following  [[file:src/prelude.h][prelude.h]]
+  Exactly one =LINUX=, =WIN32= or =NETBSD= (for MacOS) should be 1; all the rest should be 0
+- If necessary, choose C compiler -- =CC= -- in [[file:src/Makefile][Makefile]] 
 - =$ make= 
 There is no configure to run.\\
 Windows seems to build with mingw for 32 bit but not 64.

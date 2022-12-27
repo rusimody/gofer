@@ -3,4 +3,4 @@ make
 mkdir linux
 mv gofer ./linux
 make clean
-CC=x86_64-w64-mingw32-gcc CFLAGS="-DWIN32=1 -DLINUX=0" make
+CC=/usr/bin/x86_64-w64-mingw32-gcc-win32 CFLAGS="-DWIN32=1 -DLINUX=0" make

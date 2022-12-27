@@ -27,9 +27,9 @@ COBJECTS	= gofc.o cbuiltin.o cmachine.o $(OBJECTS)
 # Choose one of these (ATM 64-bit is not working)
 #CC		= i686-w64-mingw32-gcc-4.6
 #CC		= x86_64-w64-mingw32-gcc
-CC		= gcc
+CC		?= gcc
 #CFLAGS		= -DUSE_READLINE=1
-CFLAGS		=
+CFLAGS		?=
 LDFLAGS    	= -lm
 OPTFLAGS	= -O
 OPT1		=
@@ -40,7 +40,7 @@ ENFLAGS		= --preload-file ./pusimple.pre --preload-file ./map.hs
 
 gofer		: $(IOBJECTS)
 		  $(CC) $(CFLAGS) $(OPTFLAGS) $(IOBJECTS) -o gofer $(LDFLAGS)
-		  strip gofer
+#		  strip gofer
 
 gw		: $(IOBJECTS) 
 		  $(CC) $(CFLAGS) $(OPTFLAGS) $(IOBJECTS) -o gofer.html $(ENFLAGS) $(LDFLAGS)

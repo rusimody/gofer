@@ -1,2 +1,6 @@
 cd src
 make
+mkdir linux
+mv gofer ./linux
+make clean
+CC=x86_64-w64-mingw32-gcc CFLAGS="-DWIN32=1 -DLINUX=0" make

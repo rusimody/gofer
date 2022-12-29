@@ -1,8 +1,9 @@
 cd src
 make clean
 make
-mkdir -p pug_linux
-cp gofer ./pug_linux
-cp ../*.pre ./pug_linux
-zip -r pug_linux.zip ./pug_linux
+rm -rf pug
+mkdir -p pug
+cp gofer ./pug
+cp ../pusimple.pre ../pustd.pre ../pucc28.pre ./pug
+zip -r pug_linux.zip ./pug
 cd ..

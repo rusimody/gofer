@@ -54,7 +54,7 @@ gofc		: $(COBJECTS)
 		  $(CC) -c $(CFLAGS) $(OPTFLAGS) $<
 
 clean		:
-		  rm *.o $(TESTS)
+		  rm -f *.o $(TESTS)
 
 install		:
 		  mv gofer ..

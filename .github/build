@@ -1,2 +1,2 @@
 source ./.github/build-linux.sh
-source ./.github/build-windows.sh
+# source ./.github/build-windows.sh

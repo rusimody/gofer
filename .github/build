@@ -1,6 +1,2 @@
-cd src
-make
-mkdir linux
-mv gofer ./linux
-make clean
-CC=/usr/bin/i686-w64-mingw32-gcc-win32 CFLAGS="-DWIN32=1 -DLINUX=0" make
+source ./.github/build-linux.sh
+source ./.github/build-windows.sh

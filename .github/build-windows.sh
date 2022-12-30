@@ -7,5 +7,5 @@ cp gofer.exe ./pug
 cp ../windows/*.pre ./pug
 cd pug
 # Zip all files in the pug directory
-zip -r pug_windows.zip *
+zip -r ../pug_windows.zip *
 cd ../..

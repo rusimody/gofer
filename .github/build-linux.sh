@@ -1,6 +1,6 @@
 cd src
 make clean
-make
+CFLAGS=-static make
 rm -rf pug
 mkdir -p pug
 cp gofer ./pug

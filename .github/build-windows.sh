@@ -5,5 +5,7 @@ rm -rf pug
 mkdir -p pug
 cp gofer.exe ./pug
 cp ../windows/*.pre ./pug
-zip -r pug_windows.zip ./pug
-cd ..
+cd pug
+# Zip all files in the pug directory
+zip -r pug_windows.zip *
+cd ../..

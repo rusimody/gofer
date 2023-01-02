@@ -45,7 +45,9 @@
 #define AIX	     0	/* For IBM AIX on RS/6000 using GCC		   */
 #define ATARI	 0	/* For Atari ST/STE/TT/Falcon w/ Lattice C 5.52 UN */
 #define SGI4	 0	/* For SiliconGraphics Indigo, IRIX v*4*.0.5	UN */
+#ifndef NETBSD
 #define NETBSD	 0	/* For NetBSD-current;  Use for MacOS		   */
+#endif
 #ifndef WIN32
 #define WIN32	 0	/* rusi aug 2013 */
 #endif

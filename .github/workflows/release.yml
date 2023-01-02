@@ -31,9 +31,8 @@ jobs:
       - name: Build the project
         run: source ./.github/build-macos.sh
         shell: bash 
-      - name: Upload the artifacts
-        uses: skx/github-action-publish-binaries@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload files to a GitHub release
+        uses: svenstaro/upload-release-action@2.3.0
         with:
-          args: 'src/pug_macos.zip' 
+          file: 'src/pug_macos.zip'
+          repo_token: ${{ secrets.GITHUB_TOKEN }}

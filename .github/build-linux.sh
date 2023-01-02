@@ -1,6 +1,9 @@
 cd src
 make clean
-CFLAGS=-static make
+# export CFLAGS="-static -DUSE_READLINE=1"
+export CFLAGS="-DUSE_READLINE=1"
+export LDFLAGS="-lm -ledit"
+make
 rm -rf pug
 mkdir -p pug
 cp gofer ./pug

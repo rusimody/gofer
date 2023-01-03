@@ -335,11 +335,11 @@ typedef unsigned Unsigned;
 #define NUM_TEXT           Pick(7000,  20000,      80000)
 #define NUM_TEXTH	   Pick(1,     10,         10)
 #define NUM_TYVARS         Pick(800,   3000,       4000)
-#define NUM_STACK          Pick(1800,  16000,      16000)
+#define NUM_STACK          Pick(1800,  16000,      32000)
 #define NUM_ADDRS          Pick(28000, 100000,     320000)
 #define MINIMUMHEAP	   Pick(7500,  7500,       7500)
 #define MAXIMUMHEAP	   Pick(32765, 0,          0)
-#define DEFAULTHEAP        Pick(28000, 100000,     100000)
+#define DEFAULTHEAP        Pick(28000, 100000,     1000000)
 #define MAXPOSINT          Pick(32767, 2147483647, 2147483647)
 
 #define minRecovery	   Pick(1000,  1000,       1000)

@@ -48,4 +48,4 @@ jobs:
           push: true
           context: .
           file: ./.github/pugofer.dockerfile
-          tags: saukap/pugofer:latest
+          tags: ghcr.io/saukap/pugofer:latest

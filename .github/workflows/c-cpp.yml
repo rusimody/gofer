@@ -32,7 +32,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ghcr.io/saukap/pugofer
+          images: ghcr.io/saukap/gofer
           flavor: latest=true
           
       - name: Login to image repository

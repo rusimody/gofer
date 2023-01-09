@@ -9,7 +9,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  
+
 jobs:
   build:
 
@@ -23,7 +23,7 @@ jobs:
   publish-container:
     name: Publish pugofer container
     runs-on: ubuntu-latest
-    depends-on: [build]
+    needs: [build]
     steps:
       - name: Login to GitHub Container Registry
         uses: actions/checkout@v2

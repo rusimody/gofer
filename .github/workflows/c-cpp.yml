@@ -21,6 +21,7 @@ jobs:
       run: cd src && make
 
   publish-container:
+    if: false
     name: Publish pugofer container
     runs-on: ubuntu-latest
     needs: [build]
@@ -32,7 +33,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ghcr.io/saukap/pugofer
+          images: ghcr.io/${{ github.actor }}/pugofer
           flavor: latest=true
           
       - name: Login to image repository
@@ -48,4 +49,4 @@ jobs:
           push: true
           context: .
           file: ./.github/pugofer.dockerfile
-          tags: ghcr.io/saukap/pugofer:latest
+          tags: ghcr.io/${{ github.actor }}/pugofer:latest

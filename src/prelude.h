@@ -42,7 +42,7 @@
 #define ALPHA	 0	/* For DEC Alpha with OSF/1 (32 bit ints, no gofc) */
 #define SVR4	 0	/* For SVR4 using GCC2.2			   */
 #define ULTRIX   0      /* For DEC Ultrix 4.x using GCC2.3.3		   */
-#define AIX	     0	/* For IBM AIX on RS/6000 using GCC		   */
+#define AIX		 0	/* For IBM AIX on RS/6000 using GCC		   */
 #define ATARI	 0	/* For Atari ST/STE/TT/Falcon w/ Lattice C 5.52 UN */
 #define SGI4	 0	/* For SiliconGraphics Indigo, IRIX v*4*.0.5	UN */
 #ifndef NETBSD
